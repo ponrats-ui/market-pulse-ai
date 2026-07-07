@@ -1,6 +1,35 @@
-# Architecture
+﻿# Architecture
 
 Market Pulse AI separates the frontend dashboard, backend API, provider integrations, configuration, and documentation.
+
+## Current Layout
+
+- `frontend`: React + Vite + TypeScript dashboard
+- `backend`: FastAPI market data and analysis API
+- `configs`: watchlist and shared configuration
+- `docs`: architecture, deployment, and sprint documentation
+
+## Future Workspace Direction
+
+A future workspace migration can move toward:
+
+```text
+apps/
+  web/
+  mobile/
+  desktop/
+backend/
+  app/
+  api/
+  services/
+packages/
+  api-contract/
+  shared-types/
+configs/
+docs/
+```
+
+Sprint 2 does not move folders, so Cloudflare Pages and local commands remain stable.
 
 ## Frontend
 
@@ -8,6 +37,7 @@ Market Pulse AI separates the frontend dashboard, backend API, provider integrat
 - TailwindCSS for styling
 - Recharts for time-series visualization
 - lucide-react for interface icons
+- Thai/English i18n in `frontend/src/i18n`
 - Uses backend data when `VITE_API_BASE_URL` is set
 - Falls back to mock data when the API is unavailable or the env var is empty
 
@@ -25,13 +55,5 @@ Market Pulse AI separates the frontend dashboard, backend API, provider integrat
 1. Frontend loads `/api/watchlist` or local mock watchlist.
 2. User selects category and asset.
 3. Frontend requests quote, history, AI analysis, risk, and financials.
-4. Backend retrieves normalized yfinance data through the provider abstraction.
-5. Quote, history, and watchlist responses are cached with short TTLs.
-6. Failed assets return structured `error` fields so the UI can keep rendering.
-
-## Extension Points
-
-- Add new providers by implementing `MarketDataProvider`.
-- Add provider failover in `registry.py`.
-- Add persistent caching or edge caching for production.
-- Add backend deployment through Cloudflare Containers, Render, Fly.io, Railway, or container hosting.
+4. Dashboard renders localized labels and Thai/English interpretation surfaces.
+5. Failed assets return structured `error` fields so the UI can keep rendering.

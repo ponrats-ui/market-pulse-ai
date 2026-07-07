@@ -1,6 +1,6 @@
-# Market Pulse AI
+﻿# Market Pulse AI
 
-Market Pulse AI is a financial intelligence dashboard foundation for tracking crypto, Thai stocks, global stocks, indices, energy, precious metals, and FX/macro assets. Users can select an asset category and asset to view price data, chart context, cautious AI analysis, risk analysis, financial statement analysis when applicable, and news placeholders.
+Market Pulse AI is a Thai-first bilingual financial intelligence dashboard for tracking crypto, Thai stocks, global stocks, indices, energy, precious metals, and FX/macro assets. Users can select an asset category and asset to view real market data, chart context, AI investment committee analysis, risk analysis, financial statement analysis when applicable, market sentiment, and news-impact placeholders.
 
 > This is not financial advice. Market Pulse AI provides educational information and conservative analysis only.
 
@@ -8,14 +8,19 @@ Market Pulse AI is a financial intelligence dashboard foundation for tracking cr
 
 - React + Vite + TypeScript frontend
 - TailwindCSS dark market-terminal interface
+- Thai and English localization with instant language switching
+- Language preference stored in localStorage
+- Chief Investment AI summary card
+- Five-specialist AI Investment Committee
+- Grouped financial statement cards with color indicators
+- Fear & Greed / market sentiment widget
+- News impact placeholder panel
 - Recharts line chart
 - lucide-react icons
 - FastAPI backend
 - yfinance-first provider abstraction
 - Normalized quote and historical price responses
 - In-memory TTL cache for quote, history, and watchlist data
-- Watchlist, asset quote, asset history, dashboard, AI analysis, risk, and financial statement endpoints
-- Cloudflare Pages-ready frontend build
 - Mock fallback when frontend API URL is empty or unavailable
 
 ## Local Setup
@@ -28,12 +33,6 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-Health check:
-
-```bash
-curl http://127.0.0.1:8000/health
 ```
 
 Run tests:
@@ -70,26 +69,21 @@ Create `frontend/.env.local` for local backend integration:
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-## GitHub Workflow
-
-```bash
-git status
-git add .
-git commit -m "feat(data): add real market data layer"
-git push
-```
-
 ## Cloudflare Pages Deployment
 
 1. Push the repository to GitHub.
-2. In Cloudflare Dashboard, create or open the Pages project.
-3. Set the root directory to `frontend`.
+2. In Cloudflare Dashboard, open the Pages project.
+3. Root directory: `frontend`.
 4. Build command: `npm run build`.
 5. Build output directory: `dist`.
 6. Leave `VITE_API_BASE_URL` empty for static mock fallback, or set it to the deployed backend API URL later.
 7. Deploy.
 
-See [docs/DEPLOYMENT_CLOUDFLARE.md](docs/DEPLOYMENT_CLOUDFLARE.md) for details.
+## Sprint Documentation
+
+- [Sprint 1 Data Layer](docs/SPRINT_1_DATA_LAYER.md)
+- [Sprint 2 Localization](docs/SPRINT_2_LOCALIZATION.md)
+- [AI Investment Committee](docs/AI_COMMITTEE.md)
 
 ## Risk Disclaimer
 

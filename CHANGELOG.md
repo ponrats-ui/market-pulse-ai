@@ -40,3 +40,15 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 ## Thai Summary
 
 ไฟล์นี้ใช้บันทึกการเปลี่ยนแปลงสำคัญของ Market Pulse AI เพื่อให้ผู้ใช้และผู้ร่วมพัฒนาเห็นพัฒนาการของโครงการอย่างโปร่งใส
+
+## Sprint 3
+
+### Added
+
+- Real-data asset comparison endpoint and UI.
+- Timeframe selector for historical chart data.
+- Rule-based AI Q&A assistant.
+- Portfolio analyzer placeholder with localStorage.
+- Economic calendar placeholder endpoint.
+- News impact provider interface and mock provider.
+- Sentiment placeholder endpoint.

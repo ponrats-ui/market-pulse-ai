@@ -107,3 +107,17 @@ option { background: #0a101c; color: #d9e7ff; }
   background: #101827;
   color: #d9e7ff;
 }
+.input-shell {
+  width: 100%;
+  border: 1px solid #1e2b3f;
+  border-radius: 0.375rem;
+  background: #101827;
+  color: #d9e7ff;
+  padding: 0.75rem;
+  outline: none;
+}
+
+.input-shell:focus {
+  border-color: #35d0ff;
+  box-shadow: 0 0 0 2px rgba(53, 208, 255, 0.14);
+}

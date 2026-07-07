@@ -105,3 +105,25 @@ VITE_API_BASE_URL=http://localhost:8000
 ## Risk Disclaimer
 
 Market Pulse AI does not provide investment, tax, legal, or financial advice. All analysis is probabilistic, educational, and may be incomplete or incorrect. Users should verify data independently, define risk limits, and consult licensed professionals before making financial decisions.
+
+## Sprint 3 Research Terminal
+
+Sprint 3 adds real-data research terminal features:
+
+- Timeframe-based price chart using backend historical OHLCV data.
+- Real asset comparison using quote and history endpoints.
+- Rule-based AI Q&A assistant using quote, risk, and analysis context.
+- LocalStorage portfolio analyzer.
+- Economic calendar placeholder endpoint.
+- News impact provider interface with a mock provider.
+- Sentiment placeholder endpoint.
+
+New endpoints:
+
+- `GET /api/compare?symbols=BTC-USD,ETH-USD`
+- `POST /api/assistant/ask`
+- `GET /api/calendar`
+- `GET /api/news-impact/{symbol}`
+- `GET /api/sentiment/{symbol}`
+
+See [Sprint 3 Research Terminal](docs/SPRINT_3_RESEARCH_TERMINAL.md) and [Real Data vs Mock](docs/REAL_DATA_VS_MOCK.md).

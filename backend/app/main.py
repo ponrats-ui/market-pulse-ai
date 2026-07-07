@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -6,18 +6,32 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
+from app.providers.mock_news_provider import MockNewsProvider
 from app.providers.registry import get_provider
 from app.services.analysis import build_ai_analysis, build_risk
 from app.services.cache import HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
+from app.services.calendar import economic_calendar
+from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
+from app.services.qa_assistant import answer_question
+from app.services.sentiment import sentiment_for_symbol
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
 WATCHLIST_PATH = PROJECT_DIR / "configs" / "watchlist.json"
 DEFAULT_PROVIDER = "yfinance"
+news_provider = MockNewsProvider()
 
-app = FastAPI(title="Market Pulse AI API", version="0.2.0")
+
+class AssistantRequest(BaseModel):
+    question: str
+    selected_symbol: str = "BTC-USD"
+    language: str = "th"
+
+
+app = FastAPI(title="Market Pulse AI API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://market-pulse-ai.pages.dev"],
@@ -29,7 +43,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> Dict[str, str]:
-    return {"status": "ok", "service": "market-pulse-ai", "version": "0.2.0"}
+    return {"status": "ok", "service": "market-pulse-ai", "version": "0.3.0"}
 
 
 @app.get("/api/watchlist")
@@ -64,6 +78,39 @@ def dashboard() -> Dict[str, Any]:
             assets.append({**asset, "quote": quote})
         grouped.append({"id": category.get("id"), "name": category.get("name"), "assets": assets})
     return {"categories": grouped, "source": DEFAULT_PROVIDER}
+
+
+@app.get("/api/compare")
+def compare(symbols: str = Query("BTC-USD,ETH-USD")) -> Dict[str, Any]:
+    selected = [symbol.strip() for symbol in symbols.split(",") if symbol.strip()]
+    return build_comparison(selected, get_cached_quote, get_cached_history)
+
+
+@app.post("/api/assistant/ask")
+def assistant_ask(payload: AssistantRequest) -> Dict[str, Any]:
+    quote = get_cached_quote(payload.selected_symbol)
+    history = get_cached_history(payload.selected_symbol, "1mo", "1d")
+    risk_payload = build_risk(payload.selected_symbol, quote, history)
+    analysis_payload = build_ai_analysis(payload.selected_symbol, quote)
+    return answer_question(payload.question, payload.selected_symbol, payload.language, quote, risk_payload, analysis_payload)
+
+
+@app.get("/api/calendar")
+def calendar() -> Dict[str, Any]:
+    return economic_calendar()
+
+
+@app.get("/api/news-impact/{symbol}")
+def news_impact(symbol: str) -> Dict[str, Any]:
+    try:
+        return news_provider.get_news_impact(symbol)
+    except Exception as exc:
+        return {"symbol": symbol, "source": news_provider.name, "items": [], "error": str(exc), "disclaimer": "This is not financial advice."}
+
+
+@app.get("/api/sentiment/{symbol}")
+def sentiment(symbol: str) -> Dict[str, Any]:
+    return sentiment_for_symbol(symbol)
 
 
 @app.get("/api/analysis/{symbol}")

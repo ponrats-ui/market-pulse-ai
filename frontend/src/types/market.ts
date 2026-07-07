@@ -8,3 +8,12 @@ export interface AssetHistory { symbol: string; range: string; interval: string;
 export interface AnalysisResponse { symbol: string; trend: string; facts: string[]; interpretation: string[]; bullish_factors: string[]; bearish_factors: string[]; risks: string[]; risk_score: number; volatility_level: string; support_resistance: { support: string; resistance: string }; invalidation: string; cautious_action_plan: string[]; disclaimer: string; }
 export interface RiskResponse { symbol: string; asset_type: string; risk_score: number; volatility_level: string; main_risks: string[]; risk_controls: string[]; facts: string[]; interpretation: string; disclaimer: string; }
 export interface FinancialsResponse { symbol: string; applicable: boolean; status?: string; message?: string; facts?: Record<string, string | number | null>; interpretation?: Record<string, string | null>; risks?: string[]; cautious_action_plan?: string[]; alternative_fundamentals?: { asset_type: string; focus_areas: string[] }; disclaimer: string; }
+export interface CompareItem { symbol: string; name: string; asset_type: string; price: number | null; change_percent: number | null; currency: string; volatility_estimate: string; risk_score: number; source: string; timestamp?: string; error?: string; }
+export interface CompareResponse { symbols: string[]; items: CompareItem[]; performance_points: Array<Record<string, string | number | null>>; summary: { th: string; en: string }; disclaimer: string; }
+export interface AssistantResponse { answer: string; facts_used: string[]; risks: string[]; follow_up_questions: string[]; disclaimer: string; }
+export interface CalendarEvent { date: string; name: string; region: string; impact_level: string; related_assets: string[]; note_th: string; note_en: string; }
+export interface CalendarResponse { events: CalendarEvent[]; source: string; }
+export interface NewsImpactItem { headline: string; source: string; asset_impact: string; impact_level: string; sentiment: string; ai_explanation: string; risk_warning: string; }
+export interface NewsImpactResponse { symbol: string; source: string; provider_roadmap: string[]; items: NewsImpactItem[]; disclaimer: string; error?: string; }
+export interface SentimentResponse { symbol: string; score: number; label: string; source: string; note: string; }
+export interface PortfolioHolding { symbol: string; quantity: number; averageCost: number; currency: string; }

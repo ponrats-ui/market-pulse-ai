@@ -44,3 +44,21 @@
 - Add CI build/test workflow
 - Add backend deployment pipeline
 - Evaluate workspace migration to `apps/` and `packages/`
+
+## Sprint 3 Completed Scope
+
+- Timeframe chart controls using backend history.
+- Real-data asset comparison endpoint and UI.
+- Rule-based AI Q&A assistant endpoint and UI.
+- LocalStorage portfolio analyzer.
+- Economic calendar placeholder.
+- News impact provider interface and mock implementation.
+- Sentiment placeholder endpoint and widget.
+
+## Sprint 4 Candidates
+
+- Batch quote endpoint for full portfolio valuation.
+- Real news provider integration.
+- Real economic calendar provider.
+- Technical indicators calculated from OHLCV history.
+- Optional LLM provider interface with safety policies.

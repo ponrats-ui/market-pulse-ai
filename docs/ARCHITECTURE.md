@@ -57,3 +57,13 @@ Sprint 2 does not move folders, so Cloudflare Pages and local commands remain st
 3. Frontend requests quote, history, AI analysis, risk, and financials.
 4. Dashboard renders localized labels and Thai/English interpretation surfaces.
 5. Failed assets return structured `error` fields so the UI can keep rendering.
+
+## Sprint 3 Research Terminal Architecture
+
+Sprint 3 adds provider-ready research endpoints while preserving the Sprint 1 yfinance market data layer.
+
+- Real quote/history data continues through `YFinanceProvider`.
+- Comparison is built from cached quote and history data.
+- AI Q&A lives in `backend/app/services/qa_assistant.py` and is rule-based for now.
+- News impact uses `NewsProvider` and `MockNewsProvider` so future providers can be added without changing endpoint contracts.
+- Calendar and sentiment are explicit placeholder services until provider integrations are selected.

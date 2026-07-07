@@ -37,3 +37,27 @@ export const mockAnalysis = (symbol: string): AnalysisResponse => ({
 
 export const mockRisk = (symbol: string): RiskResponse => ({ symbol, asset_type: 'global_stock', risk_score: 6, volatility_level: 'medium', main_risks: ['Gap risk', 'Liquidity risk', 'Macro sensitivity', 'Headline risk'], risk_controls: ['Define maximum loss before entry.', 'Use smaller size during high volatility.', 'Review exposure correlation.'], facts: ['Risk score is heuristic.', 'Volatility and liquidity are reviewed qualitatively.'], interpretation: 'The asset needs disciplined position sizing and clear invalidation.', disclaimer: 'This is not financial advice.' });
 export const mockFinancials = (symbol: string): FinancialsResponse => ({ symbol, applicable: true, status: 'mock', facts: { revenue_trend: 'Placeholder: stable to improving', net_profit_trend: 'Placeholder: cyclical', gross_margin: 0.52, net_margin: 0.21, debt_to_equity: 0.78, cash_flow_quality: 'Needs confirmation', roe: 0.18, roa: 0.09, eps: 7.42, pe: 24.8, pbv: 4.1, dividend_yield: 0.012 }, interpretation: { balance_sheet_strength: 'Moderate balance sheet strength.', earnings_quality: 'Review recurring earnings and cash conversion.', valuation_risk: 'Multiple compression risk if growth slows.' }, risks: ['Statement data can lag reality.', 'Valuation depends on growth assumptions.', 'Debt cost can change.'], cautious_action_plan: ['Compare against peers.', 'Check cash flow against earnings.', 'Avoid relying on one valuation metric.'], disclaimer: 'This is not financial advice.' });
+
+export const mockCompare = (symbols: string[]) => ({
+  symbols,
+  items: symbols.map((symbol, index) => ({ symbol, name: symbol, asset_type: symbol.endsWith('-USD') ? 'crypto' : 'global_stock', price: 100 + index * 12, change_percent: index === 0 ? 1.8 : 0.9, currency: 'USD', volatility_estimate: index === 0 ? 'high' : 'medium', risk_score: index === 0 ? 8 : 6, source: 'mock', timestamp: new Date().toISOString() })),
+  performance_points: Array.from({ length: 20 }, (_, day) => Object.fromEntries([['time', new Date(Date.now() - (19 - day) * 86400000).toISOString()], ...symbols.map((symbol, index) => [symbol, Math.round((Math.sin(day / 3 + index) * 4 + day * (index + 1) * 0.25) * 100) / 100])])),
+  summary: { th: `${symbols[0] ?? 'สินทรัพย์แรก'} มีแรงเคลื่อนไหวเด่นกว่าในช่วงนี้ แต่ควรพิจารณาความผันผวนและขนาดสถานะร่วมด้วย`, en: `${symbols[0] ?? 'The first asset'} is showing stronger recent performance, but volatility and position sizing still matter.` },
+  disclaimer: 'This is not financial advice.',
+});
+
+export const mockAssistant = (symbol: string, language: string) => ({
+  answer: language === 'th' ? `ข้อเท็จจริง: ${symbol} ใช้ข้อมูลจำลองเมื่อไม่ได้เชื่อมต่อ backend. การตีความ: ควรดูราคา ความผันผวน และแผนรับมือร่วมกันก่อนตัดสินใจ` : `Facts: ${symbol} is using mock fallback when the backend is not connected. Interpretation: price, volatility, and a risk plan should be reviewed together.`,
+  facts_used: [`symbol=${symbol}`, 'source=mock'],
+  risks: language === 'th' ? ['ข้อมูลจำลอง', 'ความผันผวน', 'ข่าวตลาด'] : ['Mock data', 'Volatility', 'Market headlines'],
+  follow_up_questions: language === 'th' ? ['ต้องการเปรียบเทียบกับสินทรัพย์ใด'] : ['Which asset should we compare it against?'],
+  disclaimer: 'This is not financial advice.',
+});
+
+export const mockCalendar = { source: 'mock', events: [
+  { date: new Date().toISOString().slice(0, 10), name: 'Fed meeting', region: 'US', impact_level: 'high', related_assets: ['^GSPC', 'BTC-USD'], note_th: 'ติดตามท่าทีดอกเบี้ยและสภาพคล่อง', note_en: 'Watch rate guidance and liquidity.' },
+  { date: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10), name: 'CPI', region: 'US', impact_level: 'high', related_assets: ['DXY', '^TNX'], note_th: 'เงินเฟ้ออาจกระทบพันธบัตรและค่าเงิน', note_en: 'Inflation may affect bonds and FX.' },
+] };
+
+export const mockNewsImpact = (symbol: string) => ({ symbol, source: 'mock-news', provider_roadmap: ['Finnhub', 'NewsAPI', 'Alpha Vantage News', 'GDELT', 'RSS feeds'], items: [{ headline: `${symbol} remains sensitive to macro headlines`, source: 'Market Pulse Mock', asset_impact: symbol, impact_level: 'medium', sentiment: 'neutral', ai_explanation: 'Headlines may lift short-term volatility, but confirmation is needed.', risk_warning: 'Mock news is not live news.' }], disclaimer: 'This is not financial advice.' });
+export const mockSentiment = (symbol: string) => ({ symbol, score: symbol.endsWith('-USD') ? 54 : 50, label: 'Neutral', source: 'mock', note: 'Real provider integration planned.' });

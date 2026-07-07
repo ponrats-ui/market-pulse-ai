@@ -1,8 +1,8 @@
-﻿# Cloudflare Pages Deployment
+# Cloudflare Pages Deployment
 
-The frontend is ready for Cloudflare Pages.
+The frontend is ready for Cloudflare Pages. Sprint 0 deploys the static frontend only and can safely use mock data while the FastAPI backend is deployed separately later.
 
-## Build Settings
+## Cloudflare Pages Settings
 
 - Framework preset: Vite
 - Root directory: `frontend`
@@ -12,20 +12,44 @@ The frontend is ready for Cloudflare Pages.
 
 ## Environment Variables
 
-Set this variable in Cloudflare Pages:
+For Sprint 0, leave this unset or set it to a local/mock placeholder. The frontend falls back to mock data if the API is unavailable.
+
+```bash
+VITE_API_BASE_URL=
+```
+
+When the backend is deployed later, update it to the production API URL:
 
 ```bash
 VITE_API_BASE_URL=https://your-backend.example.com
 ```
 
-## Steps
+Do not commit secrets or private API keys. This variable should only contain the public backend base URL.
+
+## Wrangler Deploy
+
+From the frontend directory:
+
+```bash
+npm install
+npm run build
+npx wrangler pages deploy dist --project-name market-pulse-ai
+```
+
+If Wrangler asks for authentication, run:
+
+```bash
+npx wrangler login
+```
+
+## Dashboard Deploy
 
 1. Push the repository to GitHub.
 2. Open Cloudflare Dashboard.
 3. Go to Workers & Pages.
 4. Create a Pages project from the GitHub repository.
-5. Configure build settings above.
-6. Add `VITE_API_BASE_URL`.
+5. Configure the Pages settings above.
+6. Leave `VITE_API_BASE_URL` unset for Sprint 0, or set it to a local/mock placeholder.
 7. Deploy preview, verify the dashboard, then promote to production.
 
 ## Backend Note

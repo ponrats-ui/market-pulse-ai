@@ -1,0 +1,42 @@
+﻿# Changelog
+
+All notable changes to Market Pulse AI will be documented in this file.
+
+The format is inspired by Keep a Changelog, and this project uses human-readable release notes.
+
+## [Unreleased]
+
+### Added
+
+- MIT license and open-source governance documents.
+- Founder and project identity documentation.
+- Application footer identity and About dialog.
+
+## Sprint 2
+
+### Added
+
+- Thai and English localization.
+- AI Investment Committee dashboard.
+- Chief Investment AI summary card.
+- Improved financial, news, and sentiment panels.
+
+## Sprint 1
+
+### Added
+
+- Normalized yfinance market data layer.
+- Provider registry and in-memory TTL cache.
+- Quote, history, dashboard, analysis, risk, and financial endpoints.
+
+## Sprint 0
+
+### Added
+
+- Initial React + Vite + TypeScript frontend.
+- Initial FastAPI backend.
+- Cloudflare Pages-ready frontend foundation.
+
+## Thai Summary
+
+ไฟล์นี้ใช้บันทึกการเปลี่ยนแปลงสำคัญของ Market Pulse AI เพื่อให้ผู้ใช้และผู้ร่วมพัฒนาเห็นพัฒนาการของโครงการอย่างโปร่งใส

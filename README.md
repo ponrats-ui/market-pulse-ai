@@ -4,6 +4,14 @@ Market Pulse AI is a Thai-first bilingual financial intelligence dashboard for t
 
 > This is not financial advice. Market Pulse AI provides educational information and conservative analysis only.
 
+## Project Identity
+
+- Created by: **Ponrat Saripan**
+- Repository: [https://github.com/ponrats-ui/market-pulse-ai](https://github.com/ponrats-ui/market-pulse-ai)
+- License: [MIT License](LICENSE)
+
+Thai summary: Market Pulse AI สร้างโดย **Ponrat Saripan** และเผยแพร่เป็น open-source ภายใต้สัญญาอนุญาต MIT
+
 ## Features
 
 - React + Vite + TypeScript frontend
@@ -78,6 +86,15 @@ VITE_API_BASE_URL=http://localhost:8000
 5. Build output directory: `dist`.
 6. Leave `VITE_API_BASE_URL` empty for static mock fallback, or set it to the deployed backend API URL later.
 7. Deploy.
+
+## Open Source Governance
+
+- [Authors](AUTHORS.md)
+- [Contributing](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [Vision](VISION.md)
+- [Changelog](CHANGELOG.md)
 
 ## Sprint Documentation
 

@@ -1,0 +1,52 @@
+{
+  "categories": [
+    { "id": "crypto", "name": "Crypto", "assets": [
+      { "symbol": "BTC-USD", "label": "BTC", "type": "crypto" },
+      { "symbol": "ETH-USD", "label": "ETH", "type": "crypto" },
+      { "symbol": "SOL-USD", "label": "SOL", "type": "crypto" },
+      { "symbol": "XRP-USD", "label": "XRP", "type": "crypto" }
+    ]},
+    { "id": "thai_stocks", "name": "Thai stocks", "assets": [
+      { "symbol": "^SET.BK", "label": "SET Index", "type": "index" },
+      { "symbol": "^SET50.BK", "label": "SET50", "type": "index" },
+      { "symbol": "PTT.BK", "label": "PTT.BK", "type": "stock" },
+      { "symbol": "AOT.BK", "label": "AOT.BK", "type": "stock" },
+      { "symbol": "CPALL.BK", "label": "CPALL.BK", "type": "stock" },
+      { "symbol": "DELTA.BK", "label": "DELTA.BK", "type": "stock" },
+      { "symbol": "KBANK.BK", "label": "KBANK.BK", "type": "stock" }
+    ]},
+    { "id": "global_stocks", "name": "Global stocks", "assets": [
+      { "symbol": "AAPL", "label": "AAPL", "type": "stock" },
+      { "symbol": "MSFT", "label": "MSFT", "type": "stock" },
+      { "symbol": "NVDA", "label": "NVDA", "type": "stock" },
+      { "symbol": "TSLA", "label": "TSLA", "type": "stock" },
+      { "symbol": "AMZN", "label": "AMZN", "type": "stock" },
+      { "symbol": "GOOGL", "label": "GOOGL", "type": "stock" },
+      { "symbol": "META", "label": "META", "type": "stock" }
+    ]},
+    { "id": "global_indices", "name": "Global indices", "assets": [
+      { "symbol": "^GSPC", "label": "S&P 500", "type": "index" },
+      { "symbol": "^IXIC", "label": "Nasdaq", "type": "index" },
+      { "symbol": "^DJI", "label": "Dow Jones", "type": "index" },
+      { "symbol": "^N225", "label": "Nikkei", "type": "index" },
+      { "symbol": "^HSI", "label": "Hang Seng", "type": "index" },
+      { "symbol": "^GDAXI", "label": "DAX", "type": "index" }
+    ]},
+    { "id": "energy", "name": "Energy", "assets": [
+      { "symbol": "CL=F", "label": "WTI Oil", "type": "commodity" },
+      { "symbol": "BZ=F", "label": "Brent Oil", "type": "commodity" },
+      { "symbol": "NG=F", "label": "Natural Gas", "type": "commodity" }
+    ]},
+    { "id": "precious_metals", "name": "Precious metals", "assets": [
+      { "symbol": "GC=F", "label": "Gold", "type": "commodity" },
+      { "symbol": "SI=F", "label": "Silver", "type": "commodity" },
+      { "symbol": "PL=F", "label": "Platinum", "type": "commodity" },
+      { "symbol": "HG=F", "label": "Copper", "type": "commodity" }
+    ]},
+    { "id": "fx_macro", "name": "FX / Macro", "assets": [
+      { "symbol": "THB=X", "label": "USDTHB", "type": "fx" },
+      { "symbol": "DX-Y.NYB", "label": "DXY", "type": "macro" },
+      { "symbol": "^TNX", "label": "US10Y", "type": "macro" }
+    ]}
+  ]
+}

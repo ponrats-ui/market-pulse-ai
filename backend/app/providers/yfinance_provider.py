@@ -1,88 +1,240 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
+import pandas as pd
 import yfinance as yf
 
 from app.providers.base import MarketDataProvider
 
+VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "5y"}
+VALID_INTERVALS = {"1h", "1d", "1wk"}
+THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK"}
+GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META"}
+GLOBAL_INDICES = {"^GSPC", "^IXIC", "^DJI", "^N225", "^HSI", "^GDAXI"}
+COMMODITIES = {"CL=F", "BZ=F", "NG=F", "GC=F", "SI=F", "PL=F", "HG=F"}
+MACRO = {"DX-Y.NYB", "^TNX"}
+
 
 class YFinanceProvider(MarketDataProvider):
-    def get_asset_snapshot(self, symbol: str) -> Dict[str, Any]:
-        ticker = yf.Ticker(symbol)
-        info = ticker.fast_info
-        history = ticker.history(period="1mo", interval="1d")
+    name = "yfinance"
 
-        last_price = self._safe_float(getattr(info, "last_price", None))
-        previous_close = self._safe_float(getattr(info, "previous_close", None))
-        if last_price is None and not history.empty:
-            last_price = self._safe_float(history["Close"].iloc[-1])
-        if previous_close is None and len(history.index) > 1:
-            previous_close = self._safe_float(history["Close"].iloc[-2])
+    def get_quote(self, symbol: str) -> Dict[str, Any]:
+        try:
+            ticker = yf.Ticker(symbol)
+            info = self._safe_info(ticker)
+            fast_info = self._safe_fast_info(ticker)
+            history = ticker.history(period="5d", interval="1d", auto_adjust=False)
+            latest = self._latest_row(history)
 
-        change = None
-        change_percent = None
-        if last_price is not None and previous_close not in (None, 0):
-            change = last_price - previous_close
-            change_percent = (change / previous_close) * 100
+            price = self._first_float(
+                self._fast_value(fast_info, "last_price"),
+                self._fast_value(fast_info, "lastPrice"),
+                info.get("regularMarketPrice"),
+                latest.get("Close"),
+            )
+            previous_close = self._first_float(
+                self._fast_value(fast_info, "previous_close"),
+                self._fast_value(fast_info, "previousClose"),
+                info.get("regularMarketPreviousClose"),
+                self._previous_close(history),
+            )
+            change = self._safe_float(price - previous_close) if price is not None and previous_close not in (None, 0) else None
+            change_percent = self._safe_float((change / previous_close) * 100) if change is not None and previous_close else None
 
-        return {
-            "symbol": symbol,
-            "price": last_price,
-            "previousClose": previous_close,
-            "change": change,
-            "changePercent": change_percent,
-            "currency": getattr(info, "currency", None) or "USD",
-            "asOf": datetime.now(timezone.utc).isoformat(),
-            "source": "yfinance",
-            "history": self._history_frame_to_points(history),
-        }
+            quote = {
+                "symbol": symbol,
+                "name": self._safe_string(info.get("shortName") or info.get("longName") or symbol),
+                "asset_type": infer_asset_type(symbol),
+                "currency": self._safe_string(self._fast_value(fast_info, "currency") or info.get("currency") or infer_currency(symbol)),
+                "price": price,
+                "previous_close": previous_close,
+                "change": change,
+                "change_percent": change_percent,
+                "open": self._first_float(info.get("regularMarketOpen"), latest.get("Open")),
+                "high": self._first_float(info.get("regularMarketDayHigh"), latest.get("High")),
+                "low": self._first_float(info.get("regularMarketDayLow"), latest.get("Low")),
+                "volume": self._first_float(info.get("regularMarketVolume"), latest.get("Volume")),
+                "market_cap": self._first_float(info.get("marketCap"), self._fast_value(fast_info, "market_cap")),
+                "source": self.name,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            if price is None:
+                quote["error"] = "No latest price was returned by yfinance for this symbol."
+            return quote
+        except Exception as exc:
+            return self._quote_error(symbol, exc)
 
-    def get_history(self, symbol: str, period: str = "1mo") -> List[Dict[str, Any]]:
-        history = yf.Ticker(symbol).history(period=period, interval="1d")
-        return self._history_frame_to_points(history)
+    def get_history(self, symbol: str, range: str = "1mo", interval: str = "1d") -> Dict[str, Any]:
+        selected_range = range if range in VALID_RANGES else "1mo"
+        selected_interval = interval if interval in VALID_INTERVALS else "1d"
+        try:
+            history = yf.Ticker(symbol).history(period=selected_range, interval=selected_interval, auto_adjust=False)
+            points = self._history_frame_to_points(history)
+            response: Dict[str, Any] = {
+                "symbol": symbol,
+                "range": selected_range,
+                "interval": selected_interval,
+                "points": points,
+                "source": self.name,
+            }
+            if not points:
+                response["error"] = "No historical prices were returned by yfinance for this symbol."
+            return response
+        except Exception as exc:
+            return {
+                "symbol": symbol,
+                "range": selected_range,
+                "interval": selected_interval,
+                "points": [],
+                "source": self.name,
+                "error": str(exc),
+            }
 
     def get_financials(self, symbol: str) -> Dict[str, Any]:
-        ticker = yf.Ticker(symbol)
-        info = ticker.info or {}
-        return {
-            "symbol": symbol,
-            "revenueTrend": "Placeholder until normalized statement history is enabled.",
-            "netProfitTrend": "Placeholder until normalized statement history is enabled.",
-            "grossMargin": self._safe_float(info.get("grossMargins")),
-            "netMargin": self._safe_float(info.get("profitMargins")),
-            "debtToEquity": self._safe_float(info.get("debtToEquity")),
-            "cashFlowQuality": "Needs operating cash flow and earnings consistency review.",
-            "roe": self._safe_float(info.get("returnOnEquity")),
-            "roa": self._safe_float(info.get("returnOnAssets")),
-            "eps": self._safe_float(info.get("trailingEps")),
-            "pe": self._safe_float(info.get("trailingPE")),
-            "pbv": self._safe_float(info.get("priceToBook")),
-            "dividendYield": self._safe_float(info.get("dividendYield")),
-            "threeToFiveYearTrend": "Placeholder for 3-5 year revenue, margin, and earnings trend.",
-            "balanceSheetStrength": "Review leverage, liquidity, and refinancing risk before relying on valuation.",
-            "earningsQuality": "Review recurring earnings versus one-time items.",
-            "valuationRisk": "Valuation may be sensitive to rates, growth assumptions, and market sentiment.",
-            "source": "yfinance",
-        }
+        try:
+            ticker = yf.Ticker(symbol)
+            info = self._safe_info(ticker)
+            return {
+                "symbol": symbol,
+                "revenueTrend": "Placeholder until normalized statement history is enabled.",
+                "netProfitTrend": "Placeholder until normalized statement history is enabled.",
+                "grossMargin": self._safe_float(info.get("grossMargins")),
+                "netMargin": self._safe_float(info.get("profitMargins")),
+                "debtToEquity": self._safe_float(info.get("debtToEquity")),
+                "cashFlowQuality": "Needs operating cash flow and earnings consistency review.",
+                "roe": self._safe_float(info.get("returnOnEquity")),
+                "roa": self._safe_float(info.get("returnOnAssets")),
+                "eps": self._safe_float(info.get("trailingEps")),
+                "pe": self._safe_float(info.get("trailingPE")),
+                "pbv": self._safe_float(info.get("priceToBook")),
+                "dividendYield": self._safe_float(info.get("dividendYield")),
+                "threeToFiveYearTrend": "Placeholder for 3-5 year revenue, margin, and earnings trend.",
+                "balanceSheetStrength": "Review leverage, liquidity, and refinancing risk before relying on valuation.",
+                "earningsQuality": "Review recurring earnings versus one-time items.",
+                "valuationRisk": "Valuation may be sensitive to rates, growth assumptions, and market sentiment.",
+                "source": self.name,
+            }
+        except Exception as exc:
+            return {"symbol": symbol, "source": self.name, "error": str(exc)}
 
     def _history_frame_to_points(self, history: Any) -> List[Dict[str, Any]]:
         if history is None or history.empty:
             return []
         points: List[Dict[str, Any]] = []
-        for index, row in history.tail(45).iterrows():
+        for index, row in history.iterrows():
             points.append({
-                "date": index.strftime("%Y-%m-%d"),
+                "time": self._to_iso(index),
+                "open": self._safe_float(row.get("Open")),
+                "high": self._safe_float(row.get("High")),
+                "low": self._safe_float(row.get("Low")),
                 "close": self._safe_float(row.get("Close")),
                 "volume": self._safe_float(row.get("Volume")),
             })
         return points
 
+    def _quote_error(self, symbol: str, exc: Exception) -> Dict[str, Any]:
+        return {
+            "symbol": symbol,
+            "name": symbol,
+            "asset_type": infer_asset_type(symbol),
+            "currency": infer_currency(symbol),
+            "price": None,
+            "previous_close": None,
+            "change": None,
+            "change_percent": None,
+            "open": None,
+            "high": None,
+            "low": None,
+            "volume": None,
+            "market_cap": None,
+            "source": self.name,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "error": str(exc),
+        }
+
+    def _safe_info(self, ticker: yf.Ticker) -> Dict[str, Any]:
+        try:
+            return ticker.info or {}
+        except Exception:
+            return {}
+
+    def _safe_fast_info(self, ticker: yf.Ticker) -> Any:
+        try:
+            return ticker.fast_info
+        except Exception:
+            return {}
+
+    def _fast_value(self, fast_info: Any, key: str) -> Any:
+        try:
+            if isinstance(fast_info, dict):
+                return fast_info.get(key)
+            return getattr(fast_info, key, None)
+        except Exception:
+            return None
+
+    def _latest_row(self, history: Any) -> Dict[str, Any]:
+        if history is None or history.empty:
+            return {}
+        row = history.iloc[-1]
+        return row.to_dict() if hasattr(row, "to_dict") else {}
+
+    def _previous_close(self, history: Any) -> float | None:
+        if history is None or history.empty:
+            return None
+        if len(history.index) > 1:
+            return self._safe_float(history["Close"].iloc[-2])
+        return self._safe_float(history["Close"].iloc[-1])
+
+    def _first_float(self, *values: Any) -> float | None:
+        for value in values:
+            safe = self._safe_float(value)
+            if safe is not None:
+                return safe
+        return None
+
     def _safe_float(self, value: Any) -> float | None:
         try:
-            if value is None:
+            if value is None or pd.isna(value):
                 return None
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    def _safe_string(self, value: Any) -> str:
+        return str(value) if value not in (None, "") else "N/A"
+
+    def _to_iso(self, value: Any) -> str:
+        try:
+            return value.to_pydatetime().astimezone(timezone.utc).isoformat()
+        except Exception:
+            return datetime.now(timezone.utc).isoformat()
+
+
+def infer_asset_type(symbol: str) -> str:
+    if symbol.endswith("-USD"):
+        return "crypto"
+    if symbol in THAI_STOCKS:
+        return "thai_stock" if not symbol.startswith("^") else "index"
+    if symbol in GLOBAL_STOCKS:
+        return "global_stock"
+    if symbol in GLOBAL_INDICES or symbol.startswith("^"):
+        return "index"
+    if symbol in COMMODITIES or symbol.endswith("=F"):
+        return "commodity"
+    if symbol.endswith("=X"):
+        return "fx"
+    if symbol in MACRO:
+        return "macro"
+    return "global_stock"
+
+
+def infer_currency(symbol: str) -> str:
+    if symbol.endswith(".BK") or symbol in {"SET.BK", "^SET.BK", "^SET50.BK"}:
+        return "THB"
+    if symbol.endswith("=X"):
+        return "FX"
+    if symbol == "^TNX":
+        return "%"
+    return "USD"

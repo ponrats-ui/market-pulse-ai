@@ -7,6 +7,7 @@
       { "symbol": "XRP-USD", "label": "XRP", "type": "crypto" }
     ]},
     { "id": "thai_stocks", "name": "Thai stocks", "assets": [
+      { "symbol": "SET.BK", "label": "SET Index alt", "type": "index" },
       { "symbol": "^SET.BK", "label": "SET Index", "type": "index" },
       { "symbol": "^SET50.BK", "label": "SET50", "type": "index" },
       { "symbol": "PTT.BK", "label": "PTT.BK", "type": "stock" },

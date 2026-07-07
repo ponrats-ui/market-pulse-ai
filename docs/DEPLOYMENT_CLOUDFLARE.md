@@ -1,6 +1,6 @@
 # Cloudflare Pages Deployment
 
-The frontend is ready for Cloudflare Pages. Sprint 0 deploys the static frontend only and can safely use mock data while the FastAPI backend is deployed separately later.
+The frontend is ready for Cloudflare Pages. Sprint 1 still deploys the static frontend only; the FastAPI backend is deployed separately later.
 
 ## Cloudflare Pages Settings
 
@@ -12,10 +12,16 @@ The frontend is ready for Cloudflare Pages. Sprint 0 deploys the static frontend
 
 ## Environment Variables
 
-For Sprint 0, leave this unset or set it to a local/mock placeholder. The frontend falls back to mock data if the API is unavailable.
+For Sprint 0/Sprint 1 static-only deploys, leave this unset or empty. The frontend falls back to mock data when it is empty or the API is unavailable.
 
 ```bash
 VITE_API_BASE_URL=
+```
+
+For local backend testing:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 When the backend is deployed later, update it to the production API URL:
@@ -41,16 +47,6 @@ If Wrangler asks for authentication, run:
 ```bash
 npx wrangler login
 ```
-
-## Dashboard Deploy
-
-1. Push the repository to GitHub.
-2. Open Cloudflare Dashboard.
-3. Go to Workers & Pages.
-4. Create a Pages project from the GitHub repository.
-5. Configure the Pages settings above.
-6. Leave `VITE_API_BASE_URL` unset for Sprint 0, or set it to a local/mock placeholder.
-7. Deploy preview, verify the dashboard, then promote to production.
 
 ## Backend Note
 

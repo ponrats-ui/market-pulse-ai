@@ -12,23 +12,21 @@ The frontend is ready for Cloudflare Pages. Sprint 1 still deploys the static fr
 
 ## Environment Variables
 
-For static-only deploys, leave this unset or empty. The frontend shows unavailable data states when it is empty or the API is unavailable.
+For production with a deployed backend, set this in **Cloudflare Pages > Settings > Environment variables**:
 
 ```bash
-VITE_API_BASE_URL=
+VITE_API_BASE_URL=https://YOUR_BACKEND_URL
 ```
 
 For local backend testing:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-When the backend is deployed later, update it to the production API URL:
+For static-only preview deploys, leave this unset or empty. The frontend shows unavailable data states when it is empty or the API is unavailable.
 
-```bash
-VITE_API_BASE_URL=https://your-backend.example.com
-```
+Use separate production and preview values if Cloudflare Pages uses different backend services.
 
 Do not commit secrets or private API keys. This variable should only contain the public backend base URL.
 
@@ -50,4 +48,4 @@ npx wrangler login
 
 ## Backend Note
 
-Cloudflare Pages hosts the static frontend. The FastAPI backend needs separate hosting such as Cloudflare Containers, Render, Fly.io, Railway, or a VM. Keep CORS configured for your production frontend domain.
+Cloudflare Pages hosts the static frontend. The FastAPI backend is prepared for Render using `render.yaml`. Keep `CORS_ALLOWED_ORIGINS` configured for the production Pages domain and any future custom domains.

@@ -12,12 +12,17 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 - Improved dashboard empty states, source transparency, accessibility affordances, and portfolio input validation.
 - Cleaned AI and unavailable-state wording in English and Thai.
 - Added regression coverage for cache age reporting.
+- Documented Cloudflare Pages production API environment variable setup.
+- Made backend CORS origins configurable through `CORS_ALLOWED_ORIGINS`.
 
 ### Added
 
 - MIT license and open-source governance documents.
 - Founder and project identity documentation.
 - Application footer identity and About dialog.
+- Render backend deployment configuration and deployment guide.
+- GitHub Actions CI for backend tests and frontend build validation.
+- Backend environment variable examples for production deployment.
 
 ## Sprint 2
 

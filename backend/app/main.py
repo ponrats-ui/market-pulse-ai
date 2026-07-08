@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict
 
@@ -21,6 +22,22 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
 WATCHLIST_PATH = PROJECT_DIR / "configs" / "watchlist.json"
 DEFAULT_PROVIDER = "yfinance"
+DEFAULT_LOCAL_CORS_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://market-pulse-ai.pages.dev",
+)
+DEFAULT_PRODUCTION_CORS_ORIGINS = ("https://market-pulse-ai.pages.dev",)
+
+
+def _cors_allowed_origins() -> tuple[str, ...]:
+    configured = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    app_env = os.getenv("APP_ENV", "development").strip().lower()
+    origins = tuple(origin.strip() for origin in configured.split(",") if origin.strip())
+    if app_env == "production":
+        origins = tuple(origin for origin in origins if origin != "*")
+        return origins or DEFAULT_PRODUCTION_CORS_ORIGINS
+    return origins or DEFAULT_LOCAL_CORS_ORIGINS
 
 
 class AssistantRequest(BaseModel):
@@ -32,7 +49,7 @@ class AssistantRequest(BaseModel):
 app = FastAPI(title="Market Pulse AI API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://market-pulse-ai.pages.dev"],
+    allow_origins=list(_cors_allowed_origins()),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

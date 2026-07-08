@@ -49,6 +49,8 @@ Sprint 2 does not move folders, so Cloudflare Pages and local commands remain st
 - yfinance implementation in `backend/app/providers/yfinance_provider.py`
 - TTL cache in `backend/app/services/cache.py`
 - Conservative analysis services in `backend/app/services`
+- Production deployment target: Render web service using `render.yaml`
+- CORS allowlist configured through `CORS_ALLOWED_ORIGINS`
 
 ## Data Flow
 
@@ -57,6 +59,18 @@ Sprint 2 does not move folders, so Cloudflare Pages and local commands remain st
 3. Frontend requests quote, history, AI analysis, risk, and financials.
 4. Dashboard renders localized labels and Thai/English interpretation surfaces.
 5. Failed assets return structured `error` fields so the UI can keep rendering.
+
+## Production Deployment Architecture
+
+```text
+User Browser
+  -> Cloudflare Pages frontend
+  -> FastAPI backend on Render
+  -> yfinance provider
+```
+
+Cloudflare Pages must set `VITE_API_BASE_URL` to the deployed Render backend URL. Render must set `CORS_ALLOWED_ORIGINS` to the Cloudflare Pages domain and any future custom domains. Wildcard CORS origins are not used for production.
+
 ## MVP Stabilization
 
 The MVP keeps Cloudflare Pages static deployment functional by treating `VITE_API_BASE_URL` as optional. The frontend API client returns typed unavailable states after failed, slow, or unavailable backend requests. UI panels render empty states instead of blank sections, and source details are surfaced where available.

@@ -46,6 +46,14 @@
 - Add backend deployment pipeline
 - Evaluate workspace migration to `apps/` and `packages/`
 
+## Deployment Sprint
+
+- Prepare Render backend deployment configuration.
+- Document production backend start command and health checks.
+- Document Cloudflare Pages `VITE_API_BASE_URL` setup.
+- Add GitHub Actions validation for backend tests and frontend build.
+- Keep deployment validation separate from automatic deployment.
+
 ## Sprint 3 Completed Scope
 
 - Timeframe chart controls using backend history.

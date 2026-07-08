@@ -75,8 +75,36 @@ The frontend uses `VITE_API_BASE_URL`. If it is empty or unavailable, the UI dis
 Create `frontend/.env.local` for local backend integration:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
+
+## Production Deployment
+
+Market Pulse AI uses a split production architecture:
+
+- Cloudflare Pages serves the static Vite frontend from `frontend/dist`.
+- Render runs the FastAPI backend from `backend`.
+- The frontend connects to the backend through `VITE_API_BASE_URL`.
+- The backend allows only configured CORS origins.
+
+### Render Backend
+
+Render can use the repository `render.yaml` file.
+
+- Root directory: `backend`
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Health check path: `/health`
+
+Backend environment variables:
+
+```bash
+APP_ENV=production
+LOG_LEVEL=info
+CORS_ALLOWED_ORIGINS=https://market-pulse-ai.pages.dev
+```
+
+See [Render backend deployment](docs/DEPLOY_BACKEND_RENDER.md).
 
 ## Cloudflare Pages Deployment
 
@@ -85,8 +113,16 @@ VITE_API_BASE_URL=http://localhost:8000
 3. Root directory: `frontend`.
 4. Build command: `npm run build`.
 5. Build output directory: `dist`.
-6. Leave `VITE_API_BASE_URL` empty for static unavailable states, or set it to the deployed backend API URL later.
+6. Set `VITE_API_BASE_URL=https://YOUR_BACKEND_URL` for production backend data, or leave it empty only for static unavailable states.
 7. Deploy.
+
+Cloudflare Pages environment variable:
+
+```bash
+VITE_API_BASE_URL=https://YOUR_BACKEND_URL
+```
+
+After changing this value, redeploy the frontend.
 
 ## Open Source Governance
 

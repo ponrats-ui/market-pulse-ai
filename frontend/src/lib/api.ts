@@ -1,24 +1,43 @@
 import { defaultWatchlist, unavailableAnalysis, unavailableAssistant, unavailableCalendar, unavailableCompare, unavailableFinancials, unavailableHistory, unavailableNewsImpact, unavailableQuote, unavailableRisk, unavailableSentiment } from '../data/unavailableData';
 import type { AnalysisResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, NewsImpactResponse, RiskResponse, SentimentResponse, WatchlistResponse } from '../types/market';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/$/, '');
+const PRODUCTION_API_BASE_URL = 'https://market-pulse-ai-api.onrender.com';
+const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
+const API_BASE_URL = resolveApiBaseUrl(RAW_API_BASE_URL);
 const REQUEST_TIMEOUT_MS = 8000;
 
 if (!API_BASE_URL && import.meta.env.DEV) {
   console.warn('Market Pulse API base URL is not configured. Set VITE_API_BASE_URL to a running backend URL to load live market data.');
 }
 
+function resolveApiBaseUrl(value: string): string {
+  const normalized = value.replace(/\/$/, '');
+  if (isProductionPagesHost() && (!normalized || isLoopbackApiUrl(normalized))) {
+    return PRODUCTION_API_BASE_URL;
+  }
+  return normalized;
+}
+
+function isProductionPagesHost(): boolean {
+  return typeof window !== 'undefined' && window.location.hostname === 'market-pulse-ai.pages.dev';
+}
+
+function isLoopbackApiUrl(value: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(value);
+}
+
 async function getJson<T>(path: string, fallback: T): Promise<T> {
   if (!API_BASE_URL) return fallback;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const url = `${API_BASE_URL}${path}`;
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, { signal: controller.signal });
+    const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return await response.json() as T;
   } catch (error) {
-    console.warn(`Market Pulse API unavailable for ${path}`, error);
-    return fallback;
+    console.error(`Market Pulse API request failed for ${path}`, { url, error });
+    throw error;
   } finally {
     window.clearTimeout(timeout);
   }
@@ -28,13 +47,14 @@ async function postJson<T>(path: string, body: unknown, fallback: T): Promise<T>
   if (!API_BASE_URL) return fallback;
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const url = `${API_BASE_URL}${path}`;
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
     return await response.json() as T;
   } catch (error) {
-    console.warn(`Market Pulse API unavailable for ${path}`, error);
-    return fallback;
+    console.error(`Market Pulse API request failed for ${path}`, { url, error });
+    throw error;
   } finally {
     window.clearTimeout(timeout);
   }

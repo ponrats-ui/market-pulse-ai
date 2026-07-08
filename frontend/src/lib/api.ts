@@ -4,6 +4,10 @@ import type { AnalysisResponse, AssistantResponse, AssetHistory, AssetQuote, Cal
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/$/, '');
 const REQUEST_TIMEOUT_MS = 8000;
 
+if (!API_BASE_URL && import.meta.env.DEV) {
+  console.warn('Market Pulse API base URL is not configured. Set VITE_API_BASE_URL to a running backend URL to load live market data.');
+}
+
 async function getJson<T>(path: string, fallback: T): Promise<T> {
   if (!API_BASE_URL) return fallback;
   const controller = new AbortController();

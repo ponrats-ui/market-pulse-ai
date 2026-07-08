@@ -40,8 +40,8 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
             "Data should be verified against a primary market source before making decisions.",
         ],
         "interpretation": [
-            "The setup is น่าติดตาม, but confirmation from price action and volume is still important.",
-            "A patient approach may favor รอจังหวะ rather than chasing a move after volatility expands.",
+            "The setup is worth monitoring, but confirmation from price action and volume is still important.",
+            "A patient approach may favor waiting for a cleaner entry rather than chasing a move after volatility expands.",
         ],
         "bullish_factors": [
             "Momentum may improve if price holds above recent support zones.",
@@ -52,7 +52,7 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
             "Unexpected macro, earnings, regulatory, or liquidity shocks can change the setup quickly.",
         ],
         "risks": [
-            "เสี่ยงสูง for leveraged or concentrated positions.",
+            "Leveraged or concentrated positions can carry high risk.",
             "Volatility can invalidate short-term technical signals.",
             "Provider data can be delayed, missing, or revised.",
         ],
@@ -64,8 +64,8 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
         },
         "invalidation": "The view weakens if price loses key support with rising volume or if fundamentals deteriorate.",
         "cautious_action_plan": [
-            "ควรกำหนดแผนรับมือก่อนลงทุน, including position size and stop conditions.",
-            "เหมาะกับผู้รับความเสี่ยงได้ only after confirming liquidity, volatility, and personal time horizon.",
+            "Define a risk plan before committing capital, including position size and stop conditions.",
+            "Confirm liquidity, volatility, and personal time horizon before taking exposure.",
             "Scale decisions gradually and avoid assuming any outcome is fixed.",
         ],
         "disclaimer": "This is not financial advice. No direct buy/sell instruction is provided.",

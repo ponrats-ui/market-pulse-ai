@@ -6,6 +6,13 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ## [Unreleased]
 
+### Changed
+
+- Stabilized MVP API fallback behavior and cache age reporting.
+- Improved dashboard empty states, source transparency, accessibility affordances, and portfolio input validation.
+- Cleaned AI and mock fallback wording in English and Thai.
+- Added regression coverage for cache age reporting.
+
 ### Added
 
 - MIT license and open-source governance documents.

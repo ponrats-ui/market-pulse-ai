@@ -57,6 +57,9 @@ Sprint 2 does not move folders, so Cloudflare Pages and local commands remain st
 3. Frontend requests quote, history, AI analysis, risk, and financials.
 4. Dashboard renders localized labels and Thai/English interpretation surfaces.
 5. Failed assets return structured `error` fields so the UI can keep rendering.
+## MVP Stabilization
+
+The MVP keeps Cloudflare Pages static deployment functional by treating `VITE_API_BASE_URL` as optional. The frontend API client falls back to typed mock data after failed, slow, or unavailable backend requests. UI panels render empty states instead of blank sections, and source details are surfaced where available.
 
 ## Sprint 3 Research Terminal Architecture
 

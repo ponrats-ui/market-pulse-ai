@@ -29,6 +29,7 @@ Thai summary: Market Pulse AI สร้างโดย **Ponrat Saripan** แล
 - yfinance-first provider abstraction
 - Normalized quote and historical price responses
 - In-memory TTL cache for quote, history, and watchlist data
+- Empty-state and mock fallback UI for Cloudflare Pages static deployments
 - Mock fallback when frontend API URL is empty or unavailable
 
 ## Local Setup
@@ -101,6 +102,7 @@ VITE_API_BASE_URL=http://localhost:8000
 - [Sprint 1 Data Layer](docs/SPRINT_1_DATA_LAYER.md)
 - [Sprint 2 Localization](docs/SPRINT_2_LOCALIZATION.md)
 - [AI Investment Committee](docs/AI_COMMITTEE.md)
+- [MVP Stabilization](docs/MVP_STABILIZATION.md)
 
 ## Risk Disclaimer
 

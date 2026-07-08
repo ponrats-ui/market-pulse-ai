@@ -39,6 +39,7 @@
 
 ## Sprint 4: Production Readiness
 
+- Stabilize MVP quality before adding more product scope
 - Add provider failover and retry policies
 - Add monitoring and error tracking
 - Add CI build/test workflow

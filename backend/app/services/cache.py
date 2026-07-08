@@ -12,6 +12,7 @@ WATCHLIST_TTL_SECONDS = 300
 @dataclass
 class CacheEntry:
     value: Any
+    created_at: float
     expires_at: float
 
 
@@ -28,8 +29,19 @@ class TTLCache:
             return None
         return entry.value
 
+    def get_with_age(self, key: Tuple[Hashable, ...]) -> tuple[Any | None, int | None]:
+        entry = self._items.get(key)
+        if entry is None:
+            return None, None
+        now = time.time()
+        if entry.expires_at <= now:
+            self._items.pop(key, None)
+            return None, None
+        return entry.value, max(0, int(now - entry.created_at))
+
     def set(self, key: Tuple[Hashable, ...], value: Any, ttl_seconds: int) -> Any:
-        self._items[key] = CacheEntry(value=value, expires_at=time.time() + ttl_seconds)
+        now = time.time()
+        self._items[key] = CacheEntry(value=value, created_at=now, expires_at=now + ttl_seconds)
         return value
 
     def clear(self) -> None:

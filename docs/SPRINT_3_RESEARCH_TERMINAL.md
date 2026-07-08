@@ -1,6 +1,6 @@
 ﻿# Sprint 3 Research Terminal
 
-Sprint 3 upgrades Market Pulse AI into an interactive research terminal that uses real upstream market data where available and explicit mock providers only where credentials or paid APIs are normally required.
+Sprint 3 upgrades Market Pulse AI into an interactive research terminal that uses real upstream market data where available and explicit unavailable states where credentials or paid APIs are normally required.
 
 ## Real Data Features
 
@@ -11,12 +11,12 @@ Sprint 3 upgrades Market Pulse AI into an interactive research terminal that use
 - Financial statement basics where yfinance exposes them.
 - Portfolio valuation uses real quote data when the selected holding matches the active quote.
 
-## Mock or Placeholder Features
+## Provider-Not-Configured Features
 
 - AI Q&A response is rule-based and does not call a paid LLM.
-- News impact uses `MockNewsProvider`.
-- Economic calendar is curated placeholder data.
-- Fear & Greed / market sentiment uses a mock sentiment service.
+- News impact returns provider-not-configured until a real provider is added.
+- Economic calendar returns provider-not-configured until a real provider is added.
+- Fear & Greed / market sentiment returns unavailable until a real provider is added.
 
 ## New Endpoints
 

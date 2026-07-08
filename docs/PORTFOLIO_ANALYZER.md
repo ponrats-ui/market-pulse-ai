@@ -7,7 +7,7 @@ The Sprint 3 portfolio analyzer is a local-first frontend feature.
 - Users manually add symbol, quantity, average cost, and currency.
 - Holdings are saved in localStorage.
 - Current value uses real quote data when the active selected symbol matches a holding.
-- Other holdings use average cost as a placeholder until batch quote lookup is added.
+- Holdings without a live quote show unavailable current value until batch quote lookup is added.
 
 ## Limitations
 

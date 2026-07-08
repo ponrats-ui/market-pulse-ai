@@ -27,6 +27,22 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
     quote = quote or {}
     price = quote.get("price")
     change_percent = quote.get("change_percent")
+    if price is None or change_percent is None:
+        return {
+            "symbol": symbol,
+            "trend": "unavailable",
+            "facts": ["There is currently insufficient market data to produce a reliable analysis."],
+            "interpretation": ["ข้อมูลยังไม่เพียงพอสำหรับการวิเคราะห์ที่น่าเชื่อถือ"],
+            "bullish_factors": [],
+            "bearish_factors": [],
+            "risks": ["Provider data is unavailable or incomplete."],
+            "risk_score": None,
+            "volatility_level": "unavailable",
+            "support_resistance": {"support": "Unavailable", "resistance": "Unavailable"},
+            "invalidation": "Unavailable until sufficient market data is available.",
+            "cautious_action_plan": ["Wait for complete market data before forming a view."],
+            "disclaimer": "This is not financial advice.",
+        }
     trend = "sideways to constructive" if change_percent is None or change_percent >= 0 else "short-term pressure"
     risk_score = _risk_score(symbol, change_percent, quote)
     volatility = _volatility_level(risk_score, change_percent)
@@ -59,8 +75,8 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
         "risk_score": risk_score,
         "volatility_level": volatility,
         "support_resistance": {
-            "support": "Placeholder: derive from recent swing lows or moving averages.",
-            "resistance": "Placeholder: derive from recent swing highs or volume nodes.",
+            "support": "Unavailable until technical swing levels are calculated from historical prices.",
+            "resistance": "Unavailable until technical swing levels are calculated from historical prices.",
         },
         "invalidation": "The view weakens if price loses key support with rising volume or if fundamentals deteriorate.",
         "cautious_action_plan": [
@@ -79,6 +95,18 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
     history = history or {}
     change_percent = quote.get("change_percent")
     realized_hint = _history_volatility_hint(history.get("points", []))
+    if change_percent is None or realized_hint == "unknown":
+        return {
+            "symbol": symbol,
+            "asset_type": get_asset_type(symbol, quote),
+            "risk_score": None,
+            "volatility_level": "unavailable",
+            "main_risks": ["Unable to estimate risk."],
+            "risk_controls": ["Wait for complete quote and historical price data before estimating risk."],
+            "facts": ["Risk analysis requires real price movement and historical volatility data."],
+            "interpretation": "Unable to estimate risk.",
+            "disclaimer": "This is not financial advice.",
+        }
     score = _risk_score(symbol, change_percent, quote)
     if realized_hint == "high":
         score = min(10, score + 1)

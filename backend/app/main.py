@@ -8,7 +8,6 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app.providers.mock_news_provider import MockNewsProvider
 from app.providers.registry import get_provider
 from app.services.analysis import build_ai_analysis, build_risk
 from app.services.cache import HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
@@ -22,7 +21,6 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
 WATCHLIST_PATH = PROJECT_DIR / "configs" / "watchlist.json"
 DEFAULT_PROVIDER = "yfinance"
-news_provider = MockNewsProvider()
 
 
 class AssistantRequest(BaseModel):
@@ -102,10 +100,15 @@ def calendar() -> Dict[str, Any]:
 
 @app.get("/api/news-impact/{symbol}")
 def news_impact(symbol: str) -> Dict[str, Any]:
-    try:
-        return news_provider.get_news_impact(symbol)
-    except Exception as exc:
-        return {"symbol": symbol, "source": news_provider.name, "items": [], "error": str(exc), "disclaimer": "This is not financial advice."}
+    return {
+        "symbol": symbol,
+        "source": "Unavailable",
+        "provider_configured": False,
+        "items": [],
+        "message": "No news provider configured.",
+        "message_th": "ยังไม่ได้ตั้งค่าผู้ให้บริการข่าว",
+        "disclaimer": "This is not financial advice.",
+    }
 
 
 @app.get("/api/sentiment/{symbol}")

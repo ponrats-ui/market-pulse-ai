@@ -1,6 +1,6 @@
 ﻿# Market Pulse AI
 
-Market Pulse AI is a Thai-first bilingual financial intelligence dashboard for tracking crypto, Thai stocks, global stocks, indices, energy, precious metals, and FX/macro assets. Users can select an asset category and asset to view real market data, chart context, AI investment committee analysis, risk analysis, financial statement analysis when applicable, market sentiment, and news-impact placeholders.
+Market Pulse AI is a Thai-first bilingual financial intelligence dashboard for tracking crypto, Thai stocks, global stocks, indices, energy, precious metals, and FX/macro assets. Users can select an asset category and asset to view real market data, chart context, AI investment committee analysis, risk analysis, financial statement analysis when applicable, and clear unavailable states for sections that do not yet have a configured provider.
 
 > This is not financial advice. Market Pulse AI provides educational information and conservative analysis only.
 
@@ -22,15 +22,15 @@ Thai summary: Market Pulse AI สร้างโดย **Ponrat Saripan** แล
 - Five-specialist AI Investment Committee
 - Grouped financial statement cards with color indicators
 - Fear & Greed / market sentiment widget
-- News impact placeholder panel
+- News impact unavailable-state panel until a provider is configured
 - Recharts line chart
 - lucide-react icons
 - FastAPI backend
 - yfinance-first provider abstraction
 - Normalized quote and historical price responses
 - In-memory TTL cache for quote, history, and watchlist data
-- Empty-state and mock fallback UI for Cloudflare Pages static deployments
-- Mock fallback when frontend API URL is empty or unavailable
+- Empty-state UI for Cloudflare Pages static deployments
+- Explicit unavailable responses when frontend API URL is empty or unavailable
 
 ## Local Setup
 
@@ -70,7 +70,7 @@ npm run dev
 npm run build
 ```
 
-The frontend uses `VITE_API_BASE_URL`. If it is empty or unavailable, it falls back to mock data.
+The frontend uses `VITE_API_BASE_URL`. If it is empty or unavailable, the UI displays unavailable states rather than fabricated market data.
 
 Create `frontend/.env.local` for local backend integration:
 
@@ -85,7 +85,7 @@ VITE_API_BASE_URL=http://localhost:8000
 3. Root directory: `frontend`.
 4. Build command: `npm run build`.
 5. Build output directory: `dist`.
-6. Leave `VITE_API_BASE_URL` empty for static mock fallback, or set it to the deployed backend API URL later.
+6. Leave `VITE_API_BASE_URL` empty for static unavailable states, or set it to the deployed backend API URL later.
 7. Deploy.
 
 ## Open Source Governance
@@ -116,9 +116,9 @@ Sprint 3 adds real-data research terminal features:
 - Real asset comparison using quote and history endpoints.
 - Rule-based AI Q&A assistant using quote, risk, and analysis context.
 - LocalStorage portfolio analyzer.
-- Economic calendar placeholder endpoint.
-- News impact provider interface with a mock provider.
-- Sentiment placeholder endpoint.
+- Economic calendar unavailable endpoint until a provider is configured.
+- News impact provider interface with a provider-not-configured response.
+- Sentiment unavailable endpoint until a provider is configured.
 
 New endpoints:
 
@@ -128,4 +128,4 @@ New endpoints:
 - `GET /api/news-impact/{symbol}`
 - `GET /api/sentiment/{symbol}`
 
-See [Sprint 3 Research Terminal](docs/SPRINT_3_RESEARCH_TERMINAL.md) and [Real Data vs Mock](docs/REAL_DATA_VS_MOCK.md).
+See [Sprint 3 Research Terminal](docs/SPRINT_3_RESEARCH_TERMINAL.md) and [Real Data Policy](docs/REAL_DATA_POLICY.md).

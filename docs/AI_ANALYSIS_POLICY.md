@@ -9,7 +9,7 @@ Market Pulse AI analysis must be cautious, educational, and separated into facts
 - bearish factors
 - risk score 1-10
 - volatility level
-- key support/resistance placeholder
+- key support/resistance unavailable state when technical levels are not calculated
 - what would invalidate the view
 - cautious action plan
 - disclaimer

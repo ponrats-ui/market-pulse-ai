@@ -12,7 +12,7 @@ The frontend is ready for Cloudflare Pages. Sprint 1 still deploys the static fr
 
 ## Environment Variables
 
-For Sprint 0/Sprint 1 static-only deploys, leave this unset or empty. The frontend falls back to mock data when it is empty or the API is unavailable.
+For static-only deploys, leave this unset or empty. The frontend shows unavailable data states when it is empty or the API is unavailable.
 
 ```bash
 VITE_API_BASE_URL=

@@ -3,7 +3,7 @@
 ## Sprint 0: Foundation
 
 - Project scaffold for frontend, backend, configs, docs, and scripts
-- Dashboard UI with mock fallback data
+- Dashboard UI with explicit unavailable states
 - FastAPI endpoints for health, watchlist, asset, analysis, risk, and financials
 - yfinance provider abstraction
 - Cloudflare Pages-ready frontend build
@@ -16,7 +16,7 @@
 - Add `/api/assets/{symbol}/history`
 - Add `/api/dashboard`
 - Integrate frontend with backend when `VITE_API_BASE_URL` is set
-- Preserve mock fallback for Cloudflare static deployments
+- Preserve Cloudflare static deployments with unavailable states
 - Add lightweight backend tests
 
 ## Sprint 2: Thai Localization and AI Investment Committee
@@ -25,7 +25,7 @@
 - Add language selector with localStorage persistence
 - Replace single analysis surface with Chief Investment AI plus five specialist panels
 - Improve financial statement card grouping
-- Upgrade news placeholder to a clearer impact panel
+- Upgrade news unavailable state to a clearer impact panel
 - Add Fear & Greed / market sentiment widget
 - Improve spacing, contrast, and mobile responsiveness
 
@@ -34,7 +34,7 @@
 - Add professional chart controls and indicator calculations
 - Add asset comparison charts
 - Add rule-based AI Q&A assistant
-- Add portfolio analyzer placeholder
+- Add portfolio analyzer
 - Add economic calendar and news impact endpoints
 
 ## Sprint 4: Production Readiness
@@ -52,9 +52,9 @@
 - Real-data asset comparison endpoint and UI.
 - Rule-based AI Q&A assistant endpoint and UI.
 - LocalStorage portfolio analyzer.
-- Economic calendar placeholder.
-- News impact provider interface and mock implementation.
-- Sentiment placeholder endpoint and widget.
+- Economic calendar provider-not-configured response.
+- News impact provider interface.
+- Sentiment provider-not-configured endpoint and widget.
 
 ## Sprint 4 Candidates
 

@@ -39,7 +39,7 @@ Sprint 2 does not move folders, so Cloudflare Pages and local commands remain st
 - lucide-react for interface icons
 - Thai/English i18n in `frontend/src/i18n`
 - Uses backend data when `VITE_API_BASE_URL` is set
-- Falls back to mock data when the API is unavailable or the env var is empty
+- Shows unavailable states when the API is unavailable or the env var is empty
 
 ## Backend
 
@@ -52,14 +52,14 @@ Sprint 2 does not move folders, so Cloudflare Pages and local commands remain st
 
 ## Data Flow
 
-1. Frontend loads `/api/watchlist` or local mock watchlist.
+1. Frontend loads `/api/watchlist` or a local symbol list with unavailable market values.
 2. User selects category and asset.
 3. Frontend requests quote, history, AI analysis, risk, and financials.
 4. Dashboard renders localized labels and Thai/English interpretation surfaces.
 5. Failed assets return structured `error` fields so the UI can keep rendering.
 ## MVP Stabilization
 
-The MVP keeps Cloudflare Pages static deployment functional by treating `VITE_API_BASE_URL` as optional. The frontend API client falls back to typed mock data after failed, slow, or unavailable backend requests. UI panels render empty states instead of blank sections, and source details are surfaced where available.
+The MVP keeps Cloudflare Pages static deployment functional by treating `VITE_API_BASE_URL` as optional. The frontend API client returns typed unavailable states after failed, slow, or unavailable backend requests. UI panels render empty states instead of blank sections, and source details are surfaced where available.
 
 ## Sprint 3 Research Terminal Architecture
 
@@ -68,5 +68,5 @@ Sprint 3 adds provider-ready research endpoints while preserving the Sprint 1 yf
 - Real quote/history data continues through `YFinanceProvider`.
 - Comparison is built from cached quote and history data.
 - AI Q&A lives in `backend/app/services/qa_assistant.py` and is rule-based for now.
-- News impact uses `NewsProvider` and `MockNewsProvider` so future providers can be added without changing endpoint contracts.
-- Calendar and sentiment are explicit placeholder services until provider integrations are selected.
+- News impact uses `NewsProvider` contracts so future providers can be added without changing endpoint contracts.
+- Calendar and sentiment return provider-not-configured responses until integrations are selected.

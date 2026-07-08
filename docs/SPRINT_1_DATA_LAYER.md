@@ -61,7 +61,7 @@ npm.cmd run build
 
 ## Cloudflare Frontend Note
 
-Cloudflare Pages serves the frontend only. Set `VITE_API_BASE_URL` to the deployed backend URL when the backend is available. If it is empty, the frontend uses mock data.
+Cloudflare Pages serves the frontend only. Set `VITE_API_BASE_URL` to the deployed backend URL when the backend is available. If it is empty, the frontend shows unavailable market data states.
 
 ## Backend Deployment Note
 

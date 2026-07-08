@@ -17,7 +17,7 @@ Future options:
 Provider interface added in Sprint 3:
 
 - `backend/app/providers/news_base.py`
-- `backend/app/providers/mock_news_provider.py`
+- future news provider implementation file
 
 Future options:
 

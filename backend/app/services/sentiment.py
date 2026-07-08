@@ -4,6 +4,12 @@ from typing import Any, Dict
 
 
 def sentiment_for_symbol(symbol: str) -> Dict[str, Any]:
-    score = 54 if symbol.endswith("-USD") else 50
-    label = "Fear" if score < 40 else "Greed" if score > 60 else "Neutral"
-    return {"symbol": symbol, "score": score, "label": label, "source": "mock", "note": "Real provider integration planned."}
+    return {
+        "symbol": symbol,
+        "score": None,
+        "label": "Unavailable",
+        "source": "Unavailable",
+        "provider_configured": False,
+        "note": "Sentiment data unavailable.",
+        "note_th": "ยังไม่มีข้อมูล sentiment",
+    }

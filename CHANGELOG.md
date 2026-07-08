@@ -10,7 +10,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 - Stabilized MVP API fallback behavior and cache age reporting.
 - Improved dashboard empty states, source transparency, accessibility affordances, and portfolio input validation.
-- Cleaned AI and mock fallback wording in English and Thai.
+- Cleaned AI and unavailable-state wording in English and Thai.
 - Added regression coverage for cache age reporting.
 
 ### Added
@@ -55,7 +55,16 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 - Real-data asset comparison endpoint and UI.
 - Timeframe selector for historical chart data.
 - Rule-based AI Q&A assistant.
-- Portfolio analyzer placeholder with localStorage.
-- Economic calendar placeholder endpoint.
-- News impact provider interface and mock provider.
-- Sentiment placeholder endpoint.
+- Portfolio analyzer with localStorage.
+- Economic calendar provider-not-configured endpoint.
+- News impact provider interface.
+- Sentiment provider-not-configured endpoint.
+
+## Real Data Sprint
+
+### Changed
+
+- Removed generated frontend market values and generated chart curves.
+- Replaced unavailable news, calendar, sentiment, and frontend static fallback data with explicit unavailable states.
+- Removed invented provider headlines and sentiment scores.
+- Added real data policy and audit documentation.

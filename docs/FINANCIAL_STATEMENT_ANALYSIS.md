@@ -16,7 +16,7 @@ Financial statement analysis is mainly applicable to stocks. It should not be sh
 - P/E
 - P/BV
 - dividend yield
-- 3-5 year trend placeholder
+- 3-5 year trend unavailable state when provider data is not returned
 - balance sheet strength
 - earnings quality
 - valuation risk

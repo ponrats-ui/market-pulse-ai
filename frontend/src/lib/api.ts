@@ -1,5 +1,5 @@
 import { defaultWatchlist, unavailableAnalysis, unavailableAssistant, unavailableCalendar, unavailableCompare, unavailableFinancials, unavailableHistory, unavailableNewsImpact, unavailableQuote, unavailableRisk, unavailableSentiment } from '../data/unavailableData';
-import type { AnalysisResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, NewsImpactResponse, RiskResponse, SentimentResponse, WatchlistResponse } from '../types/market';
+import type { AnalysisResponse, AssetSearchResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, NewsImpactResponse, PortfolioEvaluationResponse, PortfolioHolding, QuotesResponse, RiskResponse, SentimentResponse, WatchlistResponse } from '../types/market';
 
 const PRODUCTION_API_BASE_URL = 'https://market-pulse-ai-api.onrender.com';
 const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
@@ -62,6 +62,8 @@ async function postJson<T>(path: string, body: unknown, fallback: T): Promise<T>
 
 export const api = {
   watchlist: (): Promise<WatchlistResponse> => getJson('/api/watchlist', defaultWatchlist),
+  searchAssets: (query: string): Promise<AssetSearchResponse> => getJson(`/api/assets/search?q=${encodeURIComponent(query)}`, { query, count: 0, assets: [], source: 'Unavailable' }),
+  quotes: (symbols: string[]): Promise<QuotesResponse> => getJson(`/api/assets/quotes?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map(unavailableQuote), source: 'Unavailable' }),
   quote: (symbol: string): Promise<AssetQuote> => getJson(`/api/assets/${encodeURIComponent(symbol)}`, unavailableQuote(symbol)),
   history: (symbol: string, range = '1mo', interval = '1d'): Promise<AssetHistory> => getJson(`/api/assets/${encodeURIComponent(symbol)}/history?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`, unavailableHistory(symbol)),
   analysis: (symbol: string): Promise<AnalysisResponse> => getJson(`/api/analysis/${encodeURIComponent(symbol)}`, unavailableAnalysis(symbol)),
@@ -69,6 +71,7 @@ export const api = {
   financials: (symbol: string): Promise<FinancialsResponse> => getJson(`/api/financials/${encodeURIComponent(symbol)}`, unavailableFinancials(symbol)),
   compare: (symbols: string[]): Promise<CompareResponse> => getJson(`/api/compare?symbols=${symbols.map(encodeURIComponent).join(',')}`, unavailableCompare(symbols)),
   ask: (question: string, selectedSymbol: string, language: string): Promise<AssistantResponse> => postJson('/api/assistant/ask', { question, selected_symbol: selectedSymbol, language }, unavailableAssistant(selectedSymbol, language)),
+  evaluatePortfolio: (holdings: PortfolioHolding[]): Promise<PortfolioEvaluationResponse> => postJson('/api/portfolio/evaluate', { holdings }, { items: [], total_value: null, total_cost: null, total_gain_loss: null, total_gain_loss_percent: null, source: 'Unavailable', disclaimer: 'This is not financial advice.' }),
   calendar: (): Promise<CalendarResponse> => getJson('/api/calendar', unavailableCalendar),
   newsImpact: (symbol: string): Promise<NewsImpactResponse> => getJson(`/api/news-impact/${encodeURIComponent(symbol)}`, unavailableNewsImpact(symbol)),
   sentiment: (symbol: string): Promise<SentimentResponse> => getJson(`/api/sentiment/${encodeURIComponent(symbol)}`, unavailableSentiment(symbol)),

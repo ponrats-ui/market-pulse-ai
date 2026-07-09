@@ -11,10 +11,12 @@ from pydantic import BaseModel
 
 from app.providers.registry import get_provider
 from app.services.analysis import build_ai_analysis, build_risk
+from app.services.asset_universe import search_assets
 from app.services.cache import HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
 from app.services.calendar import economic_calendar
 from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
+from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
 
@@ -46,6 +48,10 @@ class AssistantRequest(BaseModel):
     language: str = "th"
 
 
+class PortfolioRequest(BaseModel):
+    holdings: list[dict[str, Any]] = []
+
+
 app = FastAPI(title="Market Pulse AI API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
@@ -68,6 +74,17 @@ def watchlist() -> Dict[str, Any]:
     if cached is not None:
         return cached
     return cache.set(key, _load_watchlist(), WATCHLIST_TTL_SECONDS)
+
+
+@app.get("/api/assets/search")
+def asset_search(q: str = Query(""), limit: int = Query(12, ge=1, le=25)) -> Dict[str, Any]:
+    return search_assets(q, limit)
+
+
+@app.get("/api/assets/quotes")
+def asset_quotes(symbols: str = Query("BTC-USD")) -> Dict[str, Any]:
+    selected = [symbol.strip() for symbol in symbols.split(",") if symbol.strip()][:25]
+    return {"symbols": selected, "items": [get_cached_quote(symbol) for symbol in selected], "source": DEFAULT_PROVIDER}
 
 
 @app.get("/api/assets/{symbol}")
@@ -108,6 +125,11 @@ def assistant_ask(payload: AssistantRequest) -> Dict[str, Any]:
     risk_payload = build_risk(payload.selected_symbol, quote, history)
     analysis_payload = build_ai_analysis(payload.selected_symbol, quote)
     return answer_question(payload.question, payload.selected_symbol, payload.language, quote, risk_payload, analysis_payload)
+
+
+@app.post("/api/portfolio/evaluate")
+def portfolio_evaluate(payload: PortfolioRequest) -> Dict[str, Any]:
+    return evaluate_portfolio(payload.holdings, get_cached_quote)
 
 
 @app.get("/api/calendar")

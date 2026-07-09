@@ -17,6 +17,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Added
 
+- RC2 professional investment platform foundation with real-data asset search, live quote batch evaluation, portfolio valuation, and enhanced comparison metrics.
 - MIT license and open-source governance documents.
 - Founder and project identity documentation.
 - Application footer identity and About dialog.

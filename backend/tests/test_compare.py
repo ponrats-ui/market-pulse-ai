@@ -14,3 +14,5 @@ def test_compare_returns_items_and_performance(monkeypatch):
     assert payload["symbols"] == ["BTC-USD", "ETH-USD"]
     assert len(payload["items"]) == 2
     assert payload["performance_points"][1]["BTC-USD"] == 10
+    assert payload["items"][0]["performance_1mo_percent"] == 10
+    assert payload["items"][0]["trend"] == "uptrend"

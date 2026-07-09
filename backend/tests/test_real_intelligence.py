@@ -24,7 +24,8 @@ def test_news_impact_classifies_provider_articles(monkeypatch):
     assert payload["provider_configured"] is True
     assert payload["items"][0]["category"] == "Earnings"
     assert payload["items"][0]["sentiment"] == "Bullish"
-    assert payload["items"][0]["affected_assets"] == ["NVDA"]
+    assert payload["items"][0]["affected_assets"] == ["NVDA", "AMD", "TSM", "QQQ", "SOXX"]
+    assert payload["items"][0]["cross_asset_effects"]
 
 
 def test_keyed_news_providers_return_unavailable_without_keys(monkeypatch):

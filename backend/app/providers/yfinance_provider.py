@@ -12,7 +12,9 @@ VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "5y"}
 VALID_INTERVALS = {"1h", "1d", "1wk"}
 THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK"}
 GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META"}
-ETFS = {"SPY", "VOO", "QQQ", "VTI", "GLD", "SLV"}
+ETFS = {"SPY", "VOO", "QQQ", "VTI", "GLD", "SLV", "SOXX"}
+BOND_ETFS = {"TLT"}
+REITS = {"VNQ"}
 GLOBAL_INDICES = {"^GSPC", "^IXIC", "^DJI", "^N225", "^HSI", "^GDAXI"}
 COMMODITIES = {"CL=F", "BZ=F", "NG=F", "GC=F", "SI=F", "PL=F", "HG=F"}
 MACRO = {"DX-Y.NYB", "^TNX"}
@@ -59,6 +61,7 @@ class YFinanceProvider(MarketDataProvider):
                 "volume": self._first_float(info.get("regularMarketVolume"), latest.get("Volume")),
                 "market_cap": self._first_float(info.get("marketCap"), self._fast_value(fast_info, "market_cap")),
                 "trailing_pe": self._safe_float(info.get("trailingPE")),
+                "dividend_yield": self._safe_float(info.get("dividendYield")),
                 "sector": self._safe_string(info.get("sector")) if info.get("sector") else None,
                 "source": self.name,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -153,6 +156,7 @@ class YFinanceProvider(MarketDataProvider):
             "volume": None,
             "market_cap": None,
             "trailing_pe": None,
+            "dividend_yield": None,
             "sector": None,
             "source": self.name,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -226,6 +230,10 @@ def infer_asset_type(symbol: str) -> str:
         return "global_stock"
     if symbol in ETFS:
         return "etf"
+    if symbol in BOND_ETFS:
+        return "bond_etf"
+    if symbol in REITS:
+        return "reit"
     if symbol in GLOBAL_INDICES or symbol.startswith("^"):
         return "index"
     if symbol in COMMODITIES or symbol.endswith("=F"):

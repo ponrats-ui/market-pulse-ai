@@ -12,12 +12,17 @@ ASSET_UNIVERSE: List[Dict[str, str]] = [
     {"symbol": "META", "label": "Meta Platforms", "asset_type": "stock", "market": "NASDAQ", "keywords": "facebook instagram ai ads"},
     {"symbol": "GOOG", "label": "Alphabet Class C", "asset_type": "stock", "market": "NASDAQ", "keywords": "google search cloud ai"},
     {"symbol": "GOOGL", "label": "Alphabet Class A", "asset_type": "stock", "market": "NASDAQ", "keywords": "google search cloud ai"},
+    {"symbol": "AMD", "label": "Advanced Micro Devices", "asset_type": "stock", "market": "NASDAQ", "keywords": "semiconductor ai gpu chip"},
+    {"symbol": "TSM", "label": "Taiwan Semiconductor Manufacturing", "asset_type": "stock", "market": "NYSE", "keywords": "semiconductor foundry tsmc ai chip"},
     {"symbol": "SPY", "label": "SPDR S&P 500 ETF", "asset_type": "etf", "market": "NYSE Arca", "keywords": "s&p 500 etf"},
     {"symbol": "VOO", "label": "Vanguard S&P 500 ETF", "asset_type": "etf", "market": "NYSE Arca", "keywords": "s&p 500 etf"},
     {"symbol": "QQQ", "label": "Invesco QQQ ETF", "asset_type": "etf", "market": "NASDAQ", "keywords": "nasdaq 100 etf technology"},
     {"symbol": "VTI", "label": "Vanguard Total Stock Market ETF", "asset_type": "etf", "market": "NYSE Arca", "keywords": "total stock market etf"},
     {"symbol": "GLD", "label": "SPDR Gold Shares", "asset_type": "etf", "market": "NYSE Arca", "keywords": "gold etf precious metals"},
     {"symbol": "SLV", "label": "iShares Silver Trust", "asset_type": "etf", "market": "NYSE Arca", "keywords": "silver etf precious metals"},
+    {"symbol": "TLT", "label": "iShares 20+ Year Treasury Bond ETF", "asset_type": "bond_etf", "market": "NASDAQ", "keywords": "bond etf treasury duration rates"},
+    {"symbol": "VNQ", "label": "Vanguard Real Estate ETF", "asset_type": "reit", "market": "NYSE Arca", "keywords": "reit real estate dividend property"},
+    {"symbol": "SOXX", "label": "iShares Semiconductor ETF", "asset_type": "etf", "market": "NASDAQ", "keywords": "semiconductor etf ai chips"},
     {"symbol": "BTC-USD", "label": "Bitcoin", "asset_type": "crypto", "market": "Crypto", "keywords": "btc bitcoin crypto"},
     {"symbol": "ETH-USD", "label": "Ethereum", "asset_type": "crypto", "market": "Crypto", "keywords": "eth ethereum crypto"},
     {"symbol": "SOL-USD", "label": "Solana", "asset_type": "crypto", "market": "Crypto", "keywords": "sol solana crypto"},
@@ -49,6 +54,20 @@ ASSET_UNIVERSE: List[Dict[str, str]] = [
 ]
 
 
+THAI_NAME_ALIASES = {
+    "PTT.BK": "ปตท. พลังงาน น้ำมัน ก๊าซ",
+    "AOT.BK": "ท่าอากาศยานไทย สนามบิน ท่องเที่ยว",
+    "SCB.BK": "เอสซีบี เอกซ์ ธนาคาร",
+    "KBANK.BK": "กสิกรไทย ธนาคาร",
+    "ADVANC.BK": "แอดวานซ์ อินโฟร์ เซอร์วิส เอไอเอส สื่อสาร",
+    "GC=F": "ทอง ทองคำ",
+    "GLD": "ทอง ทองคำ",
+    "SI=F": "เงิน โลหะเงิน",
+    "CL=F": "น้ำมัน ดิบ พลังงาน",
+    "BZ=F": "น้ำมัน เบรนท์ พลังงาน",
+}
+
+
 def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
     term = query.strip().lower()
     if not term:
@@ -69,6 +88,7 @@ def _score_asset(term: str, asset: Dict[str, str]) -> int:
         symbol,
         asset.get("label", "").lower(),
         asset.get("thai_name", "").lower(),
+        THAI_NAME_ALIASES.get(asset["symbol"], "").lower(),
         asset.get("asset_type", "").lower(),
         asset.get("market", "").lower(),
         asset.get("keywords", "").lower(),

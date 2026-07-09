@@ -15,6 +15,7 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
         histories[symbol] = history
         risk = build_risk(symbol, quote, history)
         metrics = _history_metrics(history)
+        correlation = _correlation_to_first(symbol, selected, histories)
         items.append({
             "symbol": symbol,
             "name": quote.get("name", symbol),
@@ -30,7 +31,11 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
             "trend": metrics.get("trend"),
             "market_cap": quote.get("market_cap"),
             "pe": quote.get("trailing_pe"),
+            "dividend_yield": quote.get("dividend_yield"),
             "sector": quote.get("sector"),
+            "correlation_to_first": correlation,
+            "ai_opinion": _ai_opinion(symbol, metrics, risk),
+            "recommendation": _recommendation(metrics, risk),
             "currency": quote.get("currency"),
             "volatility_estimate": risk.get("volatility_level", "unknown"),
             "risk_score": risk.get("risk_score"),
@@ -112,6 +117,55 @@ def _history_metrics(history: Dict[str, Any]) -> Dict[str, Any]:
         "max_drawdown_percent": max_drawdown,
         "trend": trend,
     }
+
+
+def _correlation_to_first(symbol: str, symbols: List[str], histories: Dict[str, Dict[str, Any]]) -> float | None:
+    if not symbols or symbol == symbols[0]:
+        return 1.0 if symbol == symbols[0] else None
+    first_returns = _returns(histories.get(symbols[0], {}).get("points", []))
+    current_returns = _returns(histories.get(symbol, {}).get("points", []))
+    length = min(len(first_returns), len(current_returns))
+    if length < 3:
+        return None
+    return _correlation(first_returns[-length:], current_returns[-length:])
+
+
+def _returns(points: List[Dict[str, Any]]) -> List[float]:
+    closes = [float(point["close"]) for point in points if isinstance(point.get("close"), (int, float)) and point.get("close")]
+    return [((current - previous) / previous) * 100 for previous, current in zip(closes, closes[1:]) if previous]
+
+
+def _correlation(left: List[float], right: List[float]) -> float | None:
+    if len(left) != len(right) or len(left) < 3:
+        return None
+    left_mean = sum(left) / len(left)
+    right_mean = sum(right) / len(right)
+    numerator = sum((a - left_mean) * (b - right_mean) for a, b in zip(left, right))
+    left_var = sum((a - left_mean) ** 2 for a in left)
+    right_var = sum((b - right_mean) ** 2 for b in right)
+    if not left_var or not right_var:
+        return None
+    return numerator / ((left_var * right_var) ** 0.5)
+
+
+def _ai_opinion(symbol: str, metrics: Dict[str, Any], risk: Dict[str, Any]) -> str:
+    trend = metrics.get("trend", "unavailable")
+    score = risk.get("risk_score")
+    if score is None:
+        return f"{symbol}: evidence is incomplete; wait for more data."
+    return f"{symbol}: {trend} with risk score {score}/10; review position size before acting."
+
+
+def _recommendation(metrics: Dict[str, Any], risk: Dict[str, Any]) -> str:
+    score = risk.get("risk_score")
+    performance = metrics.get("performance_percent")
+    if score is None or performance is None:
+        return "Data unavailable"
+    if score >= 7:
+        return "รอจังหวะและควบคุมความเสี่ยง"
+    if performance > 5 and score <= 5:
+        return "น่าติดตาม แต่ไม่ใช่คำแนะนำซื้อขาย"
+    return "ติดตามต่อและประเมินหลักฐานเพิ่ม"
 
 
 def _window_performance(closes: List[float], sessions: int) -> float | None:

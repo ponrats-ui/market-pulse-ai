@@ -76,6 +76,8 @@ def news_impact_for_symbol(symbol: str, limit: int = 10) -> Dict[str, Any]:
             "affected_assets": item["affected_assets"],
             "affected_sector": item["affected_sector"],
             "confidence": item["confidence"],
+            "reasoning": item["reasoning"],
+            "cross_asset_effects": item["cross_asset_effects"],
             "evidence": item["evidence"],
             "ai_explanation": item["evidence"],
             "risk_warning": "News impact is directional context only and can change quickly.",
@@ -93,17 +95,23 @@ def _classify_article(symbol: str, item: Dict[str, Any]) -> Dict[str, Any]:
     importance = "High" if category in {"Earnings", "Guidance", "M&A", "Central Bank", "Geopolitics", "Regulation"} else "Medium"
     confidence = "medium" if category != "Unavailable" else "low"
     evidence = f"Classified from provider headline: {title}" if title else "Provider did not return a headline."
+    related_assets = _related_assets(symbol, text)
     return {
         **item,
+        "summary": title if title else "Unavailable",
         "category": category,
-        "affected_assets": [symbol] if symbol else [],
+        "affected_assets": related_assets,
         "affected_sector": _sector_for_category(category),
         "importance": importance,
+        "impact_strength": importance,
+        "expected_duration": _expected_duration(category),
         "confidence": confidence,
         "direction": direction,
         "immediate_impact": direction,
         "short_term_impact": direction if confidence == "medium" else "Neutral",
         "long_term_impact": "Neutral",
+        "reasoning": evidence,
+        "cross_asset_effects": _cross_asset_effects(related_assets, category),
         "evidence": evidence,
     }
 
@@ -127,6 +135,34 @@ def _sector_for_category(category: str) -> str:
         "Macroeconomics": "Macro",
         "Geopolitics": "Macro",
     }.get(category, "Unavailable")
+
+
+def _related_assets(symbol: str, text: str) -> List[str]:
+    assets = [symbol] if symbol else []
+    if "nvidia" in text or "nvda" in text:
+        assets.extend(["AMD", "TSM", "QQQ", "SOXX"])
+    if "bitcoin" in text or "btc" in text:
+        assets.extend(["ETH-USD", "SOL-USD"])
+    if "oil" in text or "energy" in text:
+        assets.extend(["CL=F", "BZ=F", "XLE"])
+    if "gold" in text:
+        assets.extend(["GC=F", "GLD", "SI=F"])
+    return list(dict.fromkeys(assets))
+
+
+def _expected_duration(category: str) -> str:
+    return {
+        "Earnings": "Short term to medium term",
+        "Guidance": "Medium term",
+        "M&A": "Medium term",
+        "Central Bank": "Short term market-wide",
+        "Geopolitics": "Uncertain duration",
+        "Regulation": "Medium term to long term",
+    }.get(category, "Short term")
+
+
+def _cross_asset_effects(assets: List[str], category: str) -> List[Dict[str, str]]:
+    return [{"asset": asset, "effect": f"Potential {category.lower()} related sensitivity"} for asset in assets[1:]]
 
 
 def _with_cache_age(payload: Dict[str, Any], age: int | None) -> Dict[str, Any]:

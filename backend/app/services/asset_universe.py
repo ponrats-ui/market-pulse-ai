@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 
 ASSET_UNIVERSE: List[Dict[str, str]] = [
@@ -10,20 +10,25 @@ ASSET_UNIVERSE: List[Dict[str, str]] = [
     {"symbol": "TSLA", "label": "Tesla", "asset_type": "stock", "market": "NASDAQ", "keywords": "ev battery autonomous"},
     {"symbol": "AMZN", "label": "Amazon", "asset_type": "stock", "market": "NASDAQ", "keywords": "aws ecommerce cloud"},
     {"symbol": "META", "label": "Meta Platforms", "asset_type": "stock", "market": "NASDAQ", "keywords": "facebook instagram ai ads"},
-    {"symbol": "GOOGL", "label": "Alphabet", "asset_type": "stock", "market": "NASDAQ", "keywords": "google search cloud ai"},
+    {"symbol": "GOOG", "label": "Alphabet Class C", "asset_type": "stock", "market": "NASDAQ", "keywords": "google search cloud ai"},
+    {"symbol": "GOOGL", "label": "Alphabet Class A", "asset_type": "stock", "market": "NASDAQ", "keywords": "google search cloud ai"},
     {"symbol": "SPY", "label": "SPDR S&P 500 ETF", "asset_type": "etf", "market": "NYSE Arca", "keywords": "s&p 500 etf"},
     {"symbol": "VOO", "label": "Vanguard S&P 500 ETF", "asset_type": "etf", "market": "NYSE Arca", "keywords": "s&p 500 etf"},
     {"symbol": "QQQ", "label": "Invesco QQQ ETF", "asset_type": "etf", "market": "NASDAQ", "keywords": "nasdaq 100 etf technology"},
+    {"symbol": "VTI", "label": "Vanguard Total Stock Market ETF", "asset_type": "etf", "market": "NYSE Arca", "keywords": "total stock market etf"},
+    {"symbol": "GLD", "label": "SPDR Gold Shares", "asset_type": "etf", "market": "NYSE Arca", "keywords": "gold etf precious metals"},
+    {"symbol": "SLV", "label": "iShares Silver Trust", "asset_type": "etf", "market": "NYSE Arca", "keywords": "silver etf precious metals"},
     {"symbol": "BTC-USD", "label": "Bitcoin", "asset_type": "crypto", "market": "Crypto", "keywords": "btc bitcoin crypto"},
     {"symbol": "ETH-USD", "label": "Ethereum", "asset_type": "crypto", "market": "Crypto", "keywords": "eth ethereum crypto"},
     {"symbol": "SOL-USD", "label": "Solana", "asset_type": "crypto", "market": "Crypto", "keywords": "sol solana crypto"},
     {"symbol": "XRP-USD", "label": "XRP", "asset_type": "crypto", "market": "Crypto", "keywords": "ripple xrp crypto"},
     {"symbol": "^SET.BK", "label": "SET Index", "asset_type": "index", "market": "Thailand", "keywords": "set thailand index"},
     {"symbol": "^SET50.BK", "label": "SET50 Index", "asset_type": "index", "market": "Thailand", "keywords": "set50 thailand index"},
-    {"symbol": "PTT.BK", "label": "PTT", "asset_type": "stock", "market": "SET", "keywords": "energy oil gas thailand"},
-    {"symbol": "AOT.BK", "label": "Airports of Thailand", "asset_type": "stock", "market": "SET", "keywords": "airport tourism thailand"},
-    {"symbol": "SCB.BK", "label": "SCB X", "asset_type": "stock", "market": "SET", "keywords": "bank thailand scb"},
-    {"symbol": "KBANK.BK", "label": "Kasikornbank", "asset_type": "stock", "market": "SET", "keywords": "bank thailand kbank"},
+    {"symbol": "PTT.BK", "label": "PTT", "thai_name": "ปตท.", "asset_type": "stock", "market": "SET", "keywords": "energy oil gas thailand พลังงาน"},
+    {"symbol": "AOT.BK", "label": "Airports of Thailand", "thai_name": "ท่าอากาศยานไทย", "asset_type": "stock", "market": "SET", "keywords": "airport tourism thailand สนามบิน"},
+    {"symbol": "SCB.BK", "label": "SCB X", "thai_name": "เอสซีบี เอกซ์", "asset_type": "stock", "market": "SET", "keywords": "bank thailand scb ธนาคาร"},
+    {"symbol": "KBANK.BK", "label": "Kasikornbank", "thai_name": "กสิกรไทย", "asset_type": "stock", "market": "SET", "keywords": "bank thailand kbank ธนาคาร"},
+    {"symbol": "ADVANC.BK", "label": "Advanced Info Service", "thai_name": "แอดวานซ์ อินโฟร์ เซอร์วิส", "asset_type": "stock", "market": "SET", "keywords": "telecom mobile thailand ais สื่อสาร"},
     {"symbol": "CPALL.BK", "label": "CP All", "asset_type": "stock", "market": "SET", "keywords": "retail 7-eleven thailand"},
     {"symbol": "DELTA.BK", "label": "Delta Electronics Thailand", "asset_type": "stock", "market": "SET", "keywords": "electronics thailand"},
     {"symbol": "GC=F", "label": "Gold Futures", "asset_type": "commodity", "market": "COMEX", "keywords": "gold precious metals"},
@@ -49,12 +54,42 @@ def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
     if not term:
         matches = ASSET_UNIVERSE[:limit]
     else:
-        matches = [
-            asset for asset in ASSET_UNIVERSE
-            if term in asset["symbol"].lower()
-            or term in asset["label"].lower()
-            or term in asset["asset_type"].lower()
-            or term in asset["market"].lower()
-            or term in asset["keywords"].lower()
-        ][:limit]
+        scored: List[Tuple[int, Dict[str, str]]] = []
+        for asset in ASSET_UNIVERSE:
+            score = _score_asset(term, asset)
+            if score:
+                scored.append((score, asset))
+        matches = [asset for _, asset in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
     return {"query": query, "count": len(matches), "assets": matches, "source": "curated_symbol_universe"}
+
+
+def _score_asset(term: str, asset: Dict[str, str]) -> int:
+    symbol = asset["symbol"].lower()
+    searchable = " ".join([
+        symbol,
+        asset.get("label", "").lower(),
+        asset.get("thai_name", "").lower(),
+        asset.get("asset_type", "").lower(),
+        asset.get("market", "").lower(),
+        asset.get("keywords", "").lower(),
+    ])
+    compact = searchable.replace(" ", "")
+    if term == symbol:
+        return 100
+    if symbol.startswith(term):
+        return 90
+    if term in searchable:
+        return 70
+    if _is_subsequence(term, compact):
+        return 40
+    return 0
+
+
+def _is_subsequence(needle: str, haystack: str) -> bool:
+    if len(needle) < 2:
+        return False
+    position = 0
+    for char in haystack:
+        if position < len(needle) and needle[position] == char:
+            position += 1
+    return position == len(needle)

@@ -11,7 +11,8 @@ from app.providers.base import MarketDataProvider
 VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "5y"}
 VALID_INTERVALS = {"1h", "1d", "1wk"}
 THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK"}
-GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META"}
+GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META"}
+ETFS = {"SPY", "VOO", "QQQ", "VTI", "GLD", "SLV"}
 GLOBAL_INDICES = {"^GSPC", "^IXIC", "^DJI", "^N225", "^HSI", "^GDAXI"}
 COMMODITIES = {"CL=F", "BZ=F", "NG=F", "GC=F", "SI=F", "PL=F", "HG=F"}
 MACRO = {"DX-Y.NYB", "^TNX"}
@@ -57,6 +58,8 @@ class YFinanceProvider(MarketDataProvider):
                 "low": self._first_float(info.get("regularMarketDayLow"), latest.get("Low")),
                 "volume": self._first_float(info.get("regularMarketVolume"), latest.get("Volume")),
                 "market_cap": self._first_float(info.get("marketCap"), self._fast_value(fast_info, "market_cap")),
+                "trailing_pe": self._safe_float(info.get("trailingPE")),
+                "sector": self._safe_string(info.get("sector")) if info.get("sector") else None,
                 "source": self.name,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
@@ -149,6 +152,8 @@ class YFinanceProvider(MarketDataProvider):
             "low": None,
             "volume": None,
             "market_cap": None,
+            "trailing_pe": None,
+            "sector": None,
             "source": self.name,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "error": str(exc),
@@ -219,6 +224,8 @@ def infer_asset_type(symbol: str) -> str:
         return "thai_stock" if not symbol.startswith("^") else "index"
     if symbol in GLOBAL_STOCKS:
         return "global_stock"
+    if symbol in ETFS:
+        return "etf"
     if symbol in GLOBAL_INDICES or symbol.startswith("^"):
         return "index"
     if symbol in COMMODITIES or symbol.endswith("=F"):

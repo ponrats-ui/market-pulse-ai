@@ -6,12 +6,12 @@ from app.services.analysis import build_risk
 
 
 def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any]], history_fn: Callable[[str, str, str], Dict[str, Any]]) -> Dict[str, Any]:
-    selected = [symbol.strip() for symbol in symbols if symbol.strip()][:6]
+    selected = [symbol.strip() for symbol in symbols if symbol.strip()][:5]
     items: List[Dict[str, Any]] = []
     histories: Dict[str, Dict[str, Any]] = {}
     for symbol in selected:
         quote = quote_fn(symbol)
-        history = history_fn(symbol, "1mo", "1d")
+        history = history_fn(symbol, "1y", "1d")
         histories[symbol] = history
         risk = build_risk(symbol, quote, history)
         metrics = _history_metrics(history)
@@ -21,10 +21,16 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
             "asset_type": quote.get("asset_type", "unknown"),
             "price": quote.get("price"),
             "change_percent": quote.get("change_percent"),
+            "performance_1d_percent": quote.get("change_percent"),
             "performance_1mo_percent": metrics.get("performance_percent"),
+            "performance_1w_percent": metrics.get("performance_1w_percent"),
+            "performance_ytd_percent": metrics.get("performance_ytd_percent"),
             "realized_volatility_percent": metrics.get("realized_volatility_percent"),
             "max_drawdown_percent": metrics.get("max_drawdown_percent"),
             "trend": metrics.get("trend"),
+            "market_cap": quote.get("market_cap"),
+            "pe": quote.get("trailing_pe"),
+            "sector": quote.get("sector"),
             "currency": quote.get("currency"),
             "volatility_estimate": risk.get("volatility_level", "unknown"),
             "risk_score": risk.get("risk_score"),
@@ -80,10 +86,13 @@ def _summary(items: List[Dict[str, Any]]) -> Dict[str, str]:
 
 def _history_metrics(history: Dict[str, Any]) -> Dict[str, Any]:
     points = history.get("points", [])
-    closes = [float(point["close"]) for point in points if isinstance(point.get("close"), (int, float)) and point.get("close")]
+    closes_with_time = [(point.get("time"), float(point["close"])) for point in points if isinstance(point.get("close"), (int, float)) and point.get("close")]
+    closes = [close for _, close in closes_with_time]
     if len(closes) < 2:
-        return {"performance_percent": None, "realized_volatility_percent": None, "max_drawdown_percent": None, "trend": "unavailable"}
+        return {"performance_percent": None, "performance_1w_percent": None, "performance_ytd_percent": None, "realized_volatility_percent": None, "max_drawdown_percent": None, "trend": "unavailable"}
     performance = ((closes[-1] - closes[0]) / closes[0]) * 100
+    performance_1w = _window_performance(closes, 5)
+    performance_ytd = _ytd_performance(closes_with_time)
     returns = [((closes[index] - closes[index - 1]) / closes[index - 1]) * 100 for index in range(1, len(closes)) if closes[index - 1]]
     mean_return = sum(returns) / len(returns) if returns else 0
     variance = sum((value - mean_return) ** 2 for value in returns) / len(returns) if returns else 0
@@ -97,7 +106,29 @@ def _history_metrics(history: Dict[str, Any]) -> Dict[str, Any]:
     trend = "uptrend" if performance > 2 else "downtrend" if performance < -2 else "sideways"
     return {
         "performance_percent": performance,
+        "performance_1w_percent": performance_1w,
+        "performance_ytd_percent": performance_ytd,
         "realized_volatility_percent": realized_volatility,
         "max_drawdown_percent": max_drawdown,
         "trend": trend,
     }
+
+
+def _window_performance(closes: List[float], sessions: int) -> float | None:
+    if len(closes) <= sessions:
+        return None
+    base = closes[-sessions - 1]
+    return ((closes[-1] - base) / base) * 100 if base else None
+
+
+def _ytd_performance(closes_with_time: List[tuple[Any, float]]) -> float | None:
+    if not closes_with_time:
+        return None
+    latest_time = str(closes_with_time[-1][0] or "")
+    current_year = latest_time[:4]
+    if not current_year:
+        return None
+    ytd_points = [close for timestamp, close in closes_with_time if str(timestamp or "").startswith(current_year)]
+    if len(ytd_points) < 2 or not ytd_points[0]:
+        return None
+    return ((ytd_points[-1] - ytd_points[0]) / ytd_points[0]) * 100

@@ -123,7 +123,7 @@ def assistant_ask(payload: AssistantRequest) -> Dict[str, Any]:
     quote = get_cached_quote(payload.selected_symbol)
     history = get_cached_history(payload.selected_symbol, "1mo", "1d")
     risk_payload = build_risk(payload.selected_symbol, quote, history)
-    analysis_payload = build_ai_analysis(payload.selected_symbol, quote)
+    analysis_payload = build_ai_analysis(payload.selected_symbol, quote, history)
     return answer_question(payload.question, payload.selected_symbol, payload.language, quote, risk_payload, analysis_payload)
 
 
@@ -158,7 +158,8 @@ def sentiment(symbol: str) -> Dict[str, Any]:
 @app.get("/api/analysis/{symbol}")
 def analysis(symbol: str) -> Dict[str, Any]:
     quote = get_cached_quote(symbol)
-    return build_ai_analysis(symbol, quote)
+    history = get_cached_history(symbol, "1mo", "1d")
+    return build_ai_analysis(symbol, quote, history)
 
 
 @app.get("/api/risk/{symbol}")

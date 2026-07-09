@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from app.analysis_engine import build_adaptive_recommendation
+
 RESTRICTED_WORDS = ("guaranteed", "certain", "must buy", "sure profit")
 
 
@@ -23,8 +25,9 @@ def get_asset_type(symbol: str, quote: Dict[str, Any] | None = None) -> str:
     return "global_stock"
 
 
-def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[str, Any] | None = None, profile: str = "Balanced") -> Dict[str, Any]:
     quote = quote or {}
+    adaptive = build_adaptive_recommendation(symbol, quote, history, profile)
     price = quote.get("price")
     change_percent = quote.get("change_percent")
     if price is None or change_percent is None:
@@ -42,6 +45,12 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
             "invalidation": "Unavailable until sufficient market data is available.",
             "cautious_action_plan": ["Wait for complete market data before forming a view."],
             "disclaimer": "This is not financial advice.",
+            "adaptive_engine": adaptive,
+            "algorithm_version": adaptive["algorithm_version"],
+            "profile": adaptive["profile"],
+            "market_regime": adaptive["market_regime"],
+            "confidence": adaptive["confidence"],
+            "evidence": adaptive["evidence"],
         }
     trend = "sideways to constructive" if change_percent is None or change_percent >= 0 else "short-term pressure"
     risk_score = _risk_score(symbol, change_percent, quote)
@@ -85,6 +94,12 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
             "Scale decisions gradually and avoid assuming any outcome is fixed.",
         ],
         "disclaimer": "This is not financial advice. No direct buy/sell instruction is provided.",
+        "adaptive_engine": adaptive,
+        "algorithm_version": adaptive["algorithm_version"],
+        "profile": adaptive["profile"],
+        "market_regime": adaptive["market_regime"],
+        "confidence": adaptive["confidence"],
+        "evidence": adaptive["evidence"],
     }
     _validate_language(analysis)
     return analysis

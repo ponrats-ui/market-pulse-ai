@@ -16,6 +16,8 @@ from app.services.cache import HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHL
 from app.services.calendar import economic_calendar
 from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
+from app.services.macro import company_events, intelligence_status, macro_indicators
+from app.services.news import news_for_symbol, news_impact_for_symbol
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
@@ -137,17 +139,14 @@ def calendar() -> Dict[str, Any]:
     return economic_calendar()
 
 
+@app.get("/api/news")
+def news(symbol: str = Query("BTC-USD"), limit: int = Query(10, ge=1, le=25)) -> Dict[str, Any]:
+    return news_for_symbol(symbol, limit)
+
+
 @app.get("/api/news-impact/{symbol}")
 def news_impact(symbol: str) -> Dict[str, Any]:
-    return {
-        "symbol": symbol,
-        "source": "Unavailable",
-        "provider_configured": False,
-        "items": [],
-        "message": "No news provider configured.",
-        "message_th": "ยังไม่ได้ตั้งค่าผู้ให้บริการข่าว",
-        "disclaimer": "This is not financial advice.",
-    }
+    return news_impact_for_symbol(symbol)
 
 
 @app.get("/api/sentiment/{symbol}")
@@ -155,11 +154,22 @@ def sentiment(symbol: str) -> Dict[str, Any]:
     return sentiment_for_symbol(symbol)
 
 
+@app.get("/api/macro")
+def macro() -> Dict[str, Any]:
+    return macro_indicators()
+
+
+@app.get("/api/company-events/{symbol}")
+def events(symbol: str) -> Dict[str, Any]:
+    return company_events(symbol)
+
+
 @app.get("/api/analysis/{symbol}")
 def analysis(symbol: str) -> Dict[str, Any]:
     quote = get_cached_quote(symbol)
     history = get_cached_history(symbol, "1mo", "1d")
-    return build_ai_analysis(symbol, quote, history)
+    payload = build_ai_analysis(symbol, quote, history)
+    return {**payload, "real_intelligence": intelligence_status(symbol)}
 
 
 @app.get("/api/risk/{symbol}")

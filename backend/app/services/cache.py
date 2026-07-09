@@ -7,6 +7,7 @@ from typing import Any, Dict, Hashable, Tuple
 QUOTE_TTL_SECONDS = 60
 HISTORICAL_TTL_SECONDS = 300
 WATCHLIST_TTL_SECONDS = 300
+INTELLIGENCE_TTL_SECONDS = 900
 
 
 @dataclass

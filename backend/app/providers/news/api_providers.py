@@ -28,9 +28,9 @@ class FinnhubNewsProvider(NewsProvider):
 
 class AlphaVantageNewsProvider(NewsProvider):
     name = "alpha_vantage_news"
-    configured = bool(os.getenv("ALPHAVANTAGE_API_KEY"))
+    configured = bool(os.getenv("ALPHA_VANTAGE_API_KEY") or os.getenv("ALPHAVANTAGE_API_KEY"))
 
     def fetch(self, query: str, limit: int = 10) -> Dict[str, Any]:
-        if not os.getenv("ALPHAVANTAGE_API_KEY"):
-            return unavailable_news(self.name, "ALPHAVANTAGE_API_KEY is not configured.")
+        if not (os.getenv("ALPHA_VANTAGE_API_KEY") or os.getenv("ALPHAVANTAGE_API_KEY")):
+            return unavailable_news(self.name, "ALPHA_VANTAGE_API_KEY is not configured.")
         return unavailable_news(self.name, "Alpha Vantage news transport is not enabled in this build.")

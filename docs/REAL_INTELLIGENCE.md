@@ -32,7 +32,7 @@ Configuration:
 - `ENABLE_YAHOO_FINANCE_NEWS=true` enables Yahoo Finance RSS.
 - `NEWS_RSS_URL=` enables a custom RSS feed. Use `{query}` as the query placeholder.
 - `FINNHUB_API_KEY=`
-- `ALPHAVANTAGE_API_KEY=`
+- `ALPHA_VANTAGE_API_KEY=`
 - `NEWSAPI_KEY=`
 
 API:
@@ -97,7 +97,7 @@ Only high-impact event types should be returned:
 - GDP
 - Rate Decision
 
-If no provider is configured, `/api/calendar` returns an empty event list and an unavailable reason.
+`TRADING_ECONOMICS_KEY` enables future TradingEconomics transport. If no provider is configured, `/api/calendar` returns an empty event list and an unavailable reason.
 
 ## Fear & Greed
 
@@ -105,7 +105,8 @@ Provider abstraction lives in `backend/app/providers/sentiment`.
 
 Current behavior:
 
-- `GET /api/sentiment/{symbol}` returns unavailable status unless a real provider is configured later.
+- `GET /api/sentiment/{symbol}` returns unavailable status unless a real provider is enabled.
+- `ENABLE_ALTERNATIVE_ME_FEAR_GREED=true` enables the free Alternative.me Crypto Fear & Greed API.
 - The system never estimates Fear & Greed.
 
 ## Macro Data
@@ -128,7 +129,7 @@ Current endpoint:
 
 - `GET /api/macro`
 
-If no macro provider is configured, the endpoint returns an unavailable status and the supported indicator list.
+`FRED_API_KEY` enables a small FRED implementation for FEDFUNDS, CPIAUCSL, UNRATE, DGS10, and DGS2. If no macro provider is configured, the endpoint returns an unavailable status and the supported indicator list.
 
 ## Company Events
 
@@ -149,7 +150,7 @@ Current endpoint:
 
 - `GET /api/company-events/{symbol}`
 
-If no provider is configured, the endpoint returns an unavailable status and no events.
+`FINNHUB_API_KEY` is detected for future company events transport. If no provider is configured, the endpoint returns an unavailable status and no events.
 
 ## Fallback
 

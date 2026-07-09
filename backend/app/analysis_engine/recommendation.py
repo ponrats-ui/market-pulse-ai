@@ -39,6 +39,7 @@ def build_final_recommendation(weighted_score: float, confidence: Dict[str, Any]
     else:
         stance = "Neutral"
         action = "รอจังหวะและติดตามข้อมูลเพิ่มเติมก่อนเพิ่มน้ำหนัก."
+    action = _thai_action(stance)
     return {
         "stance": stance,
         "cautious_action": action,
@@ -60,3 +61,13 @@ def _opinion(member: str, score: float, rationale: str, unavailable: List[str]) 
     if unavailable:
         rationale = f"{rationale} Missing data: {', '.join(unavailable)}."
     return {"member": member, "view": view, "rationale": rationale}
+
+
+def _thai_action(stance: str) -> str:
+    if stance == "Constructive but cautious":
+        return "น่าติดตาม แต่ควรกำหนดแผนรับมือก่อนลงทุนและหลีกเลี่ยงการไล่ราคา."
+    if stance == "Defensive":
+        return "รอจังหวะหรือหลีกเลี่ยงการเพิ่มความเสี่ยงจนกว่าหลักฐานจะดีขึ้น."
+    if stance == "Neutral":
+        return "รอจังหวะและติดตามข้อมูลเพิ่มเติมก่อนเพิ่มน้ำหนัก."
+    return "Wait for more complete data before forming a stronger view."

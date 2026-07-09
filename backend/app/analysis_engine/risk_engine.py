@@ -22,4 +22,11 @@ def build_quant_risk_report(evidence: Dict[str, Any], probabilities: Dict[str, A
         "macro_risk": "Regime-sensitive and should be reviewed before adding exposure.",
         "tail_risk": "Tail events can invalidate model probabilities quickly.",
         "recommended_action": "รอจังหวะและกำหนดแผนรับมือก่อนลงทุน." if high_risk or unavailable else "น่าติดตาม แต่ยังควรควบคุมขนาดสถานะ.",
+        "recommended_action": _recommended_action(high_risk, unavailable),
     }
+
+
+def _recommended_action(high_risk: bool, unavailable: list[str]) -> str:
+    if high_risk or unavailable:
+        return "รอจังหวะและกำหนดแผนรับมือก่อนลงทุน."
+    return "น่าติดตาม แต่ยังควรควบคุมขนาดสถานะ."

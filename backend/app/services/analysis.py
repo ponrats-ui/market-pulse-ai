@@ -28,6 +28,7 @@ def get_asset_type(symbol: str, quote: Dict[str, Any] | None = None) -> str:
 def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[str, Any] | None = None, profile: str = "Balanced") -> Dict[str, Any]:
     quote = quote or {}
     adaptive = build_adaptive_recommendation(symbol, quote, history, profile)
+    adaptive_aliases = _adaptive_aliases(adaptive)
     price = quote.get("price")
     change_percent = quote.get("change_percent")
     if price is None or change_percent is None:
@@ -46,11 +47,7 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history:
             "cautious_action_plan": ["Wait for complete market data before forming a view."],
             "disclaimer": "This is not financial advice.",
             "adaptive_engine": adaptive,
-            "algorithm_version": adaptive["algorithm_version"],
-            "profile": adaptive["profile"],
-            "market_regime": adaptive["market_regime"],
-            "confidence": adaptive["confidence"],
-            "evidence": adaptive["evidence"],
+            **adaptive_aliases,
         }
     trend = "sideways to constructive" if change_percent is None or change_percent >= 0 else "short-term pressure"
     risk_score = _risk_score(symbol, change_percent, quote)
@@ -95,11 +92,7 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history:
         ],
         "disclaimer": "This is not financial advice. No direct buy/sell instruction is provided.",
         "adaptive_engine": adaptive,
-        "algorithm_version": adaptive["algorithm_version"],
-        "profile": adaptive["profile"],
-        "market_regime": adaptive["market_regime"],
-        "confidence": adaptive["confidence"],
-        "evidence": adaptive["evidence"],
+        **adaptive_aliases,
     }
     _validate_language(analysis)
     return analysis
@@ -187,3 +180,20 @@ def _validate_language(payload: Dict[str, Any]) -> None:
     for word in RESTRICTED_WORDS:
         if word in text:
             raise ValueError(f"Restricted analysis wording detected: {word}")
+
+
+def _adaptive_aliases(adaptive: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "algorithm_version": adaptive["algorithm_version"],
+        "profile": adaptive["profile"],
+        "asset_class": adaptive["asset_class"],
+        "market_regime": adaptive["market_regime"],
+        "adaptive_weights": adaptive["adaptive_weights"],
+        "evidence": adaptive["evidence"],
+        "confidence": adaptive["confidence"],
+        "probability": adaptive["probability"],
+        "investment_thesis": adaptive["investment_thesis"],
+        "risk_engine": adaptive["risk_engine"],
+        "limitations": adaptive["limitations"],
+        "timestamp": adaptive["timestamp"],
+    }

@@ -78,13 +78,23 @@ def test_engine_reports_version_profile_regime_and_evidence() -> None:
     payload = build_adaptive_recommendation("AAPL", quote, history, "Balanced")
     assert payload["algorithm_version"] == "v1.2"
     assert payload["profile"] == "Balanced"
+    assert payload["asset_class"] == "Stocks"
     assert payload["market_regime"] in {"Bull Market", "Bear Market", "Sideways", "High Volatility", "Low Volatility", "Risk-On", "Risk-Off"}
+    assert payload["adaptive_weights"]
     assert payload["evidence"]["facts"]
+    assert payload["probability"]["bullish_probability"] >= 0
     assert payload["probability_engine"]["bullish_probability"] >= 0
     assert payload["investment_thesis"]["bull_case"]
     assert payload["risk_engine"]["scenario_analysis"]
+    assert payload["global_events"]["provider_configured"] is False
+    assert payload["news_impact"]["provider_configured"] is False
+    assert "No live geopolitical event provider is configured." in payload["limitations"]
     assert payload["learning"]["lifecycle"] == ["experiment", "promote", "rollback"]
+    assert payload["timestamp"]
     assert payload["final_recommendation"]["disclaimer"] == "This is not financial advice. No assured outcome or direct buy/sell instruction is provided."
+    assert "น่า" in payload["risk_engine"]["recommended_action"] or "รอ" in payload["risk_engine"]["recommended_action"]
+    assert "เธ" not in payload["risk_engine"]["recommended_action"]
+    assert "เธ" not in payload["final_recommendation"]["cautious_action"]
 
 
 def test_asset_class_models_apply_different_biases() -> None:

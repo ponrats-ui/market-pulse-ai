@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from app.providers.registry import get_provider
 from app.services.analysis import build_ai_analysis, build_risk
-from app.services.asset_universe import search_assets
+from app.services.asset_universe import assets_for_sector, search_assets, sector_browser
 from app.services.cache import HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
 from app.services.calendar import economic_calendar
 from app.services.comparison import build_comparison
@@ -21,6 +21,7 @@ from app.services.news import news_for_symbol, news_impact_for_symbol
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
+from app.services.technical import build_technical_analysis
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
@@ -83,6 +84,16 @@ def asset_search(q: str = Query(""), limit: int = Query(12, ge=1, le=25)) -> Dic
     return search_assets(q, limit)
 
 
+@app.get("/api/sectors")
+def sectors() -> Dict[str, Any]:
+    return sector_browser()
+
+
+@app.get("/api/sectors/{sector}/assets")
+def sector_assets(sector: str, limit: int = Query(25, ge=1, le=50)) -> Dict[str, Any]:
+    return assets_for_sector(sector, limit)
+
+
 @app.get("/api/assets/quotes")
 def asset_quotes(symbols: str = Query("BTC-USD")) -> Dict[str, Any]:
     selected = [symbol.strip() for symbol in symbols.split(",") if symbol.strip()][:25]
@@ -97,6 +108,12 @@ def asset_quote(symbol: str) -> Dict[str, Any]:
 @app.get("/api/assets/{symbol}/history")
 def asset_history(symbol: str, range: str = Query("1mo"), interval: str = Query("1d")) -> Dict[str, Any]:
     return get_cached_history(symbol, range, interval)
+
+
+@app.get("/api/technical/{symbol}")
+def technical(symbol: str, range: str = Query("1y"), interval: str = Query("1d")) -> Dict[str, Any]:
+    history = get_cached_history(symbol, range, interval)
+    return build_technical_analysis(symbol, history)
 
 
 @app.get("/api/dashboard")

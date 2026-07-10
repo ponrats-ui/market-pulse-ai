@@ -31,10 +31,21 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
             "trend": metrics.get("trend"),
             "market_cap": quote.get("market_cap"),
             "pe": quote.get("trailing_pe"),
+            "pb": quote.get("price_to_book"),
+            "ps": quote.get("price_to_sales"),
+            "eps_growth": quote.get("earnings_growth"),
+            "revenue_growth": quote.get("revenue_growth"),
+            "debt": quote.get("debt_to_equity"),
+            "roe": quote.get("return_on_equity"),
+            "roa": quote.get("return_on_assets"),
+            "roic": quote.get("return_on_invested_capital"),
+            "beta": quote.get("beta"),
             "dividend_yield": quote.get("dividend_yield"),
             "sector": quote.get("sector"),
             "correlation_to_first": correlation,
+            "relative_strength": metrics.get("relative_strength"),
             "ai_opinion": _ai_opinion(symbol, metrics, risk),
+            "investment_thesis": _investment_thesis(symbol, metrics, risk, quote),
             "recommendation": _recommendation(metrics, risk),
             "currency": quote.get("currency"),
             "volatility_estimate": risk.get("volatility_level", "unknown"),
@@ -47,6 +58,8 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
         "symbols": selected,
         "items": items,
         "performance_points": _performance_points(selected, histories),
+        "correlation_matrix": _correlation_matrix(selected, histories),
+        "radar_chart": _radar_chart(items),
         "summary": _summary(items),
         "disclaimer": "This is not financial advice.",
     }
@@ -111,6 +124,7 @@ def _history_metrics(history: Dict[str, Any]) -> Dict[str, Any]:
     trend = "uptrend" if performance > 2 else "downtrend" if performance < -2 else "sideways"
     return {
         "performance_percent": performance,
+        "relative_strength": performance,
         "performance_1w_percent": performance_1w,
         "performance_ytd_percent": performance_ytd,
         "realized_volatility_percent": realized_volatility,
@@ -128,6 +142,42 @@ def _correlation_to_first(symbol: str, symbols: List[str], histories: Dict[str, 
     if length < 3:
         return None
     return _correlation(first_returns[-length:], current_returns[-length:])
+
+
+def _correlation_matrix(symbols: List[str], histories: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for left in symbols:
+        row: Dict[str, Any] = {"symbol": left}
+        left_returns = _returns(histories.get(left, {}).get("points", []))
+        for right in symbols:
+            if left == right:
+                row[right] = 1.0
+                continue
+            right_returns = _returns(histories.get(right, {}).get("points", []))
+            length = min(len(left_returns), len(right_returns))
+            row[right] = _correlation(left_returns[-length:], right_returns[-length:]) if length >= 3 else None
+        rows.append(row)
+    return rows
+
+
+def _radar_chart(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [
+        {
+            "symbol": item["symbol"],
+            "momentum": _scale(item.get("performance_1mo_percent"), -20, 20),
+            "volatility_control": 100 - _scale(item.get("realized_volatility_percent"), 0, 8),
+            "valuation": 100 - _scale(item.get("pe"), 0, 80),
+            "profitability": _scale(item.get("roe"), -0.2, 0.5),
+            "risk_control": 100 - ((item.get("risk_score") or 10) * 10),
+        }
+        for item in items
+    ]
+
+
+def _scale(value: Any, low: float, high: float) -> float | None:
+    if not isinstance(value, (int, float)) or high == low:
+        return None
+    return max(0, min(100, ((float(value) - low) / (high - low)) * 100))
 
 
 def _returns(points: List[Dict[str, Any]]) -> List[float]:
@@ -154,6 +204,20 @@ def _ai_opinion(symbol: str, metrics: Dict[str, Any], risk: Dict[str, Any]) -> s
     if score is None:
         return f"{symbol}: evidence is incomplete; wait for more data."
     return f"{symbol}: {trend} with risk score {score}/10; review position size before acting."
+
+
+def _investment_thesis(symbol: str, metrics: Dict[str, Any], risk: Dict[str, Any], quote: Dict[str, Any]) -> Dict[str, Any]:
+    evidence = [
+        f"One-month performance from provider history: {metrics.get('performance_percent') if metrics.get('performance_percent') is not None else 'Unavailable'}.",
+        f"Risk score from risk engine: {risk.get('risk_score') if risk.get('risk_score') is not None else 'Unavailable'}.",
+        f"Quote source: {quote.get('source', 'unknown')}.",
+    ]
+    return {
+        "summary": _ai_opinion(symbol, metrics, risk),
+        "evidence": evidence,
+        "confidence": "medium" if metrics.get("performance_percent") is not None and risk.get("risk_score") is not None else "low",
+        "limitations": ["Comparison uses available provider data only; missing fundamentals remain unavailable."],
+    }
 
 
 def _recommendation(metrics: Dict[str, Any], risk: Dict[str, Any]) -> str:

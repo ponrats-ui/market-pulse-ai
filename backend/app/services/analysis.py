@@ -113,6 +113,7 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
             "risk_controls": ["Wait for complete quote and historical price data before estimating risk."],
             "facts": ["Risk analysis requires real price movement and historical volatility data."],
             "interpretation": "Unable to estimate risk.",
+            "categories": _risk_categories(symbol, None, "unknown"),
             "disclaimer": "This is not financial advice.",
         }
     score = _risk_score(symbol, change_percent, quote)
@@ -137,6 +138,7 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
             f"Historical volatility hint is {realized_hint}.",
         ],
         "interpretation": "Higher scores suggest wider price swings and a need for tighter risk controls.",
+        "categories": _risk_categories(symbol, score, realized_hint),
         "disclaimer": "This is not financial advice.",
     }
 
@@ -173,6 +175,46 @@ def _history_volatility_hint(points: List[Dict[str, Any]]) -> str:
     if average_move >= 1:
         return "medium"
     return "low"
+
+
+def _risk_categories(symbol: str, score: int | None, volatility_hint: str) -> List[Dict[str, Any]]:
+    asset_type = get_asset_type(symbol)
+    base_score = score or 0
+    definitions = [
+        ("Volatility", base_score, volatility_hint, "Use position sizing and avoid leverage when volatility rises."),
+        ("Liquidity", 5 if asset_type in {"crypto", "thai_stock"} else 3, "medium", "Check spread, volume, and order size before entering."),
+        ("Gap Risk", 6 if asset_type in {"global_stock", "thai_stock", "crypto"} else 4, "medium", "Avoid oversized overnight exposure around events."),
+        ("Interest Rate", 7 if symbol in {"TLT", "^TNX"} or asset_type in {"macro", "reit"} else 4, "medium", "Review rate-sensitive exposure and duration."),
+        ("Macro", 6 if asset_type in {"index", "commodity", "fx", "macro"} else 4, "medium", "Track central bank, inflation, and growth releases."),
+        ("Correlation", 5, "medium", "Compare with existing portfolio exposures before adding risk."),
+        ("Currency", 6 if asset_type in {"thai_stock", "fx"} or symbol.endswith(".BK") else 3, "medium", "Consider base currency and FX movement."),
+        ("Concentration", 5, "medium", "Set maximum allocation per asset and sector."),
+        ("Tail Risk", 7 if asset_type == "crypto" else 5, "medium", "Plan for extreme moves and liquidity stress."),
+        ("Headline Risk", 6 if asset_type in {"crypto", "global_stock", "thai_stock"} else 4, "medium", "Monitor news and avoid reacting to unverified headlines."),
+    ]
+    return [
+        {
+            "category": category,
+            "score": _bounded_risk(value),
+            "probability": _probability(value),
+            "severity": _severity(value),
+            "evidence": f"{category} risk uses asset class {asset_type} and volatility hint {hint}.",
+            "mitigation": mitigation,
+        }
+        for category, value, hint, mitigation in definitions
+    ]
+
+
+def _bounded_risk(value: int) -> int:
+    return max(1, min(10, int(value or 1)))
+
+
+def _probability(value: int) -> str:
+    return "high" if value >= 7 else "medium" if value >= 4 else "low"
+
+
+def _severity(value: int) -> str:
+    return "high" if value >= 7 else "medium" if value >= 4 else "low"
 
 
 def _validate_language(payload: Dict[str, Any]) -> None:

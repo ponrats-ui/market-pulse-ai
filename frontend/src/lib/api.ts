@@ -1,5 +1,5 @@
 import { defaultWatchlist, unavailableAnalysis, unavailableAssistant, unavailableCalendar, unavailableCompare, unavailableFinancials, unavailableHistory, unavailableNewsImpact, unavailableQuote, unavailableRisk, unavailableSentiment } from '../data/unavailableData';
-import type { AnalysisResponse, AssetSearchResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, NewsImpactResponse, PortfolioEvaluationResponse, PortfolioHolding, QuotesResponse, RiskResponse, SentimentResponse, WatchlistResponse } from '../types/market';
+import type { AnalysisResponse, AssetSearchResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, NewsImpactResponse, PortfolioEvaluationResponse, PortfolioHolding, QuotesResponse, RiskResponse, SectorResponse, SentimentResponse, TechnicalResponse, WatchlistResponse } from '../types/market';
 
 const PRODUCTION_API_BASE_URL = 'https://market-pulse-ai-api.onrender.com';
 const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
@@ -63,9 +63,11 @@ async function postJson<T>(path: string, body: unknown, fallback: T): Promise<T>
 export const api = {
   watchlist: (): Promise<WatchlistResponse> => getJson('/api/watchlist', defaultWatchlist),
   searchAssets: (query: string): Promise<AssetSearchResponse> => getJson(`/api/assets/search?q=${encodeURIComponent(query)}`, { query, count: 0, assets: [], source: 'Unavailable' }),
+  sectors: (): Promise<SectorResponse> => getJson('/api/sectors', { sectors: [], source: 'Unavailable', limitations: ['Sector browser is unavailable until the backend is reachable.'] }),
   quotes: (symbols: string[]): Promise<QuotesResponse> => getJson(`/api/assets/quotes?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map(unavailableQuote), source: 'Unavailable' }),
   quote: (symbol: string): Promise<AssetQuote> => getJson(`/api/assets/${encodeURIComponent(symbol)}`, unavailableQuote(symbol)),
   history: (symbol: string, range = '1mo', interval = '1d'): Promise<AssetHistory> => getJson(`/api/assets/${encodeURIComponent(symbol)}/history?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`, unavailableHistory(symbol)),
+  technical: (symbol: string, range = '1y', interval = '1d'): Promise<TechnicalResponse> => getJson(`/api/technical/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`, { symbol, status: 'unavailable', available_indicators: [], indicators: {}, series: [], source: 'Unavailable', message: 'Technical analysis unavailable.', message_th: 'ยังไม่มีข้อมูลวิเคราะห์ทางเทคนิค', disclaimer: 'This is not financial advice.' }),
   analysis: (symbol: string): Promise<AnalysisResponse> => getJson(`/api/analysis/${encodeURIComponent(symbol)}`, unavailableAnalysis(symbol)),
   risk: (symbol: string): Promise<RiskResponse> => getJson(`/api/risk/${encodeURIComponent(symbol)}`, unavailableRisk(symbol)),
   financials: (symbol: string): Promise<FinancialsResponse> => getJson(`/api/financials/${encodeURIComponent(symbol)}`, unavailableFinancials(symbol)),

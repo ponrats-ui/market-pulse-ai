@@ -67,9 +67,65 @@ THAI_NAME_ALIASES = {
     "BZ=F": "น้ำมัน เบรนท์ พลังงาน",
 }
 
+LEGACY_THAI_QUERY_ALIASES = {
+    "เธเธชเธดเธเธฃ": "กสิกร",
+    "เธ—เธญเธ": "ทอง",
+    "เธเนเธณเธกเธฑเธ": "น้ำมัน",
+}
+
+SECTOR_MAP = {
+    "Technology": ["AAPL", "MSFT", "GOOG", "GOOGL", "META", "QQQ", "SPY", "VOO"],
+    "Semiconductor": ["NVDA", "AMD", "TSM", "SOXX"],
+    "AI": ["NVDA", "MSFT", "GOOG", "GOOGL", "META", "AMD", "TSM", "SOXX"],
+    "Cloud": ["MSFT", "AMZN", "GOOG", "GOOGL"],
+    "Cybersecurity": ["QQQ"],
+    "Banking": ["SCB.BK", "KBANK.BK"],
+    "Insurance": [],
+    "Energy": ["PTT.BK", "CL=F", "BZ=F", "NG=F"],
+    "Utilities": [],
+    "Healthcare": [],
+    "Biotech": [],
+    "Consumer": ["AMZN", "TSLA", "CPALL.BK"],
+    "Industrial": ["AOT.BK", "DELTA.BK"],
+    "Defense": [],
+    "Real Estate": ["VNQ"],
+    "REIT": ["VNQ"],
+    "ETF": ["SPY", "VOO", "QQQ", "VTI", "GLD", "SLV", "TLT", "VNQ", "SOXX"],
+    "Crypto Layer1": ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD"],
+    "Crypto Infrastructure": ["ETH-USD", "SOL-USD"],
+    "Gold": ["GC=F", "GLD"],
+    "Oil": ["CL=F", "BZ=F", "PTT.BK"],
+}
+
+ASSET_METADATA = {
+    "AAPL": {"sector": "Technology", "industry": "Consumer Electronics", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "MSFT": {"sector": "Technology", "industry": "Software Infrastructure", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "NVDA": {"sector": "Semiconductor", "industry": "AI Accelerators", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "AMD": {"sector": "Semiconductor", "industry": "Semiconductors", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "TSM": {"sector": "Semiconductor", "industry": "Foundry", "country": "Taiwan", "currency": "USD", "exchange": "NYSE"},
+    "PTT.BK": {"sector": "Energy", "industry": "Integrated Oil and Gas", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "AOT.BK": {"sector": "Industrial", "industry": "Airport Services", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "SCB.BK": {"sector": "Banking", "industry": "Financial Services", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "KBANK.BK": {"sector": "Banking", "industry": "Commercial Bank", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "ADVANC.BK": {"sector": "Technology", "industry": "Telecommunications", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "CPALL.BK": {"sector": "Consumer", "industry": "Retail", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "DELTA.BK": {"sector": "Industrial", "industry": "Electronics", "country": "Thailand", "currency": "THB", "exchange": "SET"},
+    "BTC-USD": {"sector": "Crypto Layer1", "industry": "Digital Asset", "country": "Global", "currency": "USD", "exchange": "Crypto"},
+    "ETH-USD": {"sector": "Crypto Infrastructure", "industry": "Smart Contract Platform", "country": "Global", "currency": "USD", "exchange": "Crypto"},
+    "SOL-USD": {"sector": "Crypto Layer1", "industry": "Smart Contract Platform", "country": "Global", "currency": "USD", "exchange": "Crypto"},
+    "QQQ": {"sector": "Technology", "industry": "ETF", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "TLT": {"sector": "ETF", "industry": "Long Duration Treasury ETF", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "VNQ": {"sector": "REIT", "industry": "Real Estate ETF", "country": "US", "currency": "USD", "exchange": "NYSE Arca"},
+    "SOXX": {"sector": "Semiconductor", "industry": "Semiconductor ETF", "country": "US", "currency": "USD", "exchange": "NASDAQ"},
+    "GLD": {"sector": "Gold", "industry": "Gold ETF", "country": "US", "currency": "USD", "exchange": "NYSE Arca"},
+    "GC=F": {"sector": "Gold", "industry": "Gold Futures", "country": "US", "currency": "USD", "exchange": "COMEX"},
+    "CL=F": {"sector": "Oil", "industry": "WTI Crude Oil Futures", "country": "US", "currency": "USD", "exchange": "NYMEX"},
+    "BZ=F": {"sector": "Oil", "industry": "Brent Crude Oil Futures", "country": "Global", "currency": "USD", "exchange": "ICE"},
+}
+
 
 def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
-    term = query.strip().lower()
+    term = LEGACY_THAI_QUERY_ALIASES.get(query.strip(), query.strip()).lower()
     if not term:
         matches = ASSET_UNIVERSE[:limit]
     else:
@@ -79,7 +135,30 @@ def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
             if score:
                 scored.append((score, asset))
         matches = [asset for _, asset in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
-    return {"query": query, "count": len(matches), "assets": matches, "source": "curated_symbol_universe"}
+    enriched = [_enrich_asset(asset) for asset in matches]
+    return {"query": query, "count": len(enriched), "assets": enriched, "source": "curated_symbol_universe"}
+
+
+def sector_browser() -> Dict[str, Any]:
+    universe_by_symbol = {asset["symbol"]: asset for asset in ASSET_UNIVERSE}
+    sectors = []
+    for name, symbols in SECTOR_MAP.items():
+        assets = [_enrich_asset(universe_by_symbol[symbol]) for symbol in symbols if symbol in universe_by_symbol]
+        sectors.append({"name": name, "count": len(assets), "assets": assets})
+    return {
+        "sectors": sectors,
+        "source": "curated_symbol_universe",
+        "limitations": ["Sector membership is curated for fast research navigation and should be verified against exchange or issuer classifications."],
+    }
+
+
+def assets_for_sector(sector: str, limit: int = 25) -> Dict[str, Any]:
+    target = sector.strip().lower()
+    safe_limit = limit if isinstance(limit, int) else 25
+    universe_by_symbol = {asset["symbol"]: asset for asset in ASSET_UNIVERSE}
+    symbols = next((symbols for name, symbols in SECTOR_MAP.items() if name.lower() == target), [])
+    assets = [_enrich_asset(universe_by_symbol[symbol]) for symbol in symbols[:safe_limit] if symbol in universe_by_symbol]
+    return {"sector": sector, "count": len(assets), "assets": assets, "source": "curated_symbol_universe"}
 
 
 def _score_asset(term: str, asset: Dict[str, str]) -> int:
@@ -103,6 +182,17 @@ def _score_asset(term: str, asset: Dict[str, str]) -> int:
     if _is_subsequence(term, compact):
         return 40
     return 0
+
+
+def _enrich_asset(asset: Dict[str, str]) -> Dict[str, str]:
+    metadata = ASSET_METADATA.get(asset["symbol"], {})
+    thai_alias = THAI_NAME_ALIASES.get(asset["symbol"])
+    return {
+        **asset,
+        **metadata,
+        "thai_name": thai_alias or asset.get("thai_name", ""),
+        "alias": " ".join(part for part in [asset.get("keywords", ""), thai_alias or ""] if part),
+    }
 
 
 def _is_subsequence(needle: str, haystack: str) -> bool:

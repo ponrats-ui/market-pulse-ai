@@ -8,7 +8,7 @@ import yfinance as yf
 
 from app.providers.base import MarketDataProvider
 
-VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "5y"}
+VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "5y", "max"}
 VALID_INTERVALS = {"1h", "1d", "1wk"}
 THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK"}
 GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META"}
@@ -129,6 +129,12 @@ class YFinanceProvider(MarketDataProvider):
                 "eps": self._safe_float(info.get("trailingEps")),
                 "pe": self._safe_float(info.get("trailingPE")),
                 "pbv": self._safe_float(info.get("priceToBook")),
+                "peg": self._safe_float(info.get("pegRatio")),
+                "intrinsicValue": None,
+                "totalCash": self._safe_float(info.get("totalCash")),
+                "freeCashFlow": self._safe_float(info.get("freeCashflow")),
+                "revenueGrowth": self._safe_float(info.get("revenueGrowth")),
+                "earningsGrowth": self._safe_float(info.get("earningsGrowth")),
                 "dividendYield": self._safe_float(info.get("dividendYield")),
                 "threeToFiveYearTrend": None,
                 "balanceSheetStrength": None,

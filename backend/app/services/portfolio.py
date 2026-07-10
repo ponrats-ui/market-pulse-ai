@@ -34,6 +34,8 @@ def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str],
             "gain_loss": value - cost if value is not None else None,
             "gain_loss_percent": ((value - cost) / cost) * 100 if value is not None and cost else None,
             "daily_change_percent": _number(quote.get("change_percent")),
+            "sector": quote.get("sector"),
+            "asset_type": quote.get("asset_type"),
             "source": quote.get("source"),
             "timestamp": quote.get("timestamp"),
             "error": quote.get("error"),
@@ -54,7 +56,14 @@ def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str],
         "portfolio_return_percent": ((total_value - total_cost + realized_pl) / total_cost) * 100 if total_value and total_cost else None,
         "risk_score": _portfolio_risk_score(rows),
         "diversification_score": _diversification_score(rows),
+        "sector_allocation": _sector_allocation(rows),
+        "sharpe_ratio": None,
+        "max_drawdown_percent": None,
+        "performance_points": [],
+        "transaction_history": transactions,
         "transaction_count": len(transactions),
+        "analytics_status": "partial",
+        "analytics_unavailable_reason": "Sharpe ratio, drawdown, and performance chart require persisted portfolio value history.",
         "currency_conversion": "Unavailable until FX conversion provider is configured.",
         "source": "live_quotes",
         "disclaimer": "This is not financial advice.",
@@ -144,3 +153,13 @@ def _diversification_score(rows: List[Dict[str, Any]]) -> int | None:
     if len(rows) >= 5:
         score += 10
     return max(0, min(100, score))
+
+
+def _sector_allocation(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    allocation: Dict[str, float] = {}
+    for row in rows:
+        sector = str(row.get("sector") or row.get("asset_type") or "Unavailable")
+        percent = row.get("allocation_percent")
+        if isinstance(percent, (int, float)):
+            allocation[sector] = allocation.get(sector, 0.0) + percent
+    return [{"sector": sector, "allocation_percent": percent} for sector, percent in sorted(allocation.items())]

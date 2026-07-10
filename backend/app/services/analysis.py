@@ -198,6 +198,7 @@ def _risk_categories(symbol: str, score: int | None, volatility_hint: str) -> Li
             "score": _bounded_risk(value),
             "probability": _probability(value),
             "severity": _severity(value),
+            "trend": _risk_trend(value, volatility_hint),
             "evidence": f"{category} risk uses asset class {asset_type} and volatility hint {hint}.",
             "mitigation": mitigation,
         }
@@ -215,6 +216,14 @@ def _probability(value: int) -> str:
 
 def _severity(value: int) -> str:
     return "high" if value >= 7 else "medium" if value >= 4 else "low"
+
+
+def _risk_trend(value: int, volatility_hint: str) -> str:
+    if value >= 7 or volatility_hint == "high":
+        return "rising"
+    if value <= 3 and volatility_hint == "low":
+        return "contained"
+    return "stable"
 
 
 def _validate_language(payload: Dict[str, Any]) -> None:

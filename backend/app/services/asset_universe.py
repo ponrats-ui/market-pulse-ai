@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
+from app.services.exchange_master import exchange_master_assets, exchange_master_metadata
+
 
 ASSET_UNIVERSE: List[Dict[str, str]] = [
     {"symbol": "AAPL", "label": "Apple", "asset_type": "stock", "market": "NASDAQ", "keywords": "iphone services technology"},
@@ -126,42 +128,48 @@ ASSET_METADATA = {
 
 def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
     term = LEGACY_THAI_QUERY_ALIASES.get(query.strip(), query.strip()).lower()
+    universe = exchange_master_assets() or ASSET_UNIVERSE
     if not term:
-        matches = ASSET_UNIVERSE[:limit]
+        matches = universe[:limit]
     else:
-        scored: List[Tuple[int, Dict[str, str]]] = []
-        for asset in ASSET_UNIVERSE:
+        scored: List[Tuple[int, Dict[str, Any]]] = []
+        for asset in universe:
             score = _score_asset(term, asset)
             if score:
                 scored.append((score, asset))
         matches = [asset for _, asset in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
     enriched = [_enrich_asset(asset) for asset in matches]
-    return {"query": query, "count": len(enriched), "assets": enriched, "source": "curated_symbol_universe"}
+    metadata = exchange_master_metadata()
+    return {"query": query, "count": len(enriched), "assets": enriched, "source": metadata.get("source", "exchange_master"), "exchange_master": metadata}
 
 
 def sector_browser() -> Dict[str, Any]:
-    universe_by_symbol = {asset["symbol"]: asset for asset in ASSET_UNIVERSE}
+    universe = exchange_master_assets() or ASSET_UNIVERSE
+    sectors_by_name: Dict[str, List[Dict[str, Any]]] = {}
+    for asset in universe:
+        sector = asset.get("sector") or asset.get("asset_type") or "Unclassified"
+        sectors_by_name.setdefault(str(sector), []).append(_enrich_asset(asset))
     sectors = []
-    for name, symbols in SECTOR_MAP.items():
-        assets = [_enrich_asset(universe_by_symbol[symbol]) for symbol in symbols if symbol in universe_by_symbol]
+    for name, assets in sorted(sectors_by_name.items()):
         sectors.append({"name": name, "count": len(assets), "assets": assets})
+    metadata = exchange_master_metadata()
     return {
         "sectors": sectors,
-        "source": "curated_symbol_universe",
-        "limitations": ["Sector membership is curated for fast research navigation and should be verified against exchange or issuer classifications."],
+        "source": metadata.get("source", "exchange_master"),
+        "exchange_master": metadata,
+        "limitations": metadata.get("limitations", ["Sector membership should be verified against exchange or issuer classifications."]),
     }
 
 
 def assets_for_sector(sector: str, limit: int = 25) -> Dict[str, Any]:
     target = sector.strip().lower()
     safe_limit = limit if isinstance(limit, int) else 25
-    universe_by_symbol = {asset["symbol"]: asset for asset in ASSET_UNIVERSE}
-    symbols = next((symbols for name, symbols in SECTOR_MAP.items() if name.lower() == target), [])
-    assets = [_enrich_asset(universe_by_symbol[symbol]) for symbol in symbols[:safe_limit] if symbol in universe_by_symbol]
-    return {"sector": sector, "count": len(assets), "assets": assets, "source": "curated_symbol_universe"}
+    universe = exchange_master_assets() or ASSET_UNIVERSE
+    assets = [_enrich_asset(asset) for asset in universe if str(asset.get("sector") or asset.get("asset_type") or "").lower() == target][:safe_limit]
+    return {"sector": sector, "count": len(assets), "assets": assets, "source": exchange_master_metadata().get("source", "exchange_master")}
 
 
-def _score_asset(term: str, asset: Dict[str, str]) -> int:
+def _score_asset(term: str, asset: Dict[str, Any]) -> int:
     symbol = asset["symbol"].lower()
     searchable = " ".join([
         symbol,
@@ -170,6 +178,12 @@ def _score_asset(term: str, asset: Dict[str, str]) -> int:
         THAI_NAME_ALIASES.get(asset["symbol"], "").lower(),
         asset.get("asset_type", "").lower(),
         asset.get("market", "").lower(),
+        asset.get("exchange", "").lower(),
+        asset.get("sector", "").lower(),
+        asset.get("industry", "").lower(),
+        asset.get("country", "").lower(),
+        asset.get("currency", "").lower(),
+        asset.get("alias", "").lower(),
         asset.get("keywords", "").lower(),
     ])
     compact = searchable.replace(" ", "")
@@ -184,7 +198,7 @@ def _score_asset(term: str, asset: Dict[str, str]) -> int:
     return 0
 
 
-def _enrich_asset(asset: Dict[str, str]) -> Dict[str, str]:
+def _enrich_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
     metadata = ASSET_METADATA.get(asset["symbol"], {})
     thai_alias = THAI_NAME_ALIASES.get(asset["symbol"])
     return {

@@ -1,0 +1,17 @@
+{
+  "currency": "THB",
+  "premium_price_monthly": 49,
+  "tiers": {
+    "free": {
+      "name": "Free",
+      "features": ["dashboard", "asset_search", "watchlist", "compare", "risk", "news", "calendar", "paper_portfolio", "pia_assistant"]
+    },
+    "premium": {
+      "name": "Premium",
+      "price_monthly": 49,
+      "features": ["email_alerts", "line_alerts", "telegram_alerts", "daily_brief", "portfolio_alerts", "risk_alerts", "economic_alerts", "price_alerts", "pia_premium_analysis"]
+    }
+  },
+  "payment_enabled": false,
+  "note": "Architecture only. No payment gateway is implemented in RC4."
+}

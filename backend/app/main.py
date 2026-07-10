@@ -21,6 +21,8 @@ from app.services.news import news_for_symbol, news_impact_for_symbol
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
+from app.services.exchange_master import exchange_master_metadata
+from app.services.subscription import subscription_features
 from app.services.technical import build_technical_analysis
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -82,6 +84,11 @@ def watchlist() -> Dict[str, Any]:
 @app.get("/api/assets/search")
 def asset_search(q: str = Query(""), limit: int = Query(12, ge=1, le=25)) -> Dict[str, Any]:
     return search_assets(q, limit)
+
+
+@app.get("/api/exchange-master")
+def exchange_master() -> Dict[str, Any]:
+    return exchange_master_metadata()
 
 
 @app.get("/api/sectors")
@@ -174,6 +181,11 @@ def sentiment(symbol: str) -> Dict[str, Any]:
 @app.get("/api/macro")
 def macro() -> Dict[str, Any]:
     return macro_indicators()
+
+
+@app.get("/api/subscription/features")
+def subscription() -> Dict[str, Any]:
+    return subscription_features()
 
 
 @app.get("/api/company-events/{symbol}")

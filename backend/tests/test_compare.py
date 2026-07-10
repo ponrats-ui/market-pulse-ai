@@ -19,3 +19,18 @@ def test_compare_returns_items_and_performance(monkeypatch):
     assert payload["items"][0]["correlation_to_first"] == 1.0
     assert "recommendation" in payload["items"][0]
     assert "ai_opinion" in payload["items"][0]
+
+
+def test_compare_handles_missing_crypto_valuation(monkeypatch):
+    def quote(symbol):
+        return {"symbol": symbol, "name": symbol, "asset_type": "crypto", "price": 100, "change_percent": 1, "currency": "USD", "source": "test", "timestamp": "2026-01-01T00:00:00Z", "trailing_pe": None, "return_on_equity": None}
+
+    def history(symbol, range, interval):
+        return {"symbol": symbol, "points": [{"time": "t1", "close": 100}, {"time": "t2", "close": 101}, {"time": "t3", "close": 102}], "source": "test"}
+
+    monkeypatch.setattr(main, "get_cached_quote", quote)
+    monkeypatch.setattr(main, "get_cached_history", history)
+    payload = main.compare("BTC-USD,ETH-USD")
+    assert payload["symbols"] == ["BTC-USD", "ETH-USD"]
+    assert payload["radar_chart"][0]["valuation"] is None
+    assert payload["radar_chart"][0]["profitability"] is None

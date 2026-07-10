@@ -165,8 +165,8 @@ def _radar_chart(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         {
             "symbol": item["symbol"],
             "momentum": _scale(item.get("performance_1mo_percent"), -20, 20),
-            "volatility_control": 100 - _scale(item.get("realized_volatility_percent"), 0, 8),
-            "valuation": 100 - _scale(item.get("pe"), 0, 80),
+            "volatility_control": _inverse_scale(item.get("realized_volatility_percent"), 0, 8),
+            "valuation": _inverse_scale(item.get("pe"), 0, 80),
             "profitability": _scale(item.get("roe"), -0.2, 0.5),
             "risk_control": 100 - ((item.get("risk_score") or 10) * 10),
         }
@@ -178,6 +178,11 @@ def _scale(value: Any, low: float, high: float) -> float | None:
     if not isinstance(value, (int, float)) or high == low:
         return None
     return max(0, min(100, ((float(value) - low) / (high - low)) * 100))
+
+
+def _inverse_scale(value: Any, low: float, high: float) -> float | None:
+    scaled = _scale(value, low, high)
+    return None if scaled is None else 100 - scaled
 
 
 def _returns(points: List[Dict[str, Any]]) -> List[float]:

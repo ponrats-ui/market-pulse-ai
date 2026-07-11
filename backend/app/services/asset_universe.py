@@ -193,8 +193,6 @@ def _score_asset(term: str, asset: Dict[str, Any]) -> int:
         return 90
     if term in searchable:
         return 70
-    if _is_subsequence(term, compact):
-        return 40
     return 0
 
 
@@ -207,13 +205,3 @@ def _enrich_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
         "thai_name": thai_alias or asset.get("thai_name", ""),
         "alias": " ".join(part for part in [asset.get("keywords", ""), thai_alias or ""] if part),
     }
-
-
-def _is_subsequence(needle: str, haystack: str) -> bool:
-    if len(needle) < 2:
-        return False
-    position = 0
-    for char in haystack:
-        if position < len(needle) and needle[position] == char:
-            position += 1
-    return position == len(needle)

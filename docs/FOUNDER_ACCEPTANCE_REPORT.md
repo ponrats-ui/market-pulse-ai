@@ -1,28 +1,41 @@
-# Founder Acceptance Report
+﻿# Founder Acceptance Report
 
-Project: Market Pulse AI
-Workspace: D:\market-pulse-ai
-Inspection date: 2026-07-08
+## Market Pulse AI V1 Release Candidate
 
-## Critical Blocker Found
+- Branch: feature/founder-production-final
+- Scope: Founder Production Release Candidate v1.0
+- Deployment action: Not merged, not pushed, not deployed, not tagged
+- Protected file: RC2D_WIP_PATCH.diff remains untracked and untouched
 
-The frontend dashboard showed unavailable BTC price and chart data while the backend returned valid yfinance responses for `BTC-USD`.
+## Overall Decision
 
-## Root Cause
+READY FOR FOUNDER ACCEPTANCE TEST
 
-`VITE_API_BASE_URL` was not configured for the local frontend runtime. The frontend API client correctly avoids fabricated data and falls back to unavailable states when no backend base URL is configured, but the missing environment value made the UI appear as if live market data was unavailable.
+The release candidate passes backend tests, frontend production build, asset search validation, local API smoke checks, and encoding checks. Remaining items are documented as known limitations and should not block a controlled Founder acceptance test.
 
-## Fix Applied
+## Acceptance Summary
 
-- Created local frontend environment file: `frontend/.env.local`
-- Set `VITE_API_BASE_URL=http://127.0.0.1:8000`
-- Confirmed `.env.local` is ignored by the root `.gitignore` through `.env.*`
-- Added a development-only warning when `VITE_API_BASE_URL` is missing
+- Dashboard data flow: Passed local API smoke validation
+- Asset search: Passed for TTB, AOT, Thai keyword search, and unsupported symbol rejection
+- Compare: Passed API smoke for BTC-USD/ETH-USD and NVDA/AMD
+- Portfolio: Passed API smoke with live quote evaluation path
+- News and news impact: Passed API smoke; provider availability remains transparent
+- Risk and financials: Passed API smoke
+- Assistant: Passed API smoke through /api/assistant/ask
+- Relax Mode: Config remains optional and non-autoplay
+- Translation and UTF-8: Active source/config scan found no mojibake markers except negative assertions in tests
 
-## Verification Result
+## Thai Summary
 
-With the backend running on `127.0.0.1:8000` and the frontend running on `127.0.0.1:5173`, BTC now loads through the configured backend instead of the unavailable fallback path.
+สถานะ RC นี้พร้อมสำหรับ Founder Acceptance Test ในเครื่อง โดยยังไม่ merge, deploy, push หรือ tag และยังคงแสดงข้อจำกัดของข้อมูลอย่างโปร่งใส ไม่มีการสร้างข้อมูลตลาดปลอม
 
-## MVP Status
+## Evidence
 
-The critical local data-connection blocker is fixed for development. Cloudflare Pages still requires `VITE_API_BASE_URL` to be set to the deployed backend URL when the backend is available.
+- Backend tests: 44 passed
+- Frontend build: Passed with Vite production build
+- Focused asset tests: 7 passed
+- Local smoke test: All tested endpoints returned HTTP 200
+
+## Required Founder Sign-Off
+
+Founder should complete the checklist in docs/FOUNDER_TEST_GUIDE.md before approving merge or production deployment.

@@ -1,8 +1,18 @@
 [
   {
+    "id": "market-focus-radio-default",
+    "title": "Market Focus Radio",
+    "title_th": "วิทยุสำหรับโฟกัสตลาด",
+    "channel": "YouTube Mix",
+    "youtube_url": "https://www.youtube.com/watch?v=-DfHaOYeaqk&list=RD-DfHaOYeaqk&start_radio=1",
+    "embed_url": "https://www.youtube.com/embed/-DfHaOYeaqk?list=RD-DfHaOYeaqk",
+    "category": "lofi",
+    "enabled": true
+  },
+  {
     "id": "lofi-1",
-    "title": "Lo-fi Girl - beats to relax/study to",
-    "title_th": "โลไฟสำหรับโฟกัสและผ่อนคลาย",
+    "title": "Lo-fi Focus",
+    "title_th": "โลไฟสำหรับโฟกัส",
     "channel": "Lofi Girl",
     "youtube_url": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
     "embed_url": "https://www.youtube.com/embed/jfKfPfyJRdk",

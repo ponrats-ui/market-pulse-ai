@@ -1,29 +1,43 @@
 {
-  "version": "rc4.0",
+  "version": "v1.0-rc",
   "source": "exchange_master_seed",
   "provider_ready": true,
+  "universe_policy": {
+    "us_stocks": "Curated S&P 500 and Nasdaq 100 constituents only in this seed.",
+    "thailand": "Curated SET listed symbols only in this seed.",
+    "crypto": "Top market-cap crypto symbols supported by Yahoo Finance tickers.",
+    "unsupported_policy": "Symbols outside this curated universe must not be returned by search."
+  },
   "limitations": [
-    "This seed file provides the exchange-master architecture and initial production symbols.",
-    "Full exchange listings can be synchronized by replacing or extending this file from licensed exchange, broker, or data-provider masters."
+    "This seed file is a curated production universe, not a full licensed exchange master.",
+    "Full S&P 500, Nasdaq 100, SET, ETF, crypto, FX, index, and commodity masters can be synchronized from licensed providers later."
   ],
-  "supported_exchanges": ["NYSE", "NASDAQ", "AMEX", "SET", "MAI", "Crypto", "ETF", "REIT", "Indices", "Forex", "Commodities", "Bonds", "Sector ETF"],
+  "supported_exchanges": ["NYSE", "NASDAQ", "SET", "Crypto", "ETF", "REIT", "Indices", "Forex", "Commodities", "Bonds", "Sector ETF"],
   "assets": [
-    {"symbol": "AAPL", "label": "Apple", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Technology", "industry": "Consumer Electronics", "country": "US", "currency": "USD", "aliases": ["Apple", "iPhone", "Technology"]},
-    {"symbol": "MSFT", "label": "Microsoft", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Technology", "industry": "Software Infrastructure", "country": "US", "currency": "USD", "aliases": ["Microsoft", "Cloud", "AI"]},
-    {"symbol": "NVDA", "label": "NVIDIA", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Semiconductor", "industry": "AI Accelerators", "country": "US", "currency": "USD", "aliases": ["NVIDIA", "AI", "GPU", "Semiconductor"]},
-    {"symbol": "AMD", "label": "Advanced Micro Devices", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Semiconductor", "industry": "Semiconductors", "country": "US", "currency": "USD", "aliases": ["AMD", "Chip", "GPU"]},
-    {"symbol": "TSM", "label": "Taiwan Semiconductor Manufacturing", "asset_type": "stock", "exchange": "NYSE", "market": "NYSE", "sector": "Semiconductor", "industry": "Foundry", "country": "Taiwan", "currency": "USD", "aliases": ["TSMC", "Foundry", "Semiconductor"]},
-    {"symbol": "AMZN", "label": "Amazon", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Consumer", "industry": "Internet Retail", "country": "US", "currency": "USD", "aliases": ["Amazon", "AWS", "Cloud"]},
-    {"symbol": "GOOGL", "label": "Alphabet Class A", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Technology", "industry": "Internet Content", "country": "US", "currency": "USD", "aliases": ["Google", "Alphabet", "Search"]},
-    {"symbol": "META", "label": "Meta Platforms", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Technology", "industry": "Social Media", "country": "US", "currency": "USD", "aliases": ["Meta", "Facebook", "Instagram"]},
-    {"symbol": "TSLA", "label": "Tesla", "asset_type": "stock", "exchange": "NASDAQ", "market": "NASDAQ", "sector": "Consumer", "industry": "Electric Vehicles", "country": "US", "currency": "USD", "aliases": ["Tesla", "EV", "Battery"]},
-    {"symbol": "PTT.BK", "label": "PTT", "thai_name": "ปตท.", "asset_type": "stock", "exchange": "SET", "market": "SET", "sector": "Energy", "industry": "Integrated Oil and Gas", "country": "Thailand", "currency": "THB", "aliases": ["ปตท.", "พลังงาน", "น้ำมัน", "ก๊าซ", "Energy"]},
-    {"symbol": "AOT.BK", "label": "Airports of Thailand", "thai_name": "ท่าอากาศยานไทย", "asset_type": "stock", "exchange": "SET", "market": "SET", "sector": "Industrial", "industry": "Airport Services", "country": "Thailand", "currency": "THB", "aliases": ["สนามบิน", "ท่องเที่ยว", "Airport"]},
-    {"symbol": "SCB.BK", "label": "SCB X", "thai_name": "เอสซีบี เอกซ์", "asset_type": "stock", "exchange": "SET", "market": "SET", "sector": "Banking", "industry": "Financial Services", "country": "Thailand", "currency": "THB", "aliases": ["ธนาคาร", "SCB"]},
-    {"symbol": "KBANK.BK", "label": "Kasikornbank", "thai_name": "กสิกรไทย", "asset_type": "stock", "exchange": "SET", "market": "SET", "sector": "Banking", "industry": "Commercial Bank", "country": "Thailand", "currency": "THB", "aliases": ["กสิกร", "ธนาคาร", "KBANK"]},
-    {"symbol": "CPALL.BK", "label": "CP All", "thai_name": "ซีพี ออลล์", "asset_type": "stock", "exchange": "SET", "market": "SET", "sector": "Consumer", "industry": "Retail", "country": "Thailand", "currency": "THB", "aliases": ["ค้าปลีก", "7-Eleven"]},
+    {"symbol": "AAPL", "label": "Apple", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Technology", "industry": "Consumer Electronics", "country": "US", "currency": "USD", "aliases": ["Apple", "iPhone", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "MSFT", "label": "Microsoft", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Technology", "industry": "Software Infrastructure", "country": "US", "currency": "USD", "aliases": ["Microsoft", "Cloud", "AI", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "NVDA", "label": "NVIDIA", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Semiconductor", "industry": "AI Accelerators", "country": "US", "currency": "USD", "aliases": ["NVIDIA", "AI", "GPU", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "AMD", "label": "Advanced Micro Devices", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Semiconductor", "industry": "Semiconductors", "country": "US", "currency": "USD", "aliases": ["AMD", "Chip", "GPU", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "TSM", "label": "Taiwan Semiconductor Manufacturing", "asset_type": "stock", "exchange": "NYSE", "market": "US Stocks", "sector": "Semiconductor", "industry": "Foundry", "country": "Taiwan", "currency": "USD", "aliases": ["TSMC", "Foundry", "Semiconductor"]},
+    {"symbol": "AMZN", "label": "Amazon", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Consumer", "industry": "Internet Retail", "country": "US", "currency": "USD", "aliases": ["Amazon", "AWS", "Cloud", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "GOOGL", "label": "Alphabet Class A", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Technology", "industry": "Internet Content", "country": "US", "currency": "USD", "aliases": ["Google", "Alphabet", "Search", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "META", "label": "Meta Platforms", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Technology", "industry": "Social Media", "country": "US", "currency": "USD", "aliases": ["Meta", "Facebook", "Instagram", "S&P 500", "Nasdaq 100"]},
+    {"symbol": "TSLA", "label": "Tesla", "asset_type": "stock", "exchange": "NASDAQ", "market": "US Stocks", "sector": "Consumer", "industry": "Electric Vehicles", "country": "US", "currency": "USD", "aliases": ["Tesla", "EV", "Battery", "S&P 500", "Nasdaq 100"]},
+
+    {"symbol": "PTT.BK", "label": "PTT", "thai_name": "ปตท.", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Energy", "industry": "Integrated Oil and Gas", "country": "Thailand", "currency": "THB", "aliases": ["ปตท.", "พลังงาน", "น้ำมัน", "ก๊าซ", "SET"]},
+    {"symbol": "AOT.BK", "label": "Airports of Thailand", "thai_name": "ท่าอากาศยานไทย", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Industrial", "industry": "Airport Services", "country": "Thailand", "currency": "THB", "aliases": ["สนามบิน", "ท่องเที่ยว", "Airport", "SET"]},
+    {"symbol": "SCB.BK", "label": "SCB X", "thai_name": "เอสซีบี เอกซ์", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Banking", "industry": "Financial Services", "country": "Thailand", "currency": "THB", "aliases": ["ธนาคาร", "SCB", "SET"]},
+    {"symbol": "KBANK.BK", "label": "Kasikornbank", "thai_name": "กสิกรไทย", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Banking", "industry": "Commercial Bank", "country": "Thailand", "currency": "THB", "aliases": ["กสิกร", "ธนาคาร", "KBANK", "SET"]},
+    {"symbol": "TTB.BK", "label": "TMBThanachart Bank", "thai_name": "ทีเอ็มบีธนชาต", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Banking", "industry": "Commercial Bank", "country": "Thailand", "currency": "THB", "aliases": ["TTB", "ทีทีบี", "ธนาคาร", "SET"]},
+    {"symbol": "CPALL.BK", "label": "CP All", "thai_name": "ซีพี ออลล์", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Consumer", "industry": "Retail", "country": "Thailand", "currency": "THB", "aliases": ["ค้าปลีก", "7-Eleven", "SET"]},
+    {"symbol": "DELTA.BK", "label": "Delta Electronics Thailand", "thai_name": "เดลต้า อีเลคโทรนิคส์", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Industrial", "industry": "Electronics", "country": "Thailand", "currency": "THB", "aliases": ["อิเล็กทรอนิกส์", "SET"]},
+    {"symbol": "ADVANC.BK", "label": "Advanced Info Service", "thai_name": "แอดวานซ์ อินโฟร์ เซอร์วิส", "asset_type": "stock", "exchange": "SET", "market": "Thailand", "sector": "Technology", "industry": "Telecommunications", "country": "Thailand", "currency": "THB", "aliases": ["AIS", "เอไอเอส", "สื่อสาร", "SET"]},
+
     {"symbol": "BTC-USD", "label": "Bitcoin", "asset_type": "crypto", "exchange": "Crypto", "market": "Crypto", "sector": "Crypto Layer1", "industry": "Digital Asset", "country": "Global", "currency": "USD", "aliases": ["BTC", "Bitcoin", "คริปโต"]},
-    {"symbol": "ETH-USD", "label": "Ethereum", "asset_type": "crypto", "exchange": "Crypto", "market": "Crypto", "sector": "Crypto Infrastructure", "industry": "Smart Contract Platform", "country": "Global", "currency": "USD", "aliases": ["ETH", "Ethereum"]},
+    {"symbol": "ETH-USD", "label": "Ethereum", "asset_type": "crypto", "exchange": "Crypto", "market": "Crypto", "sector": "Crypto Infrastructure", "industry": "Smart Contract Platform", "country": "Global", "currency": "USD", "aliases": ["ETH", "Ethereum", "คริปโต"]},
+    {"symbol": "SOL-USD", "label": "Solana", "asset_type": "crypto", "exchange": "Crypto", "market": "Crypto", "sector": "Crypto Layer1", "industry": "Smart Contract Platform", "country": "Global", "currency": "USD", "aliases": ["SOL", "Solana", "คริปโต"]},
+    {"symbol": "XRP-USD", "label": "XRP", "asset_type": "crypto", "exchange": "Crypto", "market": "Crypto", "sector": "Crypto Payments", "industry": "Digital Asset", "country": "Global", "currency": "USD", "aliases": ["XRP", "Ripple", "คริปโต"]},
+
     {"symbol": "SPY", "label": "SPDR S&P 500 ETF", "asset_type": "etf", "exchange": "NYSE Arca", "market": "ETF", "sector": "ETF", "industry": "US Large Cap ETF", "country": "US", "currency": "USD", "aliases": ["S&P 500", "ETF"]},
     {"symbol": "VOO", "label": "Vanguard S&P 500 ETF", "asset_type": "etf", "exchange": "NYSE Arca", "market": "ETF", "sector": "ETF", "industry": "US Large Cap ETF", "country": "US", "currency": "USD", "aliases": ["S&P 500", "ETF"]},
     {"symbol": "VTI", "label": "Vanguard Total Stock Market ETF", "asset_type": "etf", "exchange": "NYSE Arca", "market": "ETF", "sector": "ETF", "industry": "Total Stock Market ETF", "country": "US", "currency": "USD", "aliases": ["Total Stock", "Total Market", "ETF"]},
@@ -32,15 +46,26 @@
     {"symbol": "VNQ", "label": "Vanguard Real Estate ETF", "asset_type": "reit", "exchange": "NYSE Arca", "market": "REIT", "sector": "REIT", "industry": "Real Estate ETF", "country": "US", "currency": "USD", "aliases": ["Real Estate", "REIT"]},
     {"symbol": "SOXX", "label": "iShares Semiconductor ETF", "asset_type": "sector_etf", "exchange": "NASDAQ", "market": "Sector ETF", "sector": "Semiconductor", "industry": "Semiconductor ETF", "country": "US", "currency": "USD", "aliases": ["Semiconductor", "Chip ETF"]},
     {"symbol": "GLD", "label": "SPDR Gold Shares", "asset_type": "etf", "exchange": "NYSE Arca", "market": "ETF", "sector": "Gold", "industry": "Gold ETF", "country": "US", "currency": "USD", "aliases": ["Gold", "ทอง", "ทองคำ"]},
+    {"symbol": "SLV", "label": "iShares Silver Trust", "asset_type": "etf", "exchange": "NYSE Arca", "market": "ETF", "sector": "Silver", "industry": "Silver ETF", "country": "US", "currency": "USD", "aliases": ["Silver", "เงิน"]},
+
     {"symbol": "GC=F", "label": "Gold Futures", "asset_type": "commodity", "exchange": "COMEX", "market": "Commodities", "sector": "Gold", "industry": "Gold Futures", "country": "US", "currency": "USD", "aliases": ["Gold", "ทอง", "ทองคำ"]},
     {"symbol": "SI=F", "label": "Silver Futures", "asset_type": "commodity", "exchange": "COMEX", "market": "Commodities", "sector": "Silver", "industry": "Silver Futures", "country": "US", "currency": "USD", "aliases": ["Silver", "เงิน"]},
     {"symbol": "CL=F", "label": "WTI Crude Oil", "asset_type": "commodity", "exchange": "NYMEX", "market": "Commodities", "sector": "Oil", "industry": "WTI Crude Oil Futures", "country": "US", "currency": "USD", "aliases": ["Oil", "WTI", "น้ำมัน"]},
     {"symbol": "BZ=F", "label": "Brent Crude Oil", "asset_type": "commodity", "exchange": "ICE", "market": "Commodities", "sector": "Oil", "industry": "Brent Crude Oil Futures", "country": "Global", "currency": "USD", "aliases": ["Oil", "Brent", "น้ำมัน"]},
     {"symbol": "NG=F", "label": "Natural Gas", "asset_type": "commodity", "exchange": "NYMEX", "market": "Commodities", "sector": "Energy", "industry": "Natural Gas Futures", "country": "US", "currency": "USD", "aliases": ["Natural Gas", "ก๊าซ"]},
     {"symbol": "HG=F", "label": "Copper Futures", "asset_type": "commodity", "exchange": "COMEX", "market": "Commodities", "sector": "Copper", "industry": "Copper Futures", "country": "US", "currency": "USD", "aliases": ["Copper", "ทองแดง"]},
+
     {"symbol": "USDTHB=X", "label": "USD/THB", "asset_type": "fx", "exchange": "FX", "market": "Forex", "sector": "Forex", "industry": "Currency Pair", "country": "Global", "currency": "FX", "aliases": ["Dollar Baht", "ดอลลาร์ บาท"]},
+    {"symbol": "DX-Y.NYB", "label": "US Dollar Index", "asset_type": "fx", "exchange": "ICE", "market": "Forex", "sector": "Forex", "industry": "Dollar Index", "country": "US", "currency": "Index", "aliases": ["DXY", "Dollar Index"]},
+    {"symbol": "^TNX", "label": "US 10Y Treasury Yield", "asset_type": "macro", "exchange": "Bond Yield", "market": "Bonds", "sector": "Bonds", "industry": "Treasury Yield", "country": "US", "currency": "%", "aliases": ["US10Y", "Treasury Yield", "Bond Yield"]},
+
     {"symbol": "^GSPC", "label": "S&P 500", "asset_type": "index", "exchange": "US", "market": "Indices", "sector": "Index", "industry": "Equity Index", "country": "US", "currency": "USD", "aliases": ["S&P", "SPX"]},
+    {"symbol": "^IXIC", "label": "Nasdaq Composite", "asset_type": "index", "exchange": "US", "market": "Indices", "sector": "Index", "industry": "Equity Index", "country": "US", "currency": "USD", "aliases": ["Nasdaq", "Technology Index"]},
+    {"symbol": "^DJI", "label": "Dow Jones Industrial Average", "asset_type": "index", "exchange": "US", "market": "Indices", "sector": "Index", "industry": "Equity Index", "country": "US", "currency": "USD", "aliases": ["Dow Jones", "DJIA"]},
     {"symbol": "^SET.BK", "label": "SET Index", "asset_type": "index", "exchange": "SET", "market": "Indices", "sector": "Index", "industry": "Thai Equity Index", "country": "Thailand", "currency": "THB", "aliases": ["SET", "ตลาดหุ้นไทย"]},
-    {"symbol": "^TNX", "label": "US 10Y Treasury Yield", "asset_type": "macro", "exchange": "Bond Yield", "market": "Bonds", "sector": "Bonds", "industry": "Treasury Yield", "country": "US", "currency": "%", "aliases": ["US10Y", "Treasury Yield", "Bond Yield"]}
+    {"symbol": "^SET50.BK", "label": "SET50 Index", "asset_type": "index", "exchange": "SET", "market": "Indices", "sector": "Index", "industry": "Thai Equity Index", "country": "Thailand", "currency": "THB", "aliases": ["SET50", "ตลาดหุ้นไทย"]},
+    {"symbol": "^N225", "label": "Nikkei 225", "asset_type": "index", "exchange": "Japan", "market": "Indices", "sector": "Index", "industry": "Equity Index", "country": "Japan", "currency": "JPY", "aliases": ["Nikkei", "Japan"]},
+    {"symbol": "^HSI", "label": "Hang Seng", "asset_type": "index", "exchange": "Hong Kong", "market": "Indices", "sector": "Index", "industry": "Equity Index", "country": "Hong Kong", "currency": "HKD", "aliases": ["Hang Seng", "Hong Kong"]},
+    {"symbol": "^GDAXI", "label": "DAX", "asset_type": "index", "exchange": "Germany", "market": "Indices", "sector": "Index", "industry": "Equity Index", "country": "Germany", "currency": "EUR", "aliases": ["DAX", "Germany"]}
   ]
 }

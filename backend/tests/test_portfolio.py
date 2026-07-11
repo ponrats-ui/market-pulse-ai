@@ -28,3 +28,24 @@ def test_evaluate_portfolio_tracks_realized_pl_from_transactions() -> None:
     ], quote)
     assert payload["realized_gain_loss"] == 25
     assert payload["transaction_count"] == 2
+
+
+def test_evaluate_portfolio_builds_single_position_from_repeated_buys_and_sell() -> None:
+    def quote(symbol):
+        return {"symbol": symbol, "price": 140, "change_percent": 0, "currency": "USD", "source": "test", "timestamp": "2026-01-01T00:00:00Z"}
+
+    payload = evaluate_portfolio([
+        {"cashBalance": 1000, "transactions": [
+            {"symbol": "AAPL", "side": "buy", "quantity": 2, "price": 100},
+            {"symbol": "AAPL", "side": "buy", "quantity": 2, "price": 120},
+            {"symbol": "AAPL", "side": "sell", "quantity": 1, "price": 130},
+        ]},
+    ], quote)
+
+    assert len(payload["items"]) == 1
+    assert payload["items"][0]["symbol"] == "AAPL"
+    assert payload["items"][0]["quantity"] == 3
+    assert payload["items"][0]["average_cost"] == 110
+    assert payload["cash_balance"] == 690
+    assert payload["realized_gain_loss"] == 20
+    assert payload["items"][0]["market_value"] == 420

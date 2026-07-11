@@ -10,8 +10,8 @@ from app.providers.base import MarketDataProvider
 
 VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "5y", "max"}
 VALID_INTERVALS = {"1h", "1d", "1wk"}
-THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK"}
-GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META"}
+THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK", "SCB.BK", "TTB.BK", "ADVANC.BK"}
+GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META", "AMD", "TSM"}
 ETFS = {"SPY", "VOO", "QQQ", "VTI", "GLD", "SLV", "SOXX"}
 BOND_ETFS = {"TLT"}
 REITS = {"VNQ"}
@@ -116,23 +116,49 @@ class YFinanceProvider(MarketDataProvider):
         try:
             ticker = yf.Ticker(symbol)
             info = self._safe_info(ticker)
+            income = self._safe_statement(getattr(ticker, "financials", None))
+            balance = self._safe_statement(getattr(ticker, "balance_sheet", None))
+            cashflow = self._safe_statement(getattr(ticker, "cashflow", None))
+            revenue = self._statement_value(income, "Total Revenue")
+            gross_profit = self._statement_value(income, "Gross Profit")
+            operating_income = self._statement_value(income, "Operating Income")
+            net_income = self._statement_value(income, "Net Income")
+            operating_cash_flow = self._statement_value(cashflow, "Operating Cash Flow", "Total Cash From Operating Activities")
+            free_cash_flow = self._first_float(info.get("freeCashflow"), self._statement_value(cashflow, "Free Cash Flow"))
+            assets = self._statement_value(balance, "Total Assets")
+            liabilities = self._statement_value(balance, "Total Liabilities Net Minority Interest", "Total Liab")
+            equity = self._statement_value(balance, "Stockholders Equity", "Total Stockholder Equity")
+            cash = self._first_float(info.get("totalCash"), self._statement_value(balance, "Cash And Cash Equivalents", "Cash"))
+            debt = self._first_float(info.get("totalDebt"), self._statement_value(balance, "Total Debt"))
             return {
                 "symbol": symbol,
-                "revenueTrend": None,
-                "netProfitTrend": None,
+                "revenue": revenue,
+                "grossProfit": gross_profit,
+                "operatingIncome": operating_income,
+                "netIncome": net_income,
+                "ebitda": self._first_float(info.get("ebitda"), self._statement_value(income, "EBITDA")),
+                "operatingCashFlow": operating_cash_flow,
+                "totalAssets": assets,
+                "totalLiabilities": liabilities,
+                "totalEquity": equity,
+                "totalDebt": debt,
+                "revenueTrend": self._safe_float(info.get("revenueGrowth")),
+                "netProfitTrend": self._safe_float(info.get("earningsGrowth")),
                 "grossMargin": self._safe_float(info.get("grossMargins")),
+                "operatingMargin": self._safe_float(info.get("operatingMargins")),
                 "netMargin": self._safe_float(info.get("profitMargins")),
                 "debtToEquity": self._safe_float(info.get("debtToEquity")),
-                "cashFlowQuality": None,
+                "cashFlowQuality": self._cash_flow_quality(operating_cash_flow, net_income),
                 "roe": self._safe_float(info.get("returnOnEquity")),
                 "roa": self._safe_float(info.get("returnOnAssets")),
                 "eps": self._safe_float(info.get("trailingEps")),
                 "pe": self._safe_float(info.get("trailingPE")),
                 "pbv": self._safe_float(info.get("priceToBook")),
+                "ps": self._safe_float(info.get("priceToSalesTrailing12Months")),
                 "peg": self._safe_float(info.get("pegRatio")),
                 "intrinsicValue": None,
-                "totalCash": self._safe_float(info.get("totalCash")),
-                "freeCashFlow": self._safe_float(info.get("freeCashflow")),
+                "totalCash": cash,
+                "freeCashFlow": free_cash_flow,
                 "revenueGrowth": self._safe_float(info.get("revenueGrowth")),
                 "earningsGrowth": self._safe_float(info.get("earningsGrowth")),
                 "dividendYield": self._safe_float(info.get("dividendYield")),
@@ -208,6 +234,35 @@ class YFinanceProvider(MarketDataProvider):
             return ticker.fast_info
         except Exception:
             return {}
+
+    def _safe_statement(self, statement: Any) -> Any:
+        try:
+            if statement is None or statement.empty:
+                return None
+            return statement
+        except Exception:
+            return None
+
+    def _statement_value(self, statement: Any, *labels: str) -> float | None:
+        if statement is None:
+            return None
+        for label in labels:
+            try:
+                if label in statement.index and len(statement.columns):
+                    return self._safe_float(statement.loc[label].iloc[0])
+            except Exception:
+                continue
+        return None
+
+    def _cash_flow_quality(self, operating_cash_flow: float | None, net_income: float | None) -> str | None:
+        if operating_cash_flow is None or net_income in (None, 0):
+            return None
+        ratio = operating_cash_flow / net_income
+        if ratio >= 1:
+            return "operating cash flow covers reported net income"
+        if ratio >= 0:
+            return "operating cash flow is positive but below reported net income"
+        return "operating cash flow is negative"
 
     def _fast_value(self, fast_info: Any, key: str) -> Any:
         try:

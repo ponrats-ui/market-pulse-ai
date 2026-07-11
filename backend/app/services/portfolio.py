@@ -6,11 +6,16 @@ from typing import Any, Callable, Dict, List
 def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str], Dict[str, Any]]) -> Dict[str, Any]:
     cash_balance = _portfolio_cash(holdings)
     transactions = _portfolio_transactions(holdings)
-    realized_pl = _realized_pl(transactions)
+    if transactions:
+        cash_balance, position_inputs, realized_pl = _positions_from_transactions(cash_balance, transactions)
+    else:
+        position_inputs = _positions_from_holdings(holdings)
+        realized_pl = 0.0
+
     rows: List[Dict[str, Any]] = []
     total_value = 0.0
     total_cost = 0.0
-    for holding in holdings:
+    for holding in position_inputs:
         symbol = str(holding.get("symbol", "")).strip().upper()
         quantity = _number(holding.get("quantity"))
         average_cost = _number(holding.get("averageCost") or holding.get("average_cost"))
@@ -43,11 +48,12 @@ def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str],
     for row in rows:
         value = row.get("market_value")
         row["allocation_percent"] = (value / total_value) * 100 if isinstance(value, (int, float)) and total_value else None
+    total_equity = total_value + cash_balance
     return {
         "items": rows,
         "cash_balance": cash_balance,
         "total_value": total_value if total_value else None,
-        "total_equity": (total_value + cash_balance) if total_value or cash_balance else None,
+        "total_equity": total_equity if total_value or cash_balance else None,
         "total_cost": total_cost if total_cost else None,
         "total_gain_loss": total_value - total_cost if total_value and total_cost else None,
         "total_gain_loss_percent": ((total_value - total_cost) / total_cost) * 100 if total_value and total_cost else None,
@@ -95,27 +101,56 @@ def _portfolio_transactions(holdings: List[Dict[str, Any]]) -> List[Dict[str, An
     return []
 
 
-def _realized_pl(transactions: List[Dict[str, Any]]) -> float:
-    positions: Dict[str, Dict[str, float]] = {}
+def _positions_from_holdings(holdings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    positions: Dict[str, Dict[str, float | str]] = {}
+    for holding in holdings:
+        symbol = str(holding.get("symbol", "")).strip().upper()
+        quantity = _number(holding.get("quantity"))
+        average_cost = _number(holding.get("averageCost") or holding.get("average_cost"))
+        if not symbol or quantity is None or average_cost is None or quantity <= 0:
+            continue
+        position = positions.setdefault(symbol, {"symbol": symbol, "quantity": 0.0, "cost": 0.0})
+        position["quantity"] = float(position["quantity"]) + quantity
+        position["cost"] = float(position["cost"]) + (quantity * average_cost)
+    return [
+        {"symbol": symbol, "quantity": position["quantity"], "averageCost": float(position["cost"]) / float(position["quantity"])}
+        for symbol, position in positions.items()
+        if float(position["quantity"]) > 0
+    ]
+
+
+def _positions_from_transactions(initial_cash: float, transactions: List[Dict[str, Any]]) -> tuple[float, List[Dict[str, Any]], float]:
+    positions: Dict[str, Dict[str, float | str]] = {}
+    cash = initial_cash
     realized = 0.0
     for transaction in transactions:
         symbol = str(transaction.get("symbol", "")).strip().upper()
         side = str(transaction.get("side", "")).strip().lower()
         quantity = _number(transaction.get("quantity"))
         price = _number(transaction.get("price"))
-        if not symbol or quantity is None or price is None or quantity <= 0:
+        if not symbol or quantity is None or price is None or quantity <= 0 or price < 0:
             continue
-        position = positions.setdefault(symbol, {"quantity": 0.0, "cost": 0.0})
+        position = positions.setdefault(symbol, {"symbol": symbol, "quantity": 0.0, "cost": 0.0})
         if side == "buy":
-            position["quantity"] += quantity
-            position["cost"] += quantity * price
-        elif side == "sell" and position["quantity"] > 0:
-            average_cost = position["cost"] / position["quantity"] if position["quantity"] else 0
-            sold = min(quantity, position["quantity"])
+            position["quantity"] = float(position["quantity"]) + quantity
+            position["cost"] = float(position["cost"]) + quantity * price
+            cash -= quantity * price
+        elif side == "sell":
+            held = float(position["quantity"])
+            if held <= 0:
+                continue
+            sold = min(quantity, held)
+            average_cost = float(position["cost"]) / held if held else 0.0
             realized += (price - average_cost) * sold
-            position["quantity"] -= sold
-            position["cost"] -= average_cost * sold
-    return realized
+            position["quantity"] = held - sold
+            position["cost"] = float(position["cost"]) - average_cost * sold
+            cash += sold * price
+    rows = [
+        {"symbol": symbol, "quantity": position["quantity"], "averageCost": float(position["cost"]) / float(position["quantity"])}
+        for symbol, position in positions.items()
+        if float(position["quantity"]) > 0
+    ]
+    return cash, rows, realized
 
 
 def _weighted_daily_return(rows: List[Dict[str, Any]]) -> float | None:

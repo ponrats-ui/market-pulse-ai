@@ -20,25 +20,37 @@ def build_financial_statement_analysis(symbol: str, provider_payload: Dict[str, 
 
     data = provider_payload or {}
     facts = {
-        "revenue_trend": data.get("revenueTrend"),
-        "net_profit_trend": data.get("netProfitTrend"),
+        "revenue": _first(data, "revenue", "totalRevenue"),
+        "gross_profit": _first(data, "grossProfit"),
+        "operating_income": _first(data, "operatingIncome"),
+        "net_income": _first(data, "netIncome"),
+        "eps": _first(data, "eps", "trailingEps"),
+        "ebitda": _first(data, "ebitda"),
+        "free_cash_flow": _first(data, "freeCashFlow"),
+        "operating_cash_flow": _first(data, "operatingCashFlow"),
+        "assets": _first(data, "totalAssets"),
+        "liabilities": _first(data, "totalLiabilities"),
+        "equity": _first(data, "totalEquity"),
+        "cash": _first(data, "totalCash"),
+        "debt": _first(data, "totalDebt"),
+        "roe": _first(data, "roe", "returnOnEquity"),
+        "roa": _first(data, "roa", "returnOnAssets"),
         "gross_margin": data.get("grossMargin"),
+        "operating_margin": data.get("operatingMargin"),
         "net_margin": data.get("netMargin"),
-        "debt_to_equity": data.get("debtToEquity"),
-        "cash_flow_quality": data.get("cashFlowQuality"),
-        "roe": data.get("roe"),
-        "roa": data.get("roa"),
-        "eps": data.get("eps"),
         "pe": data.get("pe"),
         "pbv": data.get("pbv"),
+        "ps": data.get("ps"),
         "peg": data.get("peg"),
-        "intrinsic_value": data.get("intrinsicValue"),
-        "cash": data.get("totalCash"),
-        "free_cash_flow": data.get("freeCashFlow"),
+        "dividend_yield": data.get("dividendYield"),
+        "debt_to_equity": data.get("debtToEquity"),
+        "cash_flow_quality": data.get("cashFlowQuality"),
+        "revenue_trend": _first(data, "revenueTrend", "revenueGrowth"),
+        "net_profit_trend": _first(data, "netProfitTrend", "earningsGrowth"),
         "revenue_growth": data.get("revenueGrowth"),
         "earnings_growth": data.get("earningsGrowth"),
-        "dividend_yield": data.get("dividendYield"),
         "three_to_five_year_trend": data.get("threeToFiveYearTrend"),
+        "intrinsic_value": data.get("intrinsicValue"),
     }
     if data.get("error") or all(value is None for value in facts.values()):
         return {
@@ -52,6 +64,7 @@ def build_financial_statement_analysis(symbol: str, provider_payload: Dict[str, 
             "risks": ["Financial statement analysis is unavailable until provider data is returned."],
             "cautious_action_plan": ["Review official company filings before making any decision."],
             "source": data.get("source", "yfinance"),
+            "provider_gap": data.get("error") or "Provider returned no equivalent statement, balance sheet, cash flow, valuation, or margin fields.",
             "disclaimer": "This is not financial advice.",
         }
     return {
@@ -99,3 +112,11 @@ def _alternative_fundamentals(asset_type: str) -> Dict[str, Any]:
         "asset_type": asset_type,
         "focus_areas": alternatives.get(asset_type, ["liquidity", "volatility", "macro context"]),
     }
+
+
+def _first(data: Dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        value = data.get(key)
+        if value is not None:
+            return value
+    return None

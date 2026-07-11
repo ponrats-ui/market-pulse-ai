@@ -66,6 +66,8 @@ def news_impact_for_symbol(symbol: str, limit: int = 10) -> Dict[str, Any]:
         {
             "headline": item["title"],
             "source": item.get("source", payload["source"]),
+            "url": item.get("url"),
+            "published_at": item.get("published_at"),
             "category": item["category"],
             "asset_impact": item["immediate_impact"],
             "immediate_impact": item["immediate_impact"],

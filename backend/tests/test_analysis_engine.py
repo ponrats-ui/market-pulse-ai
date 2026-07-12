@@ -92,6 +92,7 @@ def test_engine_reports_version_profile_regime_and_evidence() -> None:
     assert payload["learning"]["lifecycle"] == ["experiment", "promote", "rollback"]
     assert payload["timestamp"]
     assert payload["final_recommendation"]["disclaimer"] == "This is not financial advice. No assured outcome or direct buy/sell instruction is provided."
+    assert payload["final_recommendation"]["recommendation"] in {"Accumulate", "Buy", "Hold", "Wait", "Reduce", "Avoid", "Sell"}
     assert "น่า" in payload["risk_engine"]["recommended_action"] or "รอ" in payload["risk_engine"]["recommended_action"]
     assert "เธ" not in payload["risk_engine"]["recommended_action"]
     assert "เธ" not in payload["final_recommendation"]["cautious_action"]

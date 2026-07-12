@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List
 
 from app.analysis_engine import build_adaptive_recommendation
@@ -233,7 +234,8 @@ def _risk_trend(value: int, volatility_hint: str) -> str:
 def _validate_language(payload: Dict[str, Any]) -> None:
     text = str(payload).lower()
     for word in RESTRICTED_WORDS:
-        if word in text:
+        pattern = re.escape(word) if " " in word else rf"\b{re.escape(word)}\b"
+        if re.search(pattern, text):
             raise ValueError(f"Restricted analysis wording detected: {word}")
 
 
@@ -249,6 +251,10 @@ def _adaptive_aliases(adaptive: Dict[str, Any]) -> Dict[str, Any]:
         "probability": adaptive["probability"],
         "investment_thesis": adaptive["investment_thesis"],
         "risk_engine": adaptive["risk_engine"],
+        "committee_opinions": adaptive["committee_opinions"],
+        "final_recommendation": adaptive["final_recommendation"],
+        "chief_investment_ai": adaptive["final_recommendation"],
+        "probability_engine": adaptive["probability_engine"],
         "limitations": adaptive["limitations"],
         "timestamp": adaptive["timestamp"],
     }

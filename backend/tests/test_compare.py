@@ -34,3 +34,18 @@ def test_compare_handles_missing_crypto_valuation(monkeypatch):
     assert payload["symbols"] == ["BTC-USD", "ETH-USD"]
     assert payload["radar_chart"][0]["valuation"] is None
     assert payload["radar_chart"][0]["profitability"] is None
+
+
+def test_compare_canonicalizes_aliases_and_reports_unsupported(monkeypatch):
+    def quote(symbol):
+        return {"symbol": symbol, "name": symbol, "asset_type": "stock", "price": 2, "change_percent": 0, "currency": "THB", "source": "test", "timestamp": "2026-01-01T00:00:00Z"}
+
+    def history(symbol, range, interval):
+        return {"symbol": symbol, "points": [{"time": "t1", "close": 2}, {"time": "t2", "close": 2.2}, {"time": "t3", "close": 2.1}], "source": "test"}
+
+    monkeypatch.setattr(main, "get_cached_quote", quote)
+    monkeypatch.setattr(main, "get_cached_history", history)
+    payload = main.compare("TTB,TTB.BK,RKLB")
+    assert payload["symbols"] == ["TTB.BK"]
+    assert payload["items"][0]["symbol"] == "TTB.BK"
+    assert payload["unsupported_symbols"] == [{"symbol": "RKLB", "reason": "unsupported_under_current_universe"}]

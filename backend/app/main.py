@@ -9,10 +9,13 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app.providers.registry import get_provider
+from app.data_hub import provider_router
+from app.data_hub.capabilities import capabilities_for_symbol
+from app.data_hub.exchange_master import exchange_master_metadata, validate_exchange_master
+from app.data_hub.symbol_resolver import resolve_symbol
 from app.services.analysis import build_ai_analysis, build_risk
 from app.services.asset_universe import assets_for_sector, search_assets, sector_browser
-from app.services.cache import HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
+from app.services.cache import FUNDAMENTALS_TTL_SECONDS, HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
 from app.services.calendar import economic_calendar
 from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
@@ -21,7 +24,6 @@ from app.services.news import news_for_symbol, news_impact_for_symbol
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
-from app.services.exchange_master import exchange_master_metadata
 from app.services.subscription import subscription_features
 from app.services.technical import build_technical_analysis
 
@@ -88,6 +90,26 @@ def asset_search(q: str = Query(""), limit: int = Query(12, ge=1, le=25)) -> Dic
 
 @app.get("/api/exchange-master")
 def exchange_master() -> Dict[str, Any]:
+    return exchange_master_metadata()
+
+
+@app.get("/api/data-hub/status")
+def data_hub_status() -> Dict[str, Any]:
+    return {**provider_router.status(), "validation": validate_exchange_master()}
+
+
+@app.get("/api/data-hub/assets/{symbol}/capabilities")
+def data_hub_capabilities(symbol: str) -> Dict[str, Any]:
+    return capabilities_for_symbol(symbol)
+
+
+@app.get("/api/data-hub/resolve")
+def data_hub_resolve(q: str = Query("")) -> Dict[str, Any]:
+    return provider_router.resolve(q)
+
+
+@app.get("/api/data-hub/universe/metadata")
+def data_hub_universe_metadata() -> Dict[str, Any]:
     return exchange_master_metadata()
 
 
@@ -210,28 +232,39 @@ def risk(symbol: str) -> Dict[str, Any]:
 
 @app.get("/api/financials/{symbol}")
 def financials(symbol: str) -> Dict[str, Any]:
-    provider = get_provider(DEFAULT_PROVIDER)
-    provider_payload = provider.get_financials(symbol)
+    provider_payload = get_cached_fundamentals(symbol)
     quote = get_cached_quote(symbol)
     return build_financial_statement_analysis(symbol, provider_payload, quote)
 
 
 def get_cached_quote(symbol: str) -> Dict[str, Any]:
-    provider = get_provider(DEFAULT_PROVIDER)
-    key = cache_key(provider.name, "quote", symbol)
+    resolved = resolve_symbol(symbol)
+    canonical = resolved.canonical_symbol or symbol
+    key = cache_key(DEFAULT_PROVIDER, "quote", canonical)
     cached = cache.get(key)
     if cached is not None:
         return cached
-    return cache.set(key, provider.get_quote(symbol), QUOTE_TTL_SECONDS)
+    return cache.set(key, provider_router.get_quote(symbol), QUOTE_TTL_SECONDS)
 
 
 def get_cached_history(symbol: str, range: str, interval: str) -> Dict[str, Any]:
-    provider = get_provider(DEFAULT_PROVIDER)
-    key = cache_key(provider.name, "history", symbol, range, interval)
+    resolved = resolve_symbol(symbol)
+    canonical = resolved.canonical_symbol or symbol
+    key = cache_key(DEFAULT_PROVIDER, "history", canonical, range, interval)
     cached = cache.get(key)
     if cached is not None:
         return cached
-    return cache.set(key, provider.get_history(symbol, range, interval), HISTORICAL_TTL_SECONDS)
+    return cache.set(key, provider_router.get_history(symbol, range, interval), HISTORICAL_TTL_SECONDS)
+
+
+def get_cached_fundamentals(symbol: str) -> Dict[str, Any]:
+    resolved = resolve_symbol(symbol)
+    canonical = resolved.canonical_symbol or symbol
+    key = cache_key(DEFAULT_PROVIDER, "fundamentals", canonical)
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    return cache.set(key, provider_router.get_fundamentals(symbol), FUNDAMENTALS_TTL_SECONDS)
 
 
 def _load_watchlist() -> Dict[str, Any]:

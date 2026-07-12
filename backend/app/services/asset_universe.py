@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
-from app.services.exchange_master import exchange_master_assets, exchange_master_metadata
+from app.data_hub.exchange_master import exchange_master_metadata, list_assets
 
 
 ASSET_UNIVERSE: List[Dict[str, str]] = [
@@ -128,7 +128,7 @@ ASSET_METADATA = {
 
 def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
     term = LEGACY_THAI_QUERY_ALIASES.get(query.strip(), query.strip()).lower()
-    universe = exchange_master_assets() or ASSET_UNIVERSE
+    universe = _data_hub_assets() or ASSET_UNIVERSE
     if not term:
         matches = universe[:limit]
     else:
@@ -144,7 +144,7 @@ def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
 
 
 def sector_browser() -> Dict[str, Any]:
-    universe = exchange_master_assets() or ASSET_UNIVERSE
+    universe = _data_hub_assets() or ASSET_UNIVERSE
     sectors_by_name: Dict[str, List[Dict[str, Any]]] = {}
     for asset in universe:
         sector = asset.get("sector") or asset.get("asset_type") or "Unclassified"
@@ -164,7 +164,7 @@ def sector_browser() -> Dict[str, Any]:
 def assets_for_sector(sector: str, limit: int = 25) -> Dict[str, Any]:
     target = sector.strip().lower()
     safe_limit = limit if isinstance(limit, int) else 25
-    universe = exchange_master_assets() or ASSET_UNIVERSE
+    universe = _data_hub_assets() or ASSET_UNIVERSE
     assets = [_enrich_asset(asset) for asset in universe if str(asset.get("sector") or asset.get("asset_type") or "").lower() == target][:safe_limit]
     return {"sector": sector, "count": len(assets), "assets": assets, "source": exchange_master_metadata().get("source", "exchange_master")}
 
@@ -202,6 +202,10 @@ def _enrich_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
     return {
         **asset,
         **metadata,
-        "thai_name": thai_alias or asset.get("thai_name", ""),
+        "thai_name": asset.get("thai_name", "") or thai_alias or "",
         "alias": " ".join(part for part in [asset.get("keywords", ""), thai_alias or ""] if part),
     }
+
+
+def _data_hub_assets() -> List[Dict[str, Any]]:
+    return [asset.to_search_asset() for asset in list_assets(enabled_only=True)]

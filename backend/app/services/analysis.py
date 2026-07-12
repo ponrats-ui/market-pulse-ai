@@ -46,6 +46,7 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history:
             "invalidation": "Unavailable until sufficient market data is available.",
             "cautious_action_plan": ["Wait for complete market data before forming a view."],
             "disclaimer": "This is not financial advice.",
+            "data_hub": quote.get("data_hub"),
             "adaptive_engine": adaptive,
             **adaptive_aliases,
         }
@@ -91,6 +92,7 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history:
             "Scale decisions gradually and avoid assuming any outcome is fixed.",
         ],
         "disclaimer": "This is not financial advice. No direct buy/sell instruction is provided.",
+        "data_hub": quote.get("data_hub"),
         "adaptive_engine": adaptive,
         **adaptive_aliases,
     }
@@ -115,6 +117,7 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
             "interpretation": "Unable to estimate risk.",
             "categories": _risk_categories(symbol, None, "unknown"),
             "disclaimer": "This is not financial advice.",
+            "data_hub": quote.get("data_hub"),
         }
     score = _risk_score(symbol, change_percent, quote)
     if realized_hint == "high":
@@ -140,6 +143,7 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
         "interpretation": "Higher scores suggest wider price swings and a need for tighter risk controls.",
         "categories": _risk_categories(symbol, score, realized_hint),
         "disclaimer": "This is not financial advice.",
+        "data_hub": quote.get("data_hub"),
     }
 
 

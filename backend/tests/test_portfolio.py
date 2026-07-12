@@ -49,3 +49,19 @@ def test_evaluate_portfolio_builds_single_position_from_repeated_buys_and_sell()
     assert payload["cash_balance"] == 690
     assert payload["realized_gain_loss"] == 20
     assert payload["items"][0]["market_value"] == 420
+
+
+def test_evaluate_portfolio_canonicalizes_aliases_and_rejects_unsupported() -> None:
+    def quote(symbol):
+        return {"symbol": symbol, "price": 2, "change_percent": 0, "currency": "THB", "source": "test", "timestamp": "2026-01-01T00:00:00Z"}
+
+    payload = evaluate_portfolio([
+        {"symbol": "TTB", "quantity": 10, "averageCost": 1},
+        {"symbol": "TTB.BK", "quantity": 5, "averageCost": 2},
+        {"symbol": "RKLB", "quantity": 1, "averageCost": 1},
+    ], quote)
+    assert len(payload["items"]) == 1
+    assert payload["items"][0]["symbol"] == "TTB.BK"
+    assert payload["items"][0]["quantity"] == 15
+    assert payload["items"][0]["average_cost"] == 1.3333333333333333
+    assert payload["unsupported_symbols"] == [{"symbol": "RKLB", "reason": "unsupported_under_current_universe"}]

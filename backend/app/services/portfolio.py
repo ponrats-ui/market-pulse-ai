@@ -2,14 +2,17 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, List
 
+from app.data_hub.symbol_resolver import resolve_symbol
+
 
 def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str], Dict[str, Any]]) -> Dict[str, Any]:
     cash_balance = _portfolio_cash(holdings)
     transactions = _portfolio_transactions(holdings)
+    unsupported: List[Dict[str, str]] = []
     if transactions:
-        cash_balance, position_inputs, realized_pl = _positions_from_transactions(cash_balance, transactions)
+        cash_balance, position_inputs, realized_pl, unsupported = _positions_from_transactions(cash_balance, transactions)
     else:
-        position_inputs = _positions_from_holdings(holdings)
+        position_inputs, unsupported = _positions_from_holdings(holdings)
         realized_pl = 0.0
 
     rows: List[Dict[str, Any]] = []
@@ -68,6 +71,7 @@ def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str],
         "performance_points": [],
         "transaction_history": transactions,
         "transaction_count": len(transactions),
+        "unsupported_symbols": unsupported,
         "analytics_status": "partial",
         "analytics_unavailable_reason": "Sharpe ratio, drawdown, and performance chart require persisted portfolio value history.",
         "currency_conversion": "Unavailable until FX conversion provider is configured.",
@@ -101,10 +105,16 @@ def _portfolio_transactions(holdings: List[Dict[str, Any]]) -> List[Dict[str, An
     return []
 
 
-def _positions_from_holdings(holdings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _positions_from_holdings(holdings: List[Dict[str, Any]]) -> tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
     positions: Dict[str, Dict[str, float | str]] = {}
+    unsupported: List[Dict[str, str]] = []
     for holding in holdings:
-        symbol = str(holding.get("symbol", "")).strip().upper()
+        raw_symbol = str(holding.get("symbol", "")).strip()
+        resolved = resolve_symbol(raw_symbol)
+        if raw_symbol and not resolved.ok:
+            unsupported.append({"symbol": raw_symbol, "reason": resolved.reason or "unsupported"})
+            continue
+        symbol = resolved.canonical_symbol or raw_symbol.upper()
         quantity = _number(holding.get("quantity"))
         average_cost = _number(holding.get("averageCost") or holding.get("average_cost"))
         if not symbol or quantity is None or average_cost is None or quantity <= 0:
@@ -116,15 +126,21 @@ def _positions_from_holdings(holdings: List[Dict[str, Any]]) -> List[Dict[str, A
         {"symbol": symbol, "quantity": position["quantity"], "averageCost": float(position["cost"]) / float(position["quantity"])}
         for symbol, position in positions.items()
         if float(position["quantity"]) > 0
-    ]
+    ], unsupported
 
 
-def _positions_from_transactions(initial_cash: float, transactions: List[Dict[str, Any]]) -> tuple[float, List[Dict[str, Any]], float]:
+def _positions_from_transactions(initial_cash: float, transactions: List[Dict[str, Any]]) -> tuple[float, List[Dict[str, Any]], float, List[Dict[str, str]]]:
     positions: Dict[str, Dict[str, float | str]] = {}
     cash = initial_cash
     realized = 0.0
+    unsupported: List[Dict[str, str]] = []
     for transaction in transactions:
-        symbol = str(transaction.get("symbol", "")).strip().upper()
+        raw_symbol = str(transaction.get("symbol", "")).strip()
+        resolved = resolve_symbol(raw_symbol)
+        if raw_symbol and not resolved.ok:
+            unsupported.append({"symbol": raw_symbol, "reason": resolved.reason or "unsupported"})
+            continue
+        symbol = resolved.canonical_symbol or raw_symbol.upper()
         side = str(transaction.get("side", "")).strip().lower()
         quantity = _number(transaction.get("quantity"))
         price = _number(transaction.get("price"))
@@ -150,7 +166,7 @@ def _positions_from_transactions(initial_cash: float, transactions: List[Dict[st
         for symbol, position in positions.items()
         if float(position["quantity"]) > 0
     ]
-    return cash, rows, realized
+    return cash, rows, realized, unsupported
 
 
 def _weighted_daily_return(rows: List[Dict[str, Any]]) -> float | None:

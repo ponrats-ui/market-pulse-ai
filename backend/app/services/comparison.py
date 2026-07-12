@@ -2,11 +2,23 @@
 
 from typing import Any, Callable, Dict, List
 
+from app.data_hub.symbol_resolver import resolve_symbol
 from app.services.analysis import build_risk
 
 
 def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any]], history_fn: Callable[[str, str, str], Dict[str, Any]]) -> Dict[str, Any]:
-    selected = [symbol.strip() for symbol in symbols if symbol.strip()][:5]
+    selected: List[str] = []
+    unsupported: List[Dict[str, str]] = []
+    for raw_symbol in symbols:
+        if not raw_symbol.strip():
+            continue
+        resolved = resolve_symbol(raw_symbol)
+        if resolved.ok and resolved.canonical_symbol:
+            if resolved.canonical_symbol not in selected:
+                selected.append(resolved.canonical_symbol)
+        else:
+            unsupported.append({"symbol": raw_symbol.strip(), "reason": resolved.reason or "unsupported"})
+    selected = selected[:5]
     items: List[Dict[str, Any]] = []
     histories: Dict[str, Dict[str, Any]] = {}
     for symbol in selected:
@@ -57,6 +69,7 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
     return {
         "symbols": selected,
         "items": items,
+        "unsupported_symbols": unsupported,
         "performance_points": _performance_points(selected, histories),
         "correlation_matrix": _correlation_matrix(selected, histories),
         "radar_chart": _radar_chart(items),

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import time
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, Hashable, Tuple
 
-QUOTE_TTL_SECONDS = 60
-HISTORICAL_TTL_SECONDS = 300
-WATCHLIST_TTL_SECONDS = 300
-INTELLIGENCE_TTL_SECONDS = 900
+QUOTE_TTL_SECONDS = int(os.getenv("DATA_HUB_QUOTE_TTL_SECONDS", "60"))
+HISTORICAL_TTL_SECONDS = int(os.getenv("DATA_HUB_HISTORY_TTL_SECONDS", "300"))
+WATCHLIST_TTL_SECONDS = int(os.getenv("DATA_HUB_ASSET_MASTER_TTL_SECONDS", "300"))
+INTELLIGENCE_TTL_SECONDS = int(os.getenv("DATA_HUB_NEWS_TTL_SECONDS", "900"))
+FUNDAMENTALS_TTL_SECONDS = int(os.getenv("DATA_HUB_FUNDAMENTALS_TTL_SECONDS", "3600"))
 
 
 @dataclass

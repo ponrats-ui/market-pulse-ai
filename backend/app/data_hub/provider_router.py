@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List
 
 from app.data_hub.exchange_master import exchange_master_metadata
+from app.data_hub.provider_health import provider_health_snapshot, record_provider_result, timed_provider_call
 from app.data_hub.symbol_resolver import ResolutionResult, resolve_symbol
 from app.providers.news import get_news_aggregator
 from app.providers.registry import get_provider
@@ -64,6 +65,7 @@ def status() -> Dict[str, Any]:
     return {
         "status": "ok",
         "policy": routing_policy(),
+        "provider_health": provider_health_snapshot(),
         "universe": exchange_master_metadata(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "limitations": [
@@ -83,11 +85,12 @@ def _with_market_provider(data_type: str, query: str, call: Callable[[Any, str],
         provider_symbol = resolved.provider_symbols.get(provider_name)
         if not provider_symbol:
             failures.append({"provider": provider_name, "reason": "provider_symbol_unavailable"})
+            record_provider_result(provider_name, False, False, reason="provider_symbol_unavailable")
             continue
         provider = get_provider(provider_name)
         logger.info("provider_selected", extra={"provider": provider.name, "data_type": data_type, "symbol": resolved.canonical_symbol})
         try:
-            payload = call(provider, provider_symbol)
+            payload = timed_provider_call(provider.name, True, lambda: call(provider, provider_symbol))
             if payload.get("error"):
                 failures.append({"provider": provider.name, "reason": str(payload.get("error"))})
                 logger.warning("provider_failure", extra={"provider": provider.name, "data_type": data_type, "symbol": resolved.canonical_symbol})
@@ -100,6 +103,7 @@ def _with_market_provider(data_type: str, query: str, call: Callable[[Any, str],
             }
         except Exception as exc:
             failures.append({"provider": provider_name, "reason": str(exc)})
+            record_provider_result(provider_name, True, False, reason=str(exc))
             logger.warning("provider_failure", extra={"provider": provider_name, "data_type": data_type, "symbol": resolved.canonical_symbol})
     return _unavailable(resolved.canonical_symbol, data_type, resolved, failures)
 

@@ -130,7 +130,7 @@ class YFinanceProvider(MarketDataProvider):
             equity = self._statement_value(balance, "Stockholders Equity", "Total Stockholder Equity")
             cash = self._first_float(info.get("totalCash"), self._statement_value(balance, "Cash And Cash Equivalents", "Cash"))
             debt = self._first_float(info.get("totalDebt"), self._statement_value(balance, "Total Debt"))
-            return {
+            fields = {
                 "symbol": symbol,
                 "revenue": revenue,
                 "grossProfit": gross_profit,
@@ -168,6 +168,16 @@ class YFinanceProvider(MarketDataProvider):
                 "valuationRisk": None,
                 "source": self.name,
             }
+            fields["field_provenance"] = {
+                key: {
+                    "provider": self.name,
+                    "source": "yfinance.info" if key in {"roe", "roa", "eps", "pe", "pbv", "ps", "peg", "dividendYield", "revenueGrowth", "earningsGrowth"} else "yfinance.statements",
+                    "available": value is not None,
+                }
+                for key, value in fields.items()
+                if key not in {"symbol", "source", "field_provenance"}
+            }
+            return fields
         except Exception as exc:
             return {"symbol": symbol, "source": self.name, "error": str(exc)}
 

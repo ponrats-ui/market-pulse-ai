@@ -16,6 +16,7 @@ class EconomicCalendarProvider(ABC):
 def unavailable_calendar(provider: str, reason: str) -> Dict[str, Any]:
     return {
         "events": [],
+        "items": [],
         "provider": provider,
         "source": "Unavailable",
         "provider_configured": False,

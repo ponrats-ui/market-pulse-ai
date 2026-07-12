@@ -13,6 +13,8 @@ from app.data_hub import provider_router
 from app.data_hub.capabilities import capabilities_for_symbol
 from app.data_hub.exchange_master import exchange_master_metadata, validate_exchange_master
 from app.data_hub.symbol_resolver import resolve_symbol
+from app.premium.alerts import build_digest, evaluate_alert_rules
+from app.premium.entitlements import entitlement_matrix, evaluate_entitlement
 from app.services.analysis import build_ai_analysis, build_risk
 from app.services.asset_universe import assets_for_sector, search_assets, sector_browser
 from app.services.cache import FUNDAMENTALS_TTL_SECONDS, HISTORICAL_TTL_SECONDS, QUOTE_TTL_SECONDS, WATCHLIST_TTL_SECONDS, cache, cache_key
@@ -57,6 +59,23 @@ class AssistantRequest(BaseModel):
 
 class PortfolioRequest(BaseModel):
     holdings: list[dict[str, Any]] = []
+
+
+class EntitlementRequest(BaseModel):
+    plan: str = "free"
+    feature: str = "market_data"
+
+
+class AlertEvaluationRequest(BaseModel):
+    plan: str = "free"
+    rules: list[dict[str, Any]] = []
+    context: dict[str, Any] = {}
+    quiet_mode: dict[str, Any] = {}
+
+
+class DigestRequest(BaseModel):
+    kind: str = "morning_brief"
+    context: dict[str, Any] = {}
 
 
 app = FastAPI(title="Market Pulse AI API", version="0.3.0")
@@ -208,6 +227,26 @@ def macro() -> Dict[str, Any]:
 @app.get("/api/subscription/features")
 def subscription() -> Dict[str, Any]:
     return subscription_features()
+
+
+@app.get("/api/premium/entitlements")
+def premium_entitlements() -> Dict[str, Any]:
+    return entitlement_matrix()
+
+
+@app.post("/api/premium/entitlements/check")
+def premium_entitlement_check(payload: EntitlementRequest) -> Dict[str, Any]:
+    return evaluate_entitlement(payload.plan, payload.feature).__dict__
+
+
+@app.post("/api/alerts/evaluate")
+def alerts_evaluate(payload: AlertEvaluationRequest) -> Dict[str, Any]:
+    return evaluate_alert_rules(payload.rules, payload.context, payload.plan, payload.quiet_mode)
+
+
+@app.post("/api/digests/build")
+def digests_build(payload: DigestRequest) -> Dict[str, Any]:
+    return build_digest(payload.kind, payload.context)
 
 
 @app.get("/api/company-events/{symbol}")

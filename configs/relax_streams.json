@@ -1,72 +1,72 @@
-[
-  {
-    "id": "market-focus-radio-default",
-    "title": "Market Focus Radio",
-    "title_th": "วิทยุสำหรับโฟกัสตลาด",
-    "channel": "YouTube Mix",
-    "youtube_url": "https://www.youtube.com/watch?v=-DfHaOYeaqk&list=RD-DfHaOYeaqk&start_radio=1",
-    "embed_url": "https://www.youtube.com/embed/-DfHaOYeaqk?list=RD-DfHaOYeaqk",
-    "category": "lofi",
-    "enabled": true
-  },
-  {
-    "id": "lofi-1",
-    "title": "Lo-fi Focus",
-    "title_th": "โลไฟสำหรับโฟกัส",
-    "channel": "Lofi Girl",
-    "youtube_url": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
-    "embed_url": "https://www.youtube.com/embed/jfKfPfyJRdk",
-    "category": "lofi",
-    "enabled": true
-  },
-  {
-    "id": "piano-configurable",
-    "title": "Piano Focus Stream",
-    "title_th": "เปียโนสำหรับโฟกัส",
-    "channel": "Configure an embeddable YouTube channel",
-    "youtube_url": "",
-    "embed_url": "",
-    "category": "piano",
-    "enabled": false
-  },
-  {
-    "id": "jazz-configurable",
-    "title": "Jazz Focus Stream",
-    "title_th": "แจ๊สสำหรับโฟกัส",
-    "channel": "Configure an embeddable YouTube channel",
-    "youtube_url": "",
-    "embed_url": "",
-    "category": "jazz",
-    "enabled": false
-  },
-  {
-    "id": "ambient-configurable",
-    "title": "Ambient Focus Stream",
-    "title_th": "แอมเบียนต์สำหรับโฟกัส",
-    "channel": "Configure an embeddable YouTube channel",
-    "youtube_url": "",
-    "embed_url": "",
-    "category": "ambient",
-    "enabled": false
-  },
-  {
-    "id": "nature-configurable",
-    "title": "Nature Focus Stream",
-    "title_th": "เสียงธรรมชาติสำหรับโฟกัส",
-    "channel": "Configure an embeddable YouTube channel",
-    "youtube_url": "",
-    "embed_url": "",
-    "category": "nature",
-    "enabled": false
-  },
-  {
-    "id": "classical-configurable",
-    "title": "Classical Focus Stream",
-    "title_th": "คลาสสิกสำหรับโฟกัส",
-    "channel": "Configure an embeddable YouTube channel",
-    "youtube_url": "",
-    "embed_url": "",
-    "category": "classical",
-    "enabled": false
-  }
+﻿[
+    {
+        "id":  "market-focus-radio-default",
+        "title":  "Market Focus Radio",
+        "title_th":  "วิทยุสำหรับโฟกัสตลาด",
+        "channel":  "YouTube Mix",
+        "youtube_url":  "https://www.youtube.com/watch?v=-DfHaOYeaqk\u0026list=RD-DfHaOYeaqk\u0026start_radio=1",
+        "embed_url":  "https://www.youtube.com/embed/-DfHaOYeaqk?list=RD-DfHaOYeaqk",
+        "category":  "lofi",
+        "enabled":  true
+    },
+    {
+        "id":  "lofi-1",
+        "title":  "Lo-fi Focus",
+        "title_th":  "โลไฟสำหรับโฟกัส",
+        "channel":  "Lofi Girl",
+        "youtube_url":  "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+        "embed_url":  "https://www.youtube.com/embed/jfKfPfyJRdk",
+        "category":  "lofi",
+        "enabled":  true
+    },
+    {
+        "id":  "piano-configurable",
+        "title":  "Piano Focus Stream",
+        "title_th":  "เปียโนสำหรับโฟกัส",
+        "channel":  "Configure an embeddable YouTube channel",
+        "youtube_url":  "",
+        "embed_url":  "",
+        "category":  "piano",
+        "enabled":  false
+    },
+    {
+        "id":  "jazz-configurable",
+        "title":  "Jazz Focus Stream",
+        "title_th":  "แจ๊สสำหรับโฟกัส",
+        "channel":  "Configure an embeddable YouTube channel",
+        "youtube_url":  "",
+        "embed_url":  "",
+        "category":  "jazz",
+        "enabled":  false
+    },
+    {
+        "id":  "ambient-configurable",
+        "title":  "Ambient Focus Stream",
+        "title_th":  "แอมเบียนต์สำหรับโฟกัส",
+        "channel":  "Configure an embeddable YouTube channel",
+        "youtube_url":  "",
+        "embed_url":  "",
+        "category":  "ambient",
+        "enabled":  false
+    },
+    {
+        "id":  "nature-configurable",
+        "title":  "Nature Focus Stream",
+        "title_th":  "เสียงธรรมชาติสำหรับโฟกัส",
+        "channel":  "Configure an embeddable YouTube channel",
+        "youtube_url":  "",
+        "embed_url":  "",
+        "category":  "nature",
+        "enabled":  false
+    },
+    {
+        "id":  "classical-configurable",
+        "title":  "Classical Focus Stream",
+        "title_th":  "คลาสสิกสำหรับโฟกัส",
+        "channel":  "Configure an embeddable YouTube channel",
+        "youtube_url":  "",
+        "embed_url":  "",
+        "category":  "classical",
+        "enabled":  false
+    }
 ]

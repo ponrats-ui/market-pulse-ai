@@ -53,9 +53,9 @@
 
 - Educational disclaimer: PASS
 - Risk disclosure: PASS
-- Privacy policy: NOT PRESENT as a dedicated document
-- Terms of use: NOT PRESENT as a dedicated document
-- Provider attribution: PARTIAL, yfinance/Yahoo Finance source is surfaced in data payloads
+- Privacy policy: PASS, see `docs/PRIVACY_POLICY.md`
+- Terms of use: PASS, see `docs/TERMS_OF_USE.md`
+- Provider attribution: PASS, see `docs/DATA_PROVIDER_ATTRIBUTION.md`
 - MIT/open-source notices: PASS
 - PIA trademark language: PASS, uses PIA(tm)-style text and does not use registered mark
 
@@ -63,4 +63,4 @@
 
 NOT READY TO MERGE.
 
-The release branch is locally stable, but production is not yet aligned with the branch and dedicated Privacy Policy and Terms of Use documents are missing for public launch readiness.
+The release branch is locally stable and LP-1 adds the missing legal/provider documents. Production still is not aligned with the branch until the approved Render and Cloudflare deployment sequence is executed.

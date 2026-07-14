@@ -229,6 +229,7 @@ def market_condition() -> Dict[str, Any]:
     proxies = [
         {"key": "vix", "label": "VIX", "symbol": "^VIX"},
         {"key": "sp500", "label": "S&P 500", "symbol": "^GSPC"},
+        {"key": "nasdaq100", "label": "NASDAQ100", "symbol": "^NDX"},
         {"key": "set", "label": "SET Index", "symbol": "^SET.BK"},
         {"key": "usdthb", "label": "USD/THB", "symbol": "USDTHB=X"},
         {"key": "gold", "label": "Gold", "symbol": "GC=F"},

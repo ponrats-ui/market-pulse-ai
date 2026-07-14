@@ -22,6 +22,8 @@ export interface CalendarResponse { events: CalendarEvent[]; source: string; pro
 export interface NewsImpactItem { headline: string; source: string; url?: string | null; published_at?: string | null; asset_impact: string; impact_level: string; sentiment: string; ai_explanation: string; risk_warning: string; }
 export interface NewsImpactResponse { symbol: string; source: string; provider_roadmap: string[]; items: NewsImpactItem[]; disclaimer: string; provider_configured?: boolean; message?: string; message_th?: string; error?: string; }
 export interface SentimentResponse { symbol: string; score: number | null; label: string; source: string; note: string; note_th?: string; provider_configured?: boolean; }
+export interface MarketConditionMetric { key: string; label: string; symbol: string; value: number | null; change: number | null; change_percent: number | null; timestamp?: string; provider?: string; available: boolean; error?: string; }
+export interface MarketConditionResponse { state_th: string; state_en: string; average_change_percent: number | null; sentiment: SentimentResponse; metrics: MarketConditionMetric[]; evidence: string[]; unavailable: string[]; provider: string; disclaimer: string; }
 export interface PortfolioTransaction { symbol: string; side: 'buy' | 'sell'; quantity: number; price: number; date: string; }
 export interface PortfolioHolding { symbol: string; quantity: number; averageCost: number; currency: string; cashBalance?: number; transactions?: PortfolioTransaction[]; }
 export interface QuotesResponse { symbols: string[]; items: AssetQuote[]; source: string; }

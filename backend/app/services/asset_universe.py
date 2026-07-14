@@ -75,6 +75,16 @@ LEGACY_THAI_QUERY_ALIASES = {
     "น้ำมัน": "น้ำมัน",
 }
 
+LEGACY_THAI_QUERY_ALIASES.update({
+    "ทหารไทยธนชาต": "ทหารไทยธนชาต",
+    "ธนาคารทหารไทยธนชาต": "ทหารไทยธนชาต",
+    "ทีทีบี": "ทีทีบี",
+    "ทอง": "ทอง",
+    "ทองคำ": "ทองคำ",
+    "น้ำมัน": "น้ำมัน",
+    "กสิกร": "กสิกร",
+})
+
 SECTOR_MAP = {
     "Technology": ["AAPL", "MSFT", "GOOG", "GOOGL", "META", "QQQ", "SPY", "VOO"],
     "Semiconductor": ["NVDA", "AMD", "TSM", "SOXX"],

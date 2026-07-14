@@ -161,6 +161,19 @@ option { background: #0a101c; color: #d9e7ff; }
   border: 0;
 }
 
+.relax-panel-minimized {
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 0.7rem;
+}
+
+.relax-hidden-frame {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .relax-idle {
   height: 100%;
   display: grid;

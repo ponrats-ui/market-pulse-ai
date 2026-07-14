@@ -47,6 +47,20 @@ THAI_ALIAS_OVERRIDES = {
 }
 
 
+THAI_ALIAS_OVERRIDES.update({
+    "TTB.BK": {"thai_name": "ทีเอ็มบีธนชาต", "aliases": ["TTB", "ทีทีบี", "ทหารไทยธนชาต", "ธนาคารทหารไทยธนชาต"]},
+    "KBANK.BK": {"thai_name": "กสิกรไทย", "aliases": ["KBANK", "กสิกร", "ธนาคารกสิกรไทย"]},
+    "AOT.BK": {"thai_name": "ท่าอากาศยานไทย", "aliases": ["AOT", "สนามบิน", "ท่าอากาศยานไทย"]},
+    "PTT.BK": {"thai_name": "ปตท.", "aliases": ["PTT", "ปตท", "พลังงาน", "น้ำมัน", "ก๊าซ"]},
+    "GC=F": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
+    "GLD": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
+    "SI=F": {"aliases": ["Silver", "เงิน", "โลหะเงิน"]},
+    "SLV": {"aliases": ["Silver", "เงิน", "โลหะเงิน"]},
+    "CL=F": {"aliases": ["Oil", "WTI", "น้ำมัน"]},
+    "BZ=F": {"aliases": ["Oil", "Brent", "น้ำมัน"]},
+})
+
+
 @dataclass(frozen=True)
 class ExchangeAsset:
     canonical_symbol: str

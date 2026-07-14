@@ -1,5 +1,5 @@
 import { defaultWatchlist, unavailableAnalysis, unavailableAssistant, unavailableCalendar, unavailableCompare, unavailableFinancials, unavailableHistory, unavailableNewsImpact, unavailableQuote, unavailableRisk, unavailableSentiment } from '../data/unavailableData';
-import type { AnalysisResponse, AssetSearchResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, NewsImpactResponse, PortfolioEvaluationResponse, PortfolioHolding, QuotesResponse, RiskResponse, SectorResponse, SentimentResponse, TechnicalResponse, WatchlistResponse } from '../types/market';
+import type { AnalysisResponse, AssetSearchResponse, AssistantResponse, AssetHistory, AssetQuote, CalendarResponse, CompareResponse, FinancialsResponse, MarketConditionResponse, NewsImpactResponse, PortfolioEvaluationResponse, PortfolioHolding, QuotesResponse, RiskResponse, SectorResponse, SentimentResponse, TechnicalResponse, WatchlistResponse } from '../types/market';
 
 const PRODUCTION_API_BASE_URL = 'https://market-pulse-ai-api.onrender.com';
 const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
@@ -62,7 +62,7 @@ async function postJson<T>(path: string, body: unknown, fallback: T): Promise<T>
 
 export const api = {
   watchlist: (): Promise<WatchlistResponse> => getJson('/api/watchlist', defaultWatchlist),
-  searchAssets: (query: string): Promise<AssetSearchResponse> => getJson(`/api/assets/search?q=${encodeURIComponent(query)}`, { query, count: 0, assets: [], source: 'Unavailable' }),
+  searchAssets: (query: string): Promise<AssetSearchResponse> => getJson(`/api/assets/search?q=${encodeURIComponent(query)}&limit=25`, { query, count: 0, assets: [], source: 'Unavailable' }),
   sectors: (): Promise<SectorResponse> => getJson('/api/sectors', { sectors: [], source: 'Unavailable', limitations: ['Sector browser is unavailable until the backend is reachable.'] }),
   quotes: (symbols: string[]): Promise<QuotesResponse> => getJson(`/api/assets/quotes?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map(unavailableQuote), source: 'Unavailable' }),
   quote: (symbol: string): Promise<AssetQuote> => getJson(`/api/assets/${encodeURIComponent(symbol)}`, unavailableQuote(symbol)),
@@ -77,4 +77,5 @@ export const api = {
   calendar: (): Promise<CalendarResponse> => getJson('/api/calendar', unavailableCalendar),
   newsImpact: (symbol: string): Promise<NewsImpactResponse> => getJson(`/api/news-impact/${encodeURIComponent(symbol)}`, unavailableNewsImpact(symbol)),
   sentiment: (symbol: string): Promise<SentimentResponse> => getJson(`/api/sentiment/${encodeURIComponent(symbol)}`, unavailableSentiment(symbol)),
+  marketCondition: (): Promise<MarketConditionResponse> => getJson('/api/market-condition', { state_th: 'รอข้อมูล', state_en: 'Awaiting data', average_change_percent: null, sentiment: unavailableSentiment('BTC-USD'), metrics: [], evidence: [], unavailable: ['Market condition provider unavailable'], provider: 'Unavailable', disclaimer: 'This is not financial advice.' }),
 };

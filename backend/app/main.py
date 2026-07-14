@@ -224,6 +224,63 @@ def macro() -> Dict[str, Any]:
     return macro_indicators()
 
 
+@app.get("/api/market-condition")
+def market_condition() -> Dict[str, Any]:
+    proxies = [
+        {"key": "vix", "label": "VIX", "symbol": "^VIX"},
+        {"key": "sp500", "label": "S&P 500", "symbol": "^GSPC"},
+        {"key": "set", "label": "SET Index", "symbol": "^SET.BK"},
+        {"key": "usdthb", "label": "USD/THB", "symbol": "USDTHB=X"},
+        {"key": "gold", "label": "Gold", "symbol": "GC=F"},
+        {"key": "oil", "label": "WTI Oil", "symbol": "CL=F"},
+        {"key": "bitcoin", "label": "Bitcoin", "symbol": "BTC-USD"},
+        {"key": "us10y", "label": "US 10Y Yield", "symbol": "^TNX"},
+    ]
+    metrics = []
+    for proxy in proxies:
+        quote = get_cached_quote(proxy["symbol"])
+        metrics.append({
+            **proxy,
+            "value": quote.get("price"),
+            "change": quote.get("change"),
+            "change_percent": quote.get("change_percent"),
+            "timestamp": quote.get("timestamp"),
+            "provider": quote.get("source") or quote.get("metadata", {}).get("provider"),
+            "available": quote.get("price") is not None,
+            "error": quote.get("error") or quote.get("data_warning"),
+        })
+    sentiment_payload = sentiment_for_symbol("BTC-USD")
+    available_changes = [item["change_percent"] for item in metrics if isinstance(item.get("change_percent"), (int, float))]
+    average_change = sum(available_changes) / len(available_changes) if available_changes else None
+    if average_change is None:
+        state_th = "รอข้อมูล"
+        state_en = "Awaiting data"
+    elif average_change > 0.5:
+        state_th = "เชิงบวก"
+        state_en = "Constructive"
+    elif average_change < -0.5:
+        state_th = "ระมัดระวัง"
+        state_en = "Cautious"
+    else:
+        state_th = "เป็นกลาง"
+        state_en = "Neutral"
+    evidence = [
+        f"{item['label']} {item['change_percent']:.2f}%" for item in metrics if isinstance(item.get("change_percent"), (int, float))
+    ][:6]
+    unavailable = [item["label"] for item in metrics if not item.get("available")]
+    return {
+        "state_th": state_th,
+        "state_en": state_en,
+        "average_change_percent": average_change,
+        "sentiment": sentiment_payload,
+        "metrics": metrics,
+        "evidence": evidence,
+        "unavailable": unavailable,
+        "provider": DEFAULT_PROVIDER,
+        "disclaimer": "This is not financial advice.",
+    }
+
+
 @app.get("/api/subscription/features")
 def subscription() -> Dict[str, Any]:
     return subscription_features()

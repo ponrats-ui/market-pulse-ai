@@ -1,0 +1,104 @@
+{
+  "source": "https://www.set.or.th/api/set/stock/list?lang=en",
+  "source_name": "Stock Exchange of Thailand public stock list API",
+  "coverage_status": "verified_set_public_listing_partial",
+  "generated_at": "2026-07-15T11:06:19.992353+00:00",
+  "raw_record_count": 3859,
+  "included_record_count": 1827,
+  "included_security_types": [
+    "F",
+    "L",
+    "P",
+    "Q",
+    "S",
+    "U"
+  ],
+  "excluded_security_types": {
+    "W": 88,
+    "X": 462,
+    "V": 1482
+  },
+  "markets": {
+    "SET": 1371,
+    "mai": 456
+  },
+  "exchanges": {
+    "SET": 1371,
+    "mai": 456
+  },
+  "countries": {
+    "Thailand": 1827
+  },
+  "asset_types": {
+    "etf": 13,
+    "foreign_stock": 829,
+    "stock": 872,
+    "infrastructure_fund": 16,
+    "reit": 64,
+    "preferred_stock": 16,
+    "property_fund": 15,
+    "fund": 2
+  },
+  "security_types": {
+    "L": 13,
+    "F": 865,
+    "S": 931,
+    "P": 8,
+    "Q": 8,
+    "U": 2
+  },
+  "sectors": {
+    "Unclassified": 485,
+    "Property Development": 122,
+    "Energy & Utilities": 121,
+    "Food & Beverage": 116,
+    "Property Fund & REITs": 84,
+    "Information & Communication Technology": 79,
+    "Finance & Securities": 76,
+    "Commerce": 66,
+    "Construction Services": 63,
+    "Healthcare Services": 58,
+    "Transportation & Logistics": 56,
+    "Industrial Materials & Machinery": 43,
+    "Construction Materials": 42,
+    "Media & Publishing": 42,
+    "Steel": 41,
+    "Fashion": 38,
+    "Packaging": 38,
+    "Automotive": 36,
+    "Insurance": 34,
+    "Tourism & Leisure": 34,
+    "Personal Products & Pharmaceuticals": 33,
+    "Agribusiness": 26,
+    "Banking": 24,
+    "Home & Office Products": 24,
+    "Petrochemicals & Chemicals": 23,
+    "Professional Services": 12,
+    "Electronic Components": 9,
+    "Paper & Printing Materials": 2
+  },
+  "industries": {
+    "Services": 396,
+    "Property & Construction": 386,
+    "Industrials": 276,
+    "Agro & Food Industry": 167,
+    "Financials": 156,
+    "Resources": 142,
+    "Consumer Products": 137,
+    "Technology": 136,
+    "Unclassified": 31
+  },
+  "validation": {
+    "valid": true,
+    "duplicates": [],
+    "malformed": [],
+    "broken_thai": [],
+    "invalid_mapping": [],
+    "record_count": 1827
+  },
+  "limitations": [
+    "SET public listing API coverage is used as the verified source available to this project.",
+    "Derivative warrants, warrants, and depositary receipts are excluded from this phase.",
+    "Live provider support remains separate and depends on Yahoo Finance/yfinance symbol coverage."
+  ]
+}

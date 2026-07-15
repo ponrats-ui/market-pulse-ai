@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from typing import Any
 REQUIRED_COLUMNS = {"symbol", "label", "asset_type", "exchange", "market"}
 DEFAULT_INPUTS = {
     "us_listed_verified": Path("data/exchange_sources/us_listed_verified.csv"),
+    "thai_listed_verified": Path("data/exchange_sources/thai_listed_verified.csv"),
     "sp500": Path("data/exchange_sources/sp500.csv"),
     "nasdaq100": Path("data/exchange_sources/nasdaq100.csv"),
     "set": Path("data/exchange_sources/set.csv"),
@@ -23,13 +25,18 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Read inputs, validate, and report diff without writing.")
     parser.add_argument("--validate", action="store_true", help="Validate current output plus any provided inputs.")
     parser.add_argument("--apply", action="store_true", help="Write the updated exchange master only when validation passes.")
+    parser.add_argument("--market", choices=["all", "thailand"], default="all", help="Limit default verified sources to one market family.")
+    parser.add_argument("--diff", action="store_true", help="Always include added/removed/changed symbols in the validation report.")
     args = parser.parse_args()
 
     output = Path(args.output)
     current = _read_json(output)
     input_paths = [Path(item) for item in args.input or []]
     if not input_paths:
-        input_paths = [path for path in DEFAULT_INPUTS.values() if path.exists()]
+        if args.market == "thailand":
+            input_paths = [DEFAULT_INPUTS["thai_listed_verified"]] if DEFAULT_INPUTS["thai_listed_verified"].exists() else []
+        else:
+            input_paths = [path for path in DEFAULT_INPUTS.values() if path.exists()]
 
     if not input_paths:
         report = {
@@ -76,6 +83,10 @@ def main() -> None:
     if args.apply:
         if not validation["valid"]:
             raise SystemExit(json.dumps(report, ensure_ascii=False, indent=2))
+        if output.exists():
+            backup = output.with_suffix(f".backup-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}{output.suffix}")
+            shutil.copy2(output, backup)
+            report["backup"] = str(backup)
         output.write_text(json.dumps(next_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         report["status"] = "applied"
     elif args.dry_run or args.validate:

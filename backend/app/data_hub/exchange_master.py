@@ -12,10 +12,15 @@ EXCHANGE_MASTER_PATH = PROJECT_DIR / "configs" / "exchange_master.json"
 
 ASSET_CLASS_MAP = {
     "stock": "equity",
+    "foreign_stock": "equity",
+    "preferred_stock": "equity",
     "etf": "fund",
     "sector_etf": "fund",
     "bond_etf": "fund",
     "reit": "fund",
+    "fund": "fund",
+    "property_fund": "fund",
+    "infrastructure_fund": "fund",
     "crypto": "crypto",
     "commodity": "commodity",
     "fx": "fx",
@@ -40,25 +45,16 @@ THAI_ALIAS_OVERRIDES = {
     "KBANK.BK": {"thai_name": "กสิกรไทย", "aliases": ["KBANK", "กสิกร", "ธนาคารกสิกรไทย"]},
     "AOT.BK": {"thai_name": "ท่าอากาศยานไทย", "aliases": ["AOT", "สนามบิน", "ท่าอากาศยานไทย"]},
     "PTT.BK": {"thai_name": "ปตท.", "aliases": ["PTT", "ปตท", "พลังงาน", "น้ำมัน", "ก๊าซ"]},
-    "GC=F": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
-    "GLD": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
-    "CL=F": {"aliases": ["Oil", "WTI", "น้ำมัน"]},
-    "BZ=F": {"aliases": ["Oil", "Brent", "น้ำมัน"]},
-}
-
-
-THAI_ALIAS_OVERRIDES.update({
-    "TTB.BK": {"thai_name": "ทีเอ็มบีธนชาต", "aliases": ["TTB", "ทีทีบี", "ทหารไทยธนชาต", "ธนาคารทหารไทยธนชาต"]},
-    "KBANK.BK": {"thai_name": "กสิกรไทย", "aliases": ["KBANK", "กสิกร", "ธนาคารกสิกรไทย"]},
-    "AOT.BK": {"thai_name": "ท่าอากาศยานไทย", "aliases": ["AOT", "สนามบิน", "ท่าอากาศยานไทย"]},
-    "PTT.BK": {"thai_name": "ปตท.", "aliases": ["PTT", "ปตท", "พลังงาน", "น้ำมัน", "ก๊าซ"]},
+    "PTTEP.BK": {"aliases": ["PTTEP", "ปตท.สผ.", "ปตทสผ", "สำรวจและผลิตปิโตรเลียม"]},
+    "CPALL.BK": {"aliases": ["CPALL", "ซีพีออลล์", "เซเว่น", "7-Eleven"]},
+    "SCC.BK": {"aliases": ["SCC", "ปูนซิเมนต์ไทย", "ปูนใหญ่", "เอสซีจี"]},
     "GC=F": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
     "GLD": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
     "SI=F": {"aliases": ["Silver", "เงิน", "โลหะเงิน"]},
     "SLV": {"aliases": ["Silver", "เงิน", "โลหะเงิน"]},
     "CL=F": {"aliases": ["Oil", "WTI", "น้ำมัน"]},
     "BZ=F": {"aliases": ["Oil", "Brent", "น้ำมัน"]},
-})
+}
 
 
 @dataclass(frozen=True)

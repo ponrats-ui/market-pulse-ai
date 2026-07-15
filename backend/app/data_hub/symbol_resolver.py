@@ -25,7 +25,8 @@ def resolve_symbol(query: str, provider: str = "yfinance") -> ResolutionResult:
     if not term:
         return ResolutionResult(False, query, reason="empty_query")
     normalized = _normalize(term)
-    for asset in list_registry_assets(enabled_only=True, searchable_only=True):
+    assets = sorted(list_registry_assets(enabled_only=True, searchable_only=True), key=_asset_rank_priority)
+    for asset in assets:
         if _matches(asset, normalized):
             provider_symbol = asset.provider_symbols.get(provider)
             if not provider_symbol:
@@ -54,4 +55,15 @@ def _matches(asset: MasterAsset, normalized: str) -> bool:
 
 
 def _normalize(value: str) -> str:
-    return str(value).strip().casefold().replace(" ", "")
+    return str(value).strip().casefold().replace(" ", "").replace("-", "").replace(".", "")
+
+
+def _asset_rank_priority(asset: MasterAsset) -> tuple[int, str]:
+    if asset.country == "Thailand":
+        if asset.asset_type == "stock" and "-" not in asset.display_symbol:
+            return (0, asset.canonical_symbol)
+        if asset.asset_type in {"foreign_stock", "preferred_stock"}:
+            return (4, asset.canonical_symbol)
+        if asset.asset_class == "fund":
+            return (2, asset.canonical_symbol)
+    return (1, asset.canonical_symbol)

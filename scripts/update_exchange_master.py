@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Read inputs, validate, and report diff without writing.")
     parser.add_argument("--validate", action="store_true", help="Validate current output plus any provided inputs.")
     parser.add_argument("--apply", action="store_true", help="Write the updated exchange master only when validation passes.")
-    parser.add_argument("--market", choices=["all", "thailand"], default="all", help="Limit default verified sources to one market family.")
+    parser.add_argument("--market", choices=["all", "us", "thailand"], default="all", help="Limit default verified sources to one market family.")
     parser.add_argument("--diff", action="store_true", help="Always include added/removed/changed symbols in the validation report.")
     args = parser.parse_args()
 
@@ -33,7 +33,9 @@ def main() -> None:
     current = _read_json(output)
     input_paths = [Path(item) for item in args.input or []]
     if not input_paths:
-        if args.market == "thailand":
+        if args.market == "us":
+            input_paths = [DEFAULT_INPUTS["us_listed_verified"]] if DEFAULT_INPUTS["us_listed_verified"].exists() else []
+        elif args.market == "thailand":
             input_paths = [DEFAULT_INPUTS["thai_listed_verified"]] if DEFAULT_INPUTS["thai_listed_verified"].exists() else []
         else:
             input_paths = [path for path in DEFAULT_INPUTS.values() if path.exists()]

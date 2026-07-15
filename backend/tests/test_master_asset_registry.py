@@ -35,6 +35,15 @@ def test_thai_master_registry_has_hundreds_of_verified_records() -> None:
     assert len(thai_assets) >= 1800
 
 
+def test_us_master_registry_has_expanded_verified_records() -> None:
+    metadata = master_asset_registry_metadata()
+    us_source = next(source for source in metadata["sources"] if source["name"] == "verified_us_exchange_directory_csv")
+    assert us_source["record_count"] >= 11000
+    us_assets = [asset for asset in list_registry_assets() if asset.country == "US"]
+    assert len(us_assets) >= 11000
+    assert len([asset for asset in us_assets if asset.sector == "Technology"]) >= 700
+
+
 def test_thai_registry_payload_contains_clean_names_and_provider_mapping() -> None:
     result = search_registry("KKP")
     asset = result["assets"][0]

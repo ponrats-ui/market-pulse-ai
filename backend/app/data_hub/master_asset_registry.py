@@ -15,6 +15,7 @@ from app.data_hub.exchange_master import ASSET_CLASS_MAP, CAPABILITY_DEFAULTS, E
 
 PROJECT_DIR = Path(__file__).resolve().parents[3]
 US_LISTED_SOURCE = PROJECT_DIR / "data" / "exchange_sources" / "us_listed_verified.csv"
+US_LISTED_METADATA = PROJECT_DIR / "data" / "exchange_sources" / "us_listed_verified.meta.json"
 THAI_LISTED_SOURCE = PROJECT_DIR / "data" / "exchange_sources" / "thai_listed_verified.csv"
 THAI_LISTED_METADATA = PROJECT_DIR / "data" / "exchange_sources" / "thai_listed_verified.meta.json"
 
@@ -27,10 +28,21 @@ THAI_ALIAS_OVERRIDES: Dict[str, Dict[str, Any]] = {
     "ADVANC.BK": {"aliases": ["ADVANC", "แอดวานซ์", "เอไอเอส", "AIS"]},
     "PTT.BK": {"thai_name": "ปตท.", "aliases": ["PTT", "ปตท", "พลังงาน", "น้ำมัน", "ก๊าซ"]},
     "PTTEP.BK": {"aliases": ["PTTEP", "ปตท.สผ.", "ปตทสผ", "สำรวจและผลิตปิโตรเลียม"]},
+    "BAY.BK": {"aliases": ["BAY"]},
     "CPALL.BK": {"aliases": ["CPALL", "ซีพีออลล์", "เซเว่น", "7-Eleven"]},
+    "CPF.BK": {"aliases": ["CPF"]},
     "SCC.BK": {"aliases": ["SCC", "ปูนซิเมนต์ไทย", "ปูนใหญ่", "เอสซีจี"]},
     "BDMS.BK": {"aliases": ["BDMS", "กรุงเทพดุสิตเวชการ", "โรงพยาบาลกรุงเทพ"]},
     "BH.BK": {"aliases": ["BH", "บำรุงราษฎร์", "โรงพยาบาลบำรุงราษฎร์"]},
+    "CRC.BK": {"aliases": ["CRC"]},
+    "MINT.BK": {"aliases": ["MINT"]},
+    "EA.BK": {"aliases": ["EA"]},
+    "OR.BK": {"aliases": ["OR"]},
+    "TU.BK": {"aliases": ["TU"]},
+    "TOP.BK": {"aliases": ["TOP"]},
+    "KCE.BK": {"aliases": ["KCE"]},
+    "BCH.BK": {"aliases": ["BCH"]},
+    "BA.BK": {"aliases": ["BA"]},
     "GLD": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
     "GC=F": {"aliases": ["Gold", "ทอง", "ทองคำ"]},
     "SLV": {"aliases": ["Silver", "เงิน", "โลหะเงิน"]},
@@ -118,13 +130,15 @@ def load_master_asset_registry() -> Dict[str, Any]:
     merged = _merge_assets([*seed_assets, *imported_assets, *thai_assets])
     validation = validate_master_asset_registry(merged)
     exchange_metadata = exchange_master_metadata()
+    us_metadata = _read_us_source_metadata()
     thai_metadata = _read_thai_source_metadata()
     sources = [
         {"name": "exchange_master_seed", "path": "configs/exchange_master.json", "record_count": len(seed_assets)},
         {
-            "name": "verified_us_listed_offline_csv",
+            "name": "verified_us_exchange_directory_csv",
             "path": str(US_LISTED_SOURCE.relative_to(PROJECT_DIR)).replace("\\", "/"),
             "record_count": len(imported_assets),
+            "source_url": us_metadata.get("sources"),
         },
         {
             "name": "verified_set_public_listing_csv",
@@ -149,10 +163,11 @@ def load_master_asset_registry() -> Dict[str, Any]:
         "validation": validation,
         "limitations": [
             "This registry separates searchable securities from downstream live-data coverage.",
-            "US coverage is an offline verified partial master for launch validation, not a complete licensed exchange feed.",
+            "US coverage is sourced from public exchange symbol directories and Nasdaq screener metadata.",
             "Thai coverage is sourced from SET public listing data for supported SET/mai security types.",
             "Live quote, fundamentals, news, and portfolio support remain provider dependent per symbol.",
             *exchange_metadata.get("limitations", []),
+            *us_metadata.get("limitations", []),
             *thai_metadata.get("limitations", []),
         ],
     }
@@ -215,7 +230,7 @@ def validate_master_asset_registry(assets: List[MasterAsset] | None = None) -> D
             invalid_exchange.append(symbol)
         if asset.asset_type in {"stock", "foreign_stock", "preferred_stock", "adr"} and asset.asset_class != "equity":
             invalid_asset_class.append(symbol)
-        if asset.asset_type in {"etf", "fund", "reit", "property_fund", "infrastructure_fund", "bond_etf", "sector_etf"} and asset.asset_class not in {"fund", "equity"}:
+        if asset.asset_type in {"etf", "fund", "reit", "property_fund", "infrastructure_fund", "bond_etf", "sector_etf", "closed_end_fund"} and asset.asset_class not in {"fund", "equity"}:
             invalid_asset_class.append(symbol)
         thai_values = [asset.thai_name, *[alias for alias in asset.aliases if _has_thai(alias) or _looks_mojibaked(alias)]]
         if any(_looks_mojibaked(value) for value in thai_values):
@@ -264,7 +279,9 @@ def search_registry(
     if not normalized_term:
         matches = sorted(filtered, key=lambda asset: (asset.market, asset.exchange, asset.canonical_symbol))[:safe_limit]
     else:
-        scored = [(score, asset) for asset in filtered for score in [_score_asset(normalized_term, asset)] if score > 0]
+        exact_matches = [asset for asset in filtered if _is_exact_match(normalized_term, asset)]
+        candidates = exact_matches or filtered
+        scored = [(score, asset) for asset in candidates for score in [_score_asset(normalized_term, asset)] if score > 0]
         matches = [
             asset
             for _, asset in sorted(scored, key=lambda item: (-item[0], _asset_rank_priority(item[1]), item[1].canonical_symbol))[:safe_limit]
@@ -321,7 +338,7 @@ def _read_verified_us_source() -> List[MasterAsset]:
             capabilities = dict(CAPABILITY_DEFAULTS)
             if asset_type in {"crypto", "commodity", "fx", "macro", "index"}:
                 capabilities["fundamentals"] = "not_applicable"
-            elif asset_type in {"etf", "sector_etf", "bond_etf", "reit", "adr"}:
+            elif asset_type in {"etf", "sector_etf", "bond_etf", "reit", "adr", "closed_end_fund", "preferred_stock"}:
                 capabilities["fundamentals"] = "partial"
             aliases = _unique([symbol, symbol.replace(".BK", ""), row.get("label", ""), *_split_aliases(row.get("aliases"))])
             assets.append(
@@ -342,7 +359,7 @@ def _read_verified_us_source() -> List[MasterAsset]:
                     provider_symbols={"yfinance": str(row.get("yfinance_symbol") or symbol).strip()},
                     enabled=str(row.get("enabled") or "true").strip().lower() not in {"0", "false", "no"},
                     searchable=True,
-                    coverage_source="verified_us_listed_offline_csv",
+                    coverage_source="verified_us_exchange_directory_csv",
                     coverage_timestamp=None,
                     live_data_capability=capabilities,
                 )
@@ -411,6 +428,15 @@ def _read_thai_source_metadata() -> Dict[str, Any]:
         return {}
 
 
+def _read_us_source_metadata() -> Dict[str, Any]:
+    if not US_LISTED_METADATA.exists():
+        return {}
+    try:
+        return json.loads(US_LISTED_METADATA.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+
+
 def _merge_assets(assets: Iterable[MasterAsset]) -> List[MasterAsset]:
     merged: Dict[str, MasterAsset] = {}
     for asset in assets:
@@ -457,12 +483,14 @@ def _score_asset(term: str, asset: MasterAsset) -> int:
     curated_aliases = [_normalize_text(alias) for alias in THAI_ALIAS_OVERRIDES.get(asset.canonical_symbol, {}).get("aliases", [])]
     metadata = [_normalize_text(value) for value in [asset.exchange, asset.market, asset.sector, asset.industry, asset.country, asset.currency]]
     candidates = [symbol, display, company, thai, *aliases, *metadata]
-    if term == symbol or term == display:
+    if term in curated_aliases:
+        return 1060
+    if term == symbol:
+        return 1050
+    if term == display:
         return 1000
     if symbol.startswith(term) or display.startswith(term):
         return 900 - min(len(symbol), 20)
-    if term in curated_aliases:
-        return 875
     if term == thai:
         return 860
     if any(candidate == term for candidate in [company, *aliases]):
@@ -473,10 +501,25 @@ def _score_asset(term: str, asset: MasterAsset) -> int:
         return 720
     if term in company or term in thai or any(term in alias for alias in aliases):
         return 640
+    if len(term) < 4:
+        return 0
     best_ratio = max((SequenceMatcher(None, term, candidate).ratio() for candidate in candidates if candidate), default=0)
     if best_ratio >= 0.74:
         return int(450 + best_ratio * 100)
     return 0
+
+
+def _is_exact_match(term: str, asset: MasterAsset) -> bool:
+    aliases = [_normalize_text(alias) for alias in asset.aliases]
+    curated_aliases = [_normalize_text(alias) for alias in THAI_ALIAS_OVERRIDES.get(asset.canonical_symbol, {}).get("aliases", [])]
+    return term in {
+        _normalize_text(asset.canonical_symbol),
+        _normalize_text(asset.display_symbol),
+        _normalize_text(asset.company_name),
+        _normalize_text(asset.thai_name),
+        *aliases,
+        *curated_aliases,
+    }
 
 
 def _asset_rank_priority(asset: MasterAsset) -> int:

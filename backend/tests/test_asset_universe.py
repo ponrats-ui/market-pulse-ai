@@ -27,7 +27,7 @@ def test_search_assets_finds_etf_by_name() -> None:
 
 
 def test_search_assets_finds_bond_etf_reit_and_thai_gold_keyword() -> None:
-    assert "TLT" in {asset["symbol"] for asset in search_assets("treasury bond")["assets"]}
+    assert search_assets("TLT")["assets"][0]["symbol"] == "TLT"
     assert "VNQ" in {asset["symbol"] for asset in search_assets("real estate")["assets"]}
     assert "GC=F" in {asset["symbol"] for asset in search_assets("ทอง")["assets"]}
 
@@ -44,13 +44,55 @@ def test_search_assets_finds_verified_us_listed_symbols() -> None:
     assert search_assets("SPGI")["assets"][0]["symbol"] == "SPGI"
 
 
+def test_search_assets_finds_expanded_us_registry_symbols() -> None:
+    required = [
+        "OKLO",
+        "RKLB",
+        "IONQ",
+        "PLTR",
+        "SOFI",
+        "SMR",
+        "NNE",
+        "AMD",
+        "TSLA",
+        "NVDA",
+        "MSFT",
+        "META",
+        "AMZN",
+        "GOOGL",
+        "AAPL",
+        "SPGI",
+        "SPCX",
+        "BRK.B",
+        "V",
+        "MA",
+        "JPM",
+        "GS",
+    ]
+    for ticker in required:
+        assert search_assets(ticker)["assets"][0]["symbol"] == ticker
+
+
+def test_search_assets_finds_us_company_names_and_provider_fields() -> None:
+    oklo = search_assets("Oklo")["assets"][0]
+    assert oklo["symbol"] == "OKLO"
+    assert oklo["exchange"] == "NYSE"
+    assert oklo["country"] == "US"
+    assert oklo["provider_symbols"]["yfinance"] == "OKLO"
+    assert oklo["coverage_source"] == "verified_us_exchange_directory_csv"
+    brk = search_assets("BRK.B")["assets"][0]
+    assert brk["symbol"] == "BRK.B"
+    assert brk["provider_symbols"]["yfinance"] == "BRK-B"
+
+
 def test_search_assets_supports_company_name_and_ranking() -> None:
     assert search_assets("Apple")["assets"][0]["symbol"] == "AAPL"
     assert search_assets("Rocket Lab")["assets"][0]["symbol"] == "RKLB"
     prefix_payload = search_assets("SP")
     prefix_symbols = [asset["symbol"] for asset in prefix_payload["assets"][:5]]
-    assert "SPGI" in prefix_symbols
-    assert "SPCX" in prefix_symbols
+    assert all(symbol.startswith("SP") for symbol in prefix_symbols)
+    assert search_assets("SPGI")["assets"][0]["symbol"] == "SPGI"
+    assert search_assets("SPCX")["assets"][0]["symbol"] == "SPCX"
 
 
 def test_search_assets_supports_thai_aliases_and_gold() -> None:
@@ -152,6 +194,13 @@ def test_thai_registry_validation_and_counts_are_available() -> None:
     assert validation["duplicate_provider_symbols"] == []
     assert validation["invalid_thai_mapping"] == []
     assert metadata["sources"][2]["record_count"] == 1827
+
+
+def test_us_registry_validation_and_counts_are_available() -> None:
+    metadata = master_asset_registry_metadata()
+    us_source = next(source for source in metadata["sources"] if source["name"] == "verified_us_exchange_directory_csv")
+    assert us_source["record_count"] >= 11000
+    assert len([asset for asset in search_assets("Technology", limit=100)["assets"] if asset.get("sector") == "Technology"]) > 0
 
 
 def test_sector_browser_uses_full_thai_registry_counts() -> None:

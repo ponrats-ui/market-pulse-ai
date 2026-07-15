@@ -19,6 +19,7 @@ ASSET_CLASS_MAP = {
     "bond_etf": "fund",
     "reit": "fund",
     "fund": "fund",
+    "closed_end_fund": "fund",
     "property_fund": "fund",
     "infrastructure_fund": "fund",
     "crypto": "crypto",

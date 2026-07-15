@@ -58,13 +58,13 @@ def test_evaluate_portfolio_canonicalizes_aliases_and_rejects_unsupported() -> N
     payload = evaluate_portfolio([
         {"symbol": "TTB", "quantity": 10, "averageCost": 1},
         {"symbol": "TTB.BK", "quantity": 5, "averageCost": 2},
-        {"symbol": "RKLB", "quantity": 1, "averageCost": 1},
+        {"symbol": "ZZZNOTAREALMARKETPULSE", "quantity": 1, "averageCost": 1},
     ], quote)
     assert len(payload["items"]) == 1
     assert payload["items"][0]["symbol"] == "TTB.BK"
     assert payload["items"][0]["quantity"] == 15
     assert payload["items"][0]["average_cost"] == 1.3333333333333333
-    assert payload["unsupported_symbols"] == [{"symbol": "RKLB", "reason": "unsupported_under_current_universe"}]
+    assert payload["unsupported_symbols"] == [{"symbol": "ZZZNOTAREALMARKETPULSE", "reason": "unsupported_under_current_universe"}]
 
 
 def test_portfolio_partial_sell_and_sell_all() -> None:

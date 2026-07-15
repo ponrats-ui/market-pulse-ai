@@ -37,8 +37,8 @@ def test_news_endpoint_uses_data_hub_canonical_symbol(monkeypatch):
 def test_news_endpoint_rejects_unsupported_symbol_without_fabrication(monkeypatch):
     cache.clear()
     monkeypatch.setenv("ENABLE_YAHOO_FINANCE_NEWS", "false")
-    payload = news("RKLB", 5)
-    assert payload["symbol"] == "RKLB"
+    payload = news("ZZZNOTAREALMARKETPULSE", 5)
+    assert payload["symbol"] == "ZZZNOTAREALMARKETPULSE"
     assert payload["items"] == []
     assert payload["source"] == "Unavailable"
     assert payload["data_hub"]["data_type"] == "news"

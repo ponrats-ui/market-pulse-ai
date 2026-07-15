@@ -29,7 +29,7 @@ def test_provider_router_fallback_to_unavailable(monkeypatch) -> None:
 
 
 def test_provider_router_rejects_unsupported_without_fabricating() -> None:
-    payload = provider_router.get_quote("RKLB")
+    payload = provider_router.get_quote("ZZZNOTAREALMARKETPULSE")
     assert payload["source"] == "Unavailable"
     assert payload["error"] == "unsupported_under_current_universe"
     assert "price" not in payload

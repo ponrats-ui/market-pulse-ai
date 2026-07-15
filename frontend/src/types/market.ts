@@ -2,8 +2,8 @@ export type AssetType = 'crypto' | 'stock' | 'etf' | 'index' | 'commodity' | 'fx
 export interface Asset { symbol: string; label: string; type: AssetType; }
 export interface AssetCategory { id: string; name: string; assets: Asset[]; }
 export interface WatchlistResponse { categories: AssetCategory[]; }
-export interface AssetSearchItem { symbol: string; label: string; thai_name?: string; asset_type: string; market: string; keywords?: string; alias?: string; sector?: string; industry?: string; country?: string; currency?: string; exchange?: string; }
-export interface AssetSearchResponse { query: string; count: number; assets: AssetSearchItem[]; source: string; }
+export interface AssetSearchItem { symbol: string; canonical_symbol?: string; display_symbol?: string; label: string; company_name?: string; thai_name?: string; asset_class?: string; asset_type: string; market: string; keywords?: string; alias?: string; aliases?: string[]; sector?: string; industry?: string; country?: string; currency?: string; exchange?: string; live_data_capability?: Record<string, unknown>; coverage_status?: string; coverage_source?: string; searchable?: boolean; }
+export interface AssetSearchResponse { query: string; count: number; assets: AssetSearchItem[]; source: string; registry?: Record<string, unknown>; exchange_master?: Record<string, unknown>; }
 export interface SectorItem { name: string; count: number; assets: AssetSearchItem[]; }
 export interface SectorResponse { sectors: SectorItem[]; source: string; limitations?: string[]; }
 export interface ResponseMetadata { provider: string; source: string; updated_at: string; cache_age_seconds: number; cache_status: string; confidence: 'high' | 'medium' | 'low' | string; status: string; latency_ms: number; warnings?: string[]; data_warning?: string; }

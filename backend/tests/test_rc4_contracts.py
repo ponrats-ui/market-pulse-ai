@@ -7,7 +7,7 @@ from app.services.subscription import subscription_features
 
 def test_exchange_master_search_supports_clean_thai_and_metadata() -> None:
     payload = search_assets("ทอง")
-    assert payload["source"] == "exchange_master_seed"
+    assert payload["source"] == "master_asset_registry"
     assert payload["exchange_master"]["count"] > 20
     assert "GC=F" in {asset["symbol"] for asset in payload["assets"]}
     first = payload["assets"][0]

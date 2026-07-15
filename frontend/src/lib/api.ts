@@ -60,9 +60,14 @@ async function postJson<T>(path: string, body: unknown, fallback: T): Promise<T>
   }
 }
 
+async function searchJson(query: string): Promise<AssetSearchResponse> {
+  if (!API_BASE_URL) throw new Error('Market Pulse API base URL is not configured for asset registry search.');
+  return getJson(`/api/assets/search?q=${encodeURIComponent(query)}&limit=50`, { query, count: 0, assets: [], source: 'Unavailable' });
+}
+
 export const api = {
   watchlist: (): Promise<WatchlistResponse> => getJson('/api/watchlist', defaultWatchlist),
-  searchAssets: (query: string): Promise<AssetSearchResponse> => getJson(`/api/assets/search?q=${encodeURIComponent(query)}&limit=25`, { query, count: 0, assets: [], source: 'Unavailable' }),
+  searchAssets: (query: string): Promise<AssetSearchResponse> => searchJson(query),
   sectors: (): Promise<SectorResponse> => getJson('/api/sectors', { sectors: [], source: 'Unavailable', limitations: ['Sector browser is unavailable until the backend is reachable.'] }),
   quotes: (symbols: string[]): Promise<QuotesResponse> => getJson(`/api/assets/quotes?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map(unavailableQuote), source: 'Unavailable' }),
   quote: (symbol: string): Promise<AssetQuote> => getJson(`/api/assets/${encodeURIComponent(symbol)}`, unavailableQuote(symbol)),

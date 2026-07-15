@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from app.data_hub.exchange_master import exchange_master_metadata
+from app.data_hub.master_asset_registry import master_asset_registry_metadata
 from app.data_hub.symbol_resolver import resolve_symbol
 
 
@@ -14,10 +14,10 @@ def capabilities_for_symbol(symbol: str) -> Dict[str, Any]:
             "resolved": False,
             "reason": resolved.reason,
             "capabilities": {},
-            "metadata": exchange_master_metadata(),
+            "metadata": master_asset_registry_metadata(),
         }
     asset = resolved.asset
-    raw = asset.get("data_capabilities", {})
+    raw = asset.get("data_capabilities") or asset.get("live_data_capability") or {}
     asset_type = asset.get("asset_type")
     capabilities = {
         "quote": _status(raw.get("quote")),
@@ -36,7 +36,7 @@ def capabilities_for_symbol(symbol: str) -> Dict[str, Any]:
         "asset_class": asset.get("asset_class"),
         "asset_type": asset_type,
         "capabilities": capabilities,
-        "metadata": exchange_master_metadata(),
+        "metadata": master_asset_registry_metadata(),
     }
 
 

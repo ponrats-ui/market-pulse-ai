@@ -9,6 +9,7 @@ from typing import Any
 
 REQUIRED_COLUMNS = {"symbol", "label", "asset_type", "exchange", "market"}
 DEFAULT_INPUTS = {
+    "us_listed_verified": Path("data/exchange_sources/us_listed_verified.csv"),
     "sp500": Path("data/exchange_sources/sp500.csv"),
     "nasdaq100": Path("data/exchange_sources/nasdaq100.csv"),
     "set": Path("data/exchange_sources/set.csv"),
@@ -16,8 +17,8 @@ DEFAULT_INPUTS = {
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Validate and update configs/exchange_master.json from verified constituent CSV files.")
-    parser.add_argument("--input", action="append", help="Verified constituent CSV file. Can be passed more than once.")
+    parser = argparse.ArgumentParser(description="Validate and update configs/exchange_master.json from verified exchange/security master CSV files.")
+    parser.add_argument("--input", action="append", help="Verified exchange/security master CSV file. Can be passed more than once.")
     parser.add_argument("--output", default="configs/exchange_master.json")
     parser.add_argument("--dry-run", action="store_true", help="Read inputs, validate, and report diff without writing.")
     parser.add_argument("--validate", action="store_true", help="Validate current output plus any provided inputs.")
@@ -46,7 +47,7 @@ def main() -> None:
     for path in input_paths:
         assets = _read_assets(path)
         imported_assets.extend(assets)
-        source_reports.append({"source": str(path), "record_count": len(assets)})
+        source_reports.append({"source": str(path), "record_count": len(assets), "duplicates": _duplicate_symbols(assets)})
 
     merged = _merge_preserving_manual_fields(current.get("assets", []), imported_assets)
     validation = _validate_assets(merged)
@@ -64,7 +65,14 @@ def main() -> None:
         "assets": sorted(merged, key=lambda item: item["symbol"]),
     }
 
-    report = {"validation": validation, "diff": diff, "sources": source_reports}
+    report = {
+        "validation": validation,
+        "diff": diff,
+        "sources": source_reports,
+        "coverage_status": next_payload["coverage_status"],
+        "record_count": len(merged),
+        "note": "Search coverage and live-data coverage remain separate; provider gaps must not remove searchable securities.",
+    }
     if args.apply:
         if not validation["valid"]:
             raise SystemExit(json.dumps(report, ensure_ascii=False, indent=2))
@@ -138,6 +146,17 @@ def _validate_assets(assets: list[dict[str, Any]]) -> dict[str, Any]:
         if not symbol or not asset.get("label") or not asset.get("asset_type") or not asset.get("exchange"):
             malformed.append(symbol or "<missing>")
     return {"valid": not duplicates and not malformed, "duplicates": duplicates, "malformed": malformed, "record_count": len(assets)}
+
+
+def _duplicate_symbols(assets: list[dict[str, Any]]) -> list[str]:
+    seen: set[str] = set()
+    duplicates: list[str] = []
+    for asset in assets:
+        symbol = str(asset.get("symbol", "")).upper()
+        if symbol in seen:
+            duplicates.append(symbol)
+        seen.add(symbol)
+    return sorted(duplicates)
 
 
 def _diff(current: list[dict[str, Any]], updated: list[dict[str, Any]]) -> dict[str, list[str]]:

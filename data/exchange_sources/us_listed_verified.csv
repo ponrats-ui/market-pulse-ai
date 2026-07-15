@@ -1,0 +1,98 @@
+symbol,label,asset_type,exchange,market,sector,industry,country,currency,aliases,index_memberships,yfinance_symbol,enabled
+A,Agilent Technologies,stock,NYSE,US Stocks,Healthcare,Diagnostics and Research,US,USD,Agilent|life sciences,,A,true
+AA,Alcoa,stock,NYSE,US Stocks,Materials,Aluminum,US,USD,Alcoa|aluminum,,AA,true
+AAL,American Airlines Group,stock,NASDAQ,US Stocks,Industrials,Airlines,US,USD,American Airlines|airline,,AAL,true
+AAPL,Apple,stock,NASDAQ,US Stocks,Technology,Consumer Electronics,US,USD,Apple|iPhone|Mac|S&P 500|Nasdaq 100,S&P 500|Nasdaq 100,AAPL,true
+ABBV,AbbVie,stock,NYSE,US Stocks,Healthcare,Drug Manufacturers,US,USD,AbbVie|pharma,,ABBV,true
+ABNB,Airbnb,stock,NASDAQ,US Stocks,Consumer,Travel Services,US,USD,Airbnb|travel,,ABNB,true
+ABT,Abbott Laboratories,stock,NYSE,US Stocks,Healthcare,Medical Devices,US,USD,Abbott,,ABT,true
+ACN,Accenture,stock,NYSE,US Stocks,Technology,Information Technology Services,Ireland,USD,Accenture|consulting,,ACN,true
+ADBE,Adobe,stock,NASDAQ,US Stocks,Technology,Software Application,US,USD,Adobe|creative cloud,Nasdaq 100,ADBE,true
+ADI,Analog Devices,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,Analog Devices|chips,Nasdaq 100,ADI,true
+ADM,Archer-Daniels-Midland,stock,NYSE,US Stocks,Consumer Defensive,Farm Products,US,USD,ADM|agriculture,,ADM,true
+ADP,Automatic Data Processing,stock,NASDAQ,US Stocks,Industrials,Staffing and Employment Services,US,USD,ADP|payroll,Nasdaq 100,ADP,true
+ADSK,Autodesk,stock,NASDAQ,US Stocks,Technology,Software Application,US,USD,Autodesk|CAD,Nasdaq 100,ADSK,true
+AIG,American International Group,stock,NYSE,US Stocks,Financial Services,Insurance Diversified,US,USD,AIG|insurance,,AIG,true
+ALB,Albemarle,stock,NYSE,US Stocks,Materials,Specialty Chemicals,US,USD,Albemarle|lithium,,ALB,true
+AMD,Advanced Micro Devices,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,AMD|chip|GPU|AI,Nasdaq 100,AMD,true
+AMGN,Amgen,stock,NASDAQ,US Stocks,Healthcare,Biotechnology,US,USD,Amgen|biotech,Nasdaq 100,AMGN,true
+AMT,American Tower,stock,NYSE,US Stocks,Real Estate,REIT Telecom Towers,US,USD,American Tower|REIT|towers,,AMT,true
+AMZN,Amazon,stock,NASDAQ,US Stocks,Consumer,Internet Retail,US,USD,Amazon|AWS|cloud,Nasdaq 100,AMZN,true
+ARM,Arm Holdings,adr,NASDAQ,US Stocks,Semiconductor,Semiconductor IP,United Kingdom,USD,Arm|ARM Holdings|chip design,,ARM,true
+ASML,ASML Holding,adr,NASDAQ,US Stocks,Semiconductor,Semiconductor Equipment,Netherlands,USD,ASML|lithography,Nasdaq 100,ASML,true
+AVGO,Broadcom,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,Broadcom|networking chips,Nasdaq 100,AVGO,true
+AXON,Axon Enterprise,stock,NASDAQ,US Stocks,Industrials,Aerospace and Defense,US,USD,Axon|public safety,Nasdaq 100,AXON,true
+BA,Boeing,stock,NYSE,US Stocks,Industrials,Aerospace and Defense,US,USD,Boeing|aircraft,,BA,true
+BAC,Bank of America,stock,NYSE,US Stocks,Financial Services,Banks Diversified,US,USD,Bank of America|BofA,,BAC,true
+BABA,Alibaba Group,adr,NYSE,US Stocks,Consumer,Internet Retail,China,USD,Alibaba|ADR|China,,BABA,true
+BKR,Baker Hughes,stock,NASDAQ,US Stocks,Energy,Oil and Gas Equipment,US,USD,Baker Hughes|energy services,Nasdaq 100,BKR,true
+BLK,BlackRock,stock,NYSE,US Stocks,Financial Services,Asset Management,US,USD,BlackRock|asset manager,,BLK,true
+C,Citigroup,stock,NYSE,US Stocks,Financial Services,Banks Diversified,US,USD,Citigroup|Citi,,C,true
+CAT,Caterpillar,stock,NYSE,US Stocks,Industrials,Farm and Heavy Construction Machinery,US,USD,Caterpillar|machinery,,CAT,true
+CEG,Constellation Energy,stock,NASDAQ,US Stocks,Utilities,Utilities Renewable,US,USD,Constellation Energy|nuclear,Nasdaq 100,CEG,true
+CL,Colgate-Palmolive,stock,NYSE,US Stocks,Consumer Defensive,Household Products,US,USD,Colgate|Palmolive,,CL,true
+COIN,Coinbase Global,stock,NASDAQ,US Stocks,Financial Services,Capital Markets,US,USD,Coinbase|crypto exchange,,COIN,true
+COST,Costco Wholesale,stock,NASDAQ,US Stocks,Consumer Defensive,Discount Stores,US,USD,Costco|warehouse,Nasdaq 100,COST,true
+CRM,Salesforce,stock,NYSE,US Stocks,Technology,Software Application,US,USD,Salesforce|CRM,,CRM,true
+CRWD,CrowdStrike Holdings,stock,NASDAQ,US Stocks,Technology,Software Infrastructure,US,USD,CrowdStrike|cybersecurity,Nasdaq 100,CRWD,true
+CVX,Chevron,stock,NYSE,US Stocks,Energy,Integrated Oil and Gas,US,USD,Chevron|oil,,CVX,true
+DDOG,Datadog,stock,NASDAQ,US Stocks,Technology,Software Application,US,USD,Datadog|observability,,DDOG,true
+DE,Deere,stock,NYSE,US Stocks,Industrials,Farm and Heavy Construction Machinery,US,USD,Deere|John Deere,,DE,true
+DIA,SPDR Dow Jones Industrial Average ETF Trust,etf,NYSE Arca,ETF,ETF,US Large Cap ETF,US,USD,Dow Jones ETF|DIA,,DIA,true
+DIS,Walt Disney,stock,NYSE,US Stocks,Communication Services,Entertainment,US,USD,Disney|Walt Disney,,DIS,true
+DKNG,DraftKings,stock,NASDAQ,US Stocks,Consumer Cyclical,Gambling,US,USD,DraftKings|sports betting,,DKNG,true
+ENPH,Enphase Energy,stock,NASDAQ,US Stocks,Technology,Solar,US,USD,Enphase|solar,,ENPH,true
+F,Ford Motor,stock,NYSE,US Stocks,Consumer Cyclical,Auto Manufacturers,US,USD,Ford|automaker,,F,true
+FSLR,First Solar,stock,NASDAQ,US Stocks,Technology,Solar,US,USD,First Solar|solar,Nasdaq 100,FSLR,true
+GE,GE Aerospace,stock,NYSE,US Stocks,Industrials,Aerospace and Defense,US,USD,General Electric|GE Aerospace,,GE,true
+GEV,GE Vernova,stock,NYSE,US Stocks,Industrials,Electrical Equipment,US,USD,GE Vernova|energy equipment,,GEV,true
+GM,General Motors,stock,NYSE,US Stocks,Consumer Cyclical,Auto Manufacturers,US,USD,General Motors|GM,,GM,true
+HD,Home Depot,stock,NYSE,US Stocks,Consumer Cyclical,Home Improvement Retail,US,USD,Home Depot,,HD,true
+IBM,International Business Machines,stock,NYSE,US Stocks,Technology,Information Technology Services,US,USD,IBM|International Business Machines,,IBM,true
+INTC,Intel,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,Intel|CPU|chips,Nasdaq 100,INTC,true
+IWM,iShares Russell 2000 ETF,etf,NYSE Arca,ETF,ETF,US Small Cap ETF,US,USD,Russell 2000 ETF|small cap,,IWM,true
+JNJ,Johnson & Johnson,stock,NYSE,US Stocks,Healthcare,Drug Manufacturers,US,USD,Johnson and Johnson|J&J,,JNJ,true
+JPM,JPMorgan Chase,stock,NYSE,US Stocks,Financial Services,Banks Diversified,US,USD,JPMorgan|Chase,,JPM,true
+KO,Coca-Cola,stock,NYSE,US Stocks,Consumer Defensive,Beverages Non-Alcoholic,US,USD,Coca-Cola|Coke,,KO,true
+LLY,Eli Lilly,stock,NYSE,US Stocks,Healthcare,Drug Manufacturers,US,USD,Eli Lilly|pharma,,LLY,true
+LMT,Lockheed Martin,stock,NYSE,US Stocks,Industrials,Aerospace and Defense,US,USD,Lockheed Martin|defense,,LMT,true
+LODE,Comstock,stock,NYSE American,US Stocks,Materials,Other Precious Metals and Mining,US,USD,Comstock|NYSE American,,LODE,true
+MA,Mastercard,stock,NYSE,US Stocks,Financial Services,Credit Services,US,USD,Mastercard|payments,,MA,true
+MCD,McDonald's,stock,NYSE,US Stocks,Consumer Cyclical,Restaurants,US,USD,McDonalds|restaurants,,MCD,true
+MRK,Merck,stock,NYSE,US Stocks,Healthcare,Drug Manufacturers,US,USD,Merck|pharma,,MRK,true
+MU,Micron Technology,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,Micron|memory chips,Nasdaq 100,MU,true
+NFLX,Netflix,stock,NASDAQ,US Stocks,Communication Services,Entertainment,US,USD,Netflix|streaming,Nasdaq 100,NFLX,true
+NKE,Nike,stock,NYSE,US Stocks,Consumer Cyclical,Footwear and Accessories,US,USD,Nike,,NKE,true
+NOW,ServiceNow,stock,NYSE,US Stocks,Technology,Software Application,US,USD,ServiceNow,,NOW,true
+ORCL,Oracle,stock,NYSE,US Stocks,Technology,Software Infrastructure,US,USD,Oracle|database,,ORCL,true
+PANW,Palo Alto Networks,stock,NASDAQ,US Stocks,Technology,Software Infrastructure,US,USD,Palo Alto Networks|cybersecurity,Nasdaq 100,PANW,true
+PEP,PepsiCo,stock,NASDAQ,US Stocks,Consumer Defensive,Beverages Non-Alcoholic,US,USD,PepsiCo|Pepsi,Nasdaq 100,PEP,true
+PFE,Pfizer,stock,NYSE,US Stocks,Healthcare,Drug Manufacturers,US,USD,Pfizer|pharma,,PFE,true
+PG,Procter & Gamble,stock,NYSE,US Stocks,Consumer Defensive,Household Products,US,USD,Procter and Gamble|P&G,,PG,true
+PLTR,Palantir Technologies,stock,NASDAQ,US Stocks,Technology,Software Infrastructure,US,USD,Palantir|AI software,,PLTR,true
+PYPL,PayPal Holdings,stock,NASDAQ,US Stocks,Financial Services,Credit Services,US,USD,PayPal|payments,,PYPL,true
+QCOM,QUALCOMM,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,Qualcomm|mobile chips,Nasdaq 100,QCOM,true
+RKLB,Rocket Lab USA,stock,NASDAQ,US Stocks,Industrials,Aerospace and Defense,US,USD,Rocket Lab|space|launch,,RKLB,true
+RIVN,Rivian Automotive,stock,NASDAQ,US Stocks,Consumer Cyclical,Auto Manufacturers,US,USD,Rivian|EV,,RIVN,true
+SENS,Senseonics Holdings,stock,NYSE American,US Stocks,Healthcare,Medical Devices,US,USD,Senseonics|NYSE American,,SENS,true
+SHOP,Shopify,stock,NASDAQ,US Stocks,Technology,Software Application,Canada,USD,Shopify|ecommerce,,SHOP,true
+SNOW,Snowflake,stock,NYSE,US Stocks,Technology,Software Application,US,USD,Snowflake|data cloud,,SNOW,true
+SOFI,SoFi Technologies,stock,NASDAQ,US Stocks,Financial Services,Credit Services,US,USD,SoFi|fintech,,SOFI,true
+SPCE,Virgin Galactic Holdings,stock,NYSE,US Stocks,Industrials,Aerospace and Defense,US,USD,Virgin Galactic|space tourism,,SPCE,true
+SPCX,AXS SPAC and New Issue ETF,etf,NASDAQ,ETF,ETF,SPAC ETF,US,USD,SPAC ETF|new issue ETF,,SPCX,true
+SPGI,S&P Global,stock,NYSE,US Stocks,Financial Services,Financial Data and Stock Exchanges,US,USD,S&P Global|Standard and Poor's|ratings|indices,,SPGI,true
+SQ,Block,stock,NYSE,US Stocks,Technology,Software Infrastructure,US,USD,Block|Square|payments,,SQ,true
+T,AT&T,stock,NYSE,US Stocks,Communication Services,Telecom Services,US,USD,AT&T|telecom,,T,true
+TMO,Thermo Fisher Scientific,stock,NYSE,US Stocks,Healthcare,Diagnostics and Research,US,USD,Thermo Fisher,,TMO,true
+TXN,Texas Instruments,stock,NASDAQ,US Stocks,Semiconductor,Semiconductors,US,USD,Texas Instruments|chips,Nasdaq 100,TXN,true
+U,Unity Software,stock,NYSE,US Stocks,Technology,Software Application,US,USD,Unity|game engine,,U,true
+UNH,UnitedHealth Group,stock,NYSE,US Stocks,Healthcare,Healthcare Plans,US,USD,UnitedHealth,,UNH,true
+URG,Ur-Energy,stock,NYSE American,US Stocks,Energy,Uranium,US,USD,Ur-Energy|NYSE American|uranium,,URG,true
+UUUU,Energy Fuels,stock,NYSE American,US Stocks,Energy,Uranium,US,USD,Energy Fuels|NYSE American|uranium,,UUUU,true
+V,Visa,stock,NYSE,US Stocks,Financial Services,Credit Services,US,USD,Visa|payments,,V,true
+VZ,Verizon Communications,stock,NYSE,US Stocks,Communication Services,Telecom Services,US,USD,Verizon|telecom,,VZ,true
+WMT,Walmart,stock,NYSE,US Stocks,Consumer Defensive,Discount Stores,US,USD,Walmart,,WMT,true
+XLF,Financial Select Sector SPDR Fund,etf,NYSE Arca,Sector ETF,Financial Services,Financial ETF,US,USD,financial sector ETF,,XLF,true
+XLK,Technology Select Sector SPDR Fund,etf,NYSE Arca,Sector ETF,Technology,Technology ETF,US,USD,technology sector ETF,,XLK,true
+XOM,Exxon Mobil,stock,NYSE,US Stocks,Energy,Integrated Oil and Gas,US,USD,Exxon|ExxonMobil|oil,,XOM,true
+ZM,Zoom Video Communications,stock,NASDAQ,US Stocks,Technology,Software Application,US,USD,Zoom|video conferencing,,ZM,true

@@ -46,6 +46,6 @@ def test_compare_canonicalizes_aliases_and_reports_unsupported(monkeypatch):
     monkeypatch.setattr(main, "get_cached_quote", quote)
     monkeypatch.setattr(main, "get_cached_history", history)
     payload = main.compare("TTB,TTB.BK,RKLB")
-    assert payload["symbols"] == ["TTB.BK"]
+    assert payload["symbols"] == ["TTB.BK", "RKLB"]
     assert payload["items"][0]["symbol"] == "TTB.BK"
-    assert payload["unsupported_symbols"] == [{"symbol": "RKLB", "reason": "unsupported_under_current_universe"}]
+    assert payload["unsupported_symbols"] == []

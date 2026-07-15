@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from app.data_hub import provider_router
 from app.data_hub.capabilities import capabilities_for_symbol
 from app.data_hub.exchange_master import exchange_master_metadata, validate_exchange_master
+from app.data_hub.master_asset_registry import master_asset_registry_metadata, validate_master_asset_registry
 from app.data_hub.symbol_resolver import resolve_symbol
 from app.premium.alerts import build_digest, evaluate_alert_rules
 from app.premium.entitlements import entitlement_matrix, evaluate_entitlement
@@ -103,8 +104,16 @@ def watchlist() -> Dict[str, Any]:
 
 
 @app.get("/api/assets/search")
-def asset_search(q: str = Query(""), limit: int = Query(12, ge=1, le=25)) -> Dict[str, Any]:
-    return search_assets(q, limit)
+def asset_search(
+    q: str = Query(""),
+    asset_class: str | None = Query(None),
+    exchange: str | None = Query(None),
+    country: str | None = Query(None),
+    sector: str | None = Query(None),
+    industry: str | None = Query(None),
+    limit: int = Query(25, ge=1, le=100),
+) -> Dict[str, Any]:
+    return search_assets(q, limit, asset_class, exchange, country, sector, industry)
 
 
 @app.get("/api/exchange-master")
@@ -112,9 +121,19 @@ def exchange_master() -> Dict[str, Any]:
     return exchange_master_metadata()
 
 
+@app.get("/api/master-asset-registry")
+def master_asset_registry() -> Dict[str, Any]:
+    return master_asset_registry_metadata()
+
+
 @app.get("/api/data-hub/status")
 def data_hub_status() -> Dict[str, Any]:
-    return {**provider_router.status(), "validation": validate_exchange_master()}
+    return {
+        **provider_router.status(),
+        "validation": validate_exchange_master(),
+        "master_registry": master_asset_registry_metadata(),
+        "master_registry_validation": validate_master_asset_registry(),
+    }
 
 
 @app.get("/api/data-hub/assets/{symbol}/capabilities")

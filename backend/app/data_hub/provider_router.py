@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List
 
-from app.data_hub.exchange_master import exchange_master_metadata
+from app.data_hub.master_asset_registry import master_asset_registry_metadata
 from app.data_hub.provider_health import provider_health_snapshot, record_provider_result, timed_provider_call
 from app.data_hub.symbol_resolver import ResolutionResult, resolve_symbol
 from app.providers.news import get_news_aggregator
@@ -66,10 +66,10 @@ def status() -> Dict[str, Any]:
         "status": "ok",
         "policy": routing_policy(),
         "provider_health": provider_health_snapshot(),
-        "universe": exchange_master_metadata(),
+        "universe": master_asset_registry_metadata(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "limitations": [
-            "Coverage is partial until verified S&P 500, Nasdaq-100, and SET constituent files are ingested.",
+            "Search coverage uses the partial verified Master Asset Registry; complete exchange coverage requires future licensed or official source ingestion.",
             "Provider fallback is configured but currently relies on yfinance/Yahoo Finance RSS for live data.",
         ],
     }
@@ -115,8 +115,8 @@ def _metadata(data_type: str, resolved: ResolutionResult, provider: str, failure
         "provider": provider,
         "data_type": data_type,
         "provider_failures": failures or [],
-        "universe_version": exchange_master_metadata().get("version"),
-        "coverage_status": exchange_master_metadata().get("coverage_status", "partial"),
+        "universe_version": master_asset_registry_metadata().get("version"),
+        "coverage_status": master_asset_registry_metadata().get("coverage_status", "partial"),
     }
 
 
@@ -130,7 +130,7 @@ def _unavailable(query: str, data_type: str, resolved: ResolutionResult, failure
             "canonical_symbol": resolved.canonical_symbol,
             "data_type": data_type,
             "provider_failures": failures or [],
-            "universe_version": exchange_master_metadata().get("version"),
-            "coverage_status": exchange_master_metadata().get("coverage_status", "partial"),
+            "universe_version": master_asset_registry_metadata().get("version"),
+            "coverage_status": master_asset_registry_metadata().get("coverage_status", "partial"),
         },
     }

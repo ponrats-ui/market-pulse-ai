@@ -36,6 +36,29 @@ def test_search_assets_maps_common_set_ticker_to_bk_symbol() -> None:
     assert "AOT.BK" in {asset["symbol"] for asset in search_assets("AOT")["assets"]}
 
 
-def test_search_assets_does_not_return_unsupported_symbol() -> None:
+def test_search_assets_finds_verified_us_listed_symbols() -> None:
     payload = search_assets("RKLB")
+    assert payload["assets"][0]["symbol"] == "RKLB"
+    assert payload["assets"][0]["coverage_status"] == "partial"
+    assert search_assets("SPGI")["assets"][0]["symbol"] == "SPGI"
+
+
+def test_search_assets_supports_company_name_and_ranking() -> None:
+    assert search_assets("Apple")["assets"][0]["symbol"] == "AAPL"
+    assert search_assets("Rocket Lab")["assets"][0]["symbol"] == "RKLB"
+    prefix_payload = search_assets("SP")
+    prefix_symbols = [asset["symbol"] for asset in prefix_payload["assets"][:5]]
+    assert "SPGI" in prefix_symbols
+    assert "SPCX" in prefix_symbols
+
+
+def test_search_assets_supports_thai_aliases_and_gold() -> None:
+    assert search_assets("ทหารไทยธนชาต")["assets"][0]["symbol"] == "TTB.BK"
+    assert search_assets("KBANK")["assets"][0]["symbol"] == "KBANK.BK"
+    gold_symbols = {asset["symbol"] for asset in search_assets("ทอง")["assets"]}
+    assert {"GLD", "GC=F"} & gold_symbols
+
+
+def test_search_assets_does_not_return_unsupported_gibberish() -> None:
+    payload = search_assets("ZZZNOTAREALMARKETPULSE")
     assert payload["assets"] == []

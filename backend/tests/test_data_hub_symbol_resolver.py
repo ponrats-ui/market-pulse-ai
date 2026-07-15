@@ -14,6 +14,6 @@ def test_resolver_maps_thai_aliases() -> None:
 
 
 def test_resolver_rejects_unsupported_symbol() -> None:
-    result = resolve_symbol("RKLB")
+    result = resolve_symbol("ZZZNOTAREALMARKETPULSE")
     assert result.ok is False
     assert result.reason == "unsupported_under_current_universe"

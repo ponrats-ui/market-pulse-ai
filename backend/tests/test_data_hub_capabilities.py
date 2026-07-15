@@ -12,6 +12,6 @@ def test_capabilities_for_equity_and_crypto() -> None:
 
 
 def test_capabilities_for_unsupported_asset() -> None:
-    payload = capabilities_for_symbol("RKLB")
+    payload = capabilities_for_symbol("ZZZNOTAREALMARKETPULSE")
     assert payload["resolved"] is False
     assert payload["reason"] == "unsupported_under_current_universe"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
 
-from app.data_hub.exchange_master import exchange_master_metadata, list_assets
+from app.data_hub.master_asset_registry import list_registry_assets, master_asset_registry_metadata, search_registry
 
 
 ASSET_UNIVERSE: List[Dict[str, str]] = [
@@ -136,21 +136,25 @@ ASSET_METADATA = {
 }
 
 
-def search_assets(query: str, limit: int = 12) -> Dict[str, Any]:
-    term = LEGACY_THAI_QUERY_ALIASES.get(query.strip(), query.strip()).lower()
-    universe = _data_hub_assets() or ASSET_UNIVERSE
-    if not term:
-        matches = universe[:limit]
-    else:
-        scored: List[Tuple[int, Dict[str, Any]]] = []
-        for asset in universe:
-            score = _score_asset(term, asset)
-            if score:
-                scored.append((score, asset))
-        matches = [asset for _, asset in sorted(scored, key=lambda item: item[0], reverse=True)[:limit]]
-    enriched = [_enrich_asset(asset) for asset in matches]
-    metadata = exchange_master_metadata()
-    return {"query": query, "count": len(enriched), "assets": enriched, "source": metadata.get("source", "exchange_master"), "exchange_master": metadata}
+def search_assets(
+    query: str,
+    limit: int = 25,
+    asset_class: str | None = None,
+    exchange: str | None = None,
+    country: str | None = None,
+    sector: str | None = None,
+    industry: str | None = None,
+) -> Dict[str, Any]:
+    term = LEGACY_THAI_QUERY_ALIASES.get(query.strip(), query.strip())
+    return search_registry(
+        term,
+        asset_class=asset_class,
+        exchange=exchange,
+        country=country,
+        sector=sector,
+        industry=industry,
+        limit=limit,
+    )
 
 
 def sector_browser() -> Dict[str, Any]:
@@ -162,7 +166,7 @@ def sector_browser() -> Dict[str, Any]:
     sectors = []
     for name, assets in sorted(sectors_by_name.items()):
         sectors.append({"name": name, "count": len(assets), "assets": assets})
-    metadata = exchange_master_metadata()
+    metadata = master_asset_registry_metadata()
     return {
         "sectors": sectors,
         "source": metadata.get("source", "exchange_master"),
@@ -176,7 +180,7 @@ def assets_for_sector(sector: str, limit: int = 25) -> Dict[str, Any]:
     safe_limit = limit if isinstance(limit, int) else 25
     universe = _data_hub_assets() or ASSET_UNIVERSE
     assets = [_enrich_asset(asset) for asset in universe if str(asset.get("sector") or asset.get("asset_type") or "").lower() == target][:safe_limit]
-    return {"sector": sector, "count": len(assets), "assets": assets, "source": exchange_master_metadata().get("source", "exchange_master")}
+    return {"sector": sector, "count": len(assets), "assets": assets, "source": master_asset_registry_metadata().get("source", "master_asset_registry")}
 
 
 def _score_asset(term: str, asset: Dict[str, Any]) -> int:
@@ -218,4 +222,4 @@ def _enrich_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _data_hub_assets() -> List[Dict[str, Any]]:
-    return [asset.to_search_asset() for asset in list_assets(enabled_only=True)]
+    return [asset.to_search_asset() for asset in list_registry_assets(enabled_only=True, searchable_only=True)]

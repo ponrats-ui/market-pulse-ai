@@ -558,3 +558,61 @@ option { background: #0a101c; color: #d9e7ff; }
   .mood-gauge { width: 8rem; justify-self: center; }
   .opportunity-main, .opportunity-metrics { align-items: flex-start; }
 }
+
+/* Founder Polish 04: logos and seven-day sparklines */
+.asset-logo-pro {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+.asset-logo-md { width: 34px; height: 34px; font-size: 0.7rem; }
+.asset-logo-sm { width: 28px; height: 28px; border-radius: 8px; font-size: 0.64rem; }
+.asset-logo-pro img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #ffffff; padding: 4px; }
+.asset-logo-fallback-text { position: relative; z-index: 0; }
+.tone-cyan { background: linear-gradient(135deg, #0f5565, #12324a); }
+.tone-green { background: linear-gradient(135deg, #156145, #173726); }
+.tone-gold { background: linear-gradient(135deg, #765b12, #3d3214); }
+.tone-red { background: linear-gradient(135deg, #77333b, #331b24); }
+.tone-violet { background: linear-gradient(135deg, #4f3d84, #25223e); }
+.tone-blue { background: linear-gradient(135deg, #205c9a, #182f55); }
+.sparkline { display: inline-flex; align-items: center; justify-content: center; width: 116px; min-width: 116px; height: 38px; color: #7e8da8; }
+.sparkline svg { overflow: visible; }
+.sparkline path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.sparkline-positive { color: #33d17a; }
+.sparkline-negative { color: #ff7a7a; }
+.sparkline-flat, .sparkline-unavailable { color: #7e8da8; }
+.sparkline-empty { border: 1px dashed rgba(126, 141, 168, 0.35); border-radius: 8px; font-size: 0.68rem; font-weight: 700; color: #7e8da8; }
+.sparkline-compact { width: 80px; min-width: 80px; height: 30px; }
+.sparkline small { margin-left: 4px; color: #f7c948; font-size: 0.58rem; text-transform: uppercase; }
+.opportunity-card-pro { display: grid; gap: 10px; }
+.opportunity-row-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 10px; }
+.opportunity-identity { min-width: 0; }
+.opportunity-price-stack { display: grid; justify-items: end; gap: 2px; white-space: nowrap; }
+.watchlist-row-pro { border: 1px solid var(--terminal-border); border-radius: 8px; background: rgba(12, 20, 34, 0.88); padding: 8px; }
+.watchlist-main-action { display: grid; width: 100%; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; text-align: left; }
+.watchlist-identity { min-width: 0; display: grid; gap: 2px; }
+.watchlist-ticker { font-weight: 800; color: #ffffff; }
+.watchlist-company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #7e8da8; font-size: 0.72rem; }
+.watchlist-price-line { color: #d9e7ff; font-size: 0.72rem; }
+.watchlist-signal-badge { max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; border: 1px solid rgba(53, 208, 255, 0.28); background: rgba(53, 208, 255, 0.08); padding: 4px 8px; color: #a7edff; font-size: 0.68rem; font-weight: 700; }
+.watchlist-spark { display: flex; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .asset-logo-md { width: 28px; height: 28px; border-radius: 8px; font-size: 0.64rem; }
+  .opportunity-row-top { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .opportunity-row-top .opportunity-score { grid-column: 2 / 3; justify-self: start; }
+  .opportunity-row-top .sparkline { grid-column: 3 / 4; grid-row: 1 / 3; width: 72px; min-width: 72px; }
+  .opportunity-price-stack { justify-items: start; }
+  .watchlist-main-action { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .watchlist-signal-badge { grid-column: 2 / 3; justify-self: start; max-width: 130px; }
+  .watchlist-spark { grid-column: 3 / 4; grid-row: 1 / 3; }
+  .watchlist-spark .sparkline { width: 68px; min-width: 68px; }
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -165,6 +166,17 @@ def sector_assets(sector: str, limit: int = Query(25, ge=1, le=50)) -> Dict[str,
 def asset_quotes(symbols: str = Query("BTC-USD")) -> Dict[str, Any]:
     selected = [symbol.strip() for symbol in symbols.split(",") if symbol.strip()][:25]
     return {"symbols": selected, "items": [get_cached_quote(symbol) for symbol in selected], "source": DEFAULT_PROVIDER}
+
+
+@app.get("/api/assets/sparklines")
+def asset_sparklines(symbols: str = Query("BTC-USD")) -> Dict[str, Any]:
+    selected = _dedupe_symbols([symbol.strip() for symbol in symbols.split(",") if symbol.strip()])[:25]
+    return {
+        "symbols": selected,
+        "items": [build_sparkline(symbol) for symbol in selected],
+        "source": DEFAULT_PROVIDER,
+        "ttl_seconds": HISTORICAL_TTL_SECONDS,
+    }
 
 
 @app.get("/api/assets/{symbol}")
@@ -351,6 +363,62 @@ def financials(symbol: str) -> Dict[str, Any]:
     provider_payload = get_cached_fundamentals(symbol)
     quote = get_cached_quote(symbol)
     return build_financial_statement_analysis(symbol, provider_payload, quote)
+
+
+def build_sparkline(symbol: str) -> Dict[str, Any]:
+    history = get_cached_history(symbol, "1mo", "1d")
+    raw_points = history.get("points", []) if isinstance(history, dict) else []
+    closes = [
+        {"time": point.get("time"), "close": point.get("close")}
+        for point in raw_points
+        if isinstance(point, dict) and isinstance(point.get("close"), (int, float))
+    ][-7:]
+    timestamp = closes[-1]["time"] if closes else datetime.now(timezone.utc).isoformat()
+    unavailable_reason = None
+    if not closes:
+        unavailable_reason = history.get("error") if isinstance(history, dict) else "History provider returned no close prices."
+    elif len(closes) < 5:
+        unavailable_reason = "Fewer than five recent provider close points were available."
+    start_price = closes[0]["close"] if closes else None
+    end_price = closes[-1]["close"] if closes else None
+    change_percent = ((end_price - start_price) / start_price * 100) if isinstance(start_price, (int, float)) and start_price else None
+    stale = _sparkline_is_stale(timestamp) if closes else False
+    return {
+        "symbol": symbol,
+        "points": closes,
+        "start_price": start_price,
+        "end_price": end_price,
+        "change_percent": change_percent,
+        "provider": history.get("source", DEFAULT_PROVIDER) if isinstance(history, dict) else DEFAULT_PROVIDER,
+        "timestamp": timestamp,
+        "stale": stale,
+        "unavailable_reason": unavailable_reason,
+    }
+
+
+def _sparkline_is_stale(timestamp: str | None) -> bool:
+    if not timestamp:
+        return False
+    try:
+        normalized = timestamp.replace("Z", "+00:00")
+        value = datetime.fromisoformat(normalized)
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - value.astimezone(timezone.utc)).days > 4
+    except Exception:
+        return False
+
+
+def _dedupe_symbols(symbols: list[str]) -> list[str]:
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for symbol in symbols:
+        key = symbol.upper()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(symbol)
+    return deduped
 
 
 def get_cached_quote(symbol: str) -> Dict[str, Any]:

@@ -1,14 +1,60 @@
 import React from 'react';
 import { BarChart3, Search, WalletCards } from 'lucide-react';
 import { api } from './lib/api';
-import type { Asset, AssetCategory, AssetQuote, AssetSearchItem, CompareResponse, PortfolioEvaluationResponse, PortfolioHolding, PortfolioTransaction, SectorItem } from './types/market';
+import type { Asset, AssetCategory, AssetQuote, AssetSearchItem, AssetSparkline, CompareResponse, PortfolioEvaluationResponse, PortfolioHolding, PortfolioTransaction, SectorItem } from './types/market';
 import type { Language } from './i18n';
 
 export type OpportunityRegion = 'us' | 'thai';
 export type OpportunityCandidate = AssetSearchItem & { region: OpportunityRegion };
-export type OpportunityScore = { symbol: string; label: string; price: number; currency: string; changePercent: number | null; score: number; category: string; confidence: string; reason: string; source: string; timestamp: string; unavailableFactors: string[] };
+export type OpportunityScore = { symbol: string; label: string; price: number; currency: string; changePercent: number | null; score: number; category: string; confidence: string; reason: string; source: string; timestamp: string; unavailableFactors: string[]; logoUrl?: string | null; logoProvider?: string | null; logoAvailable?: boolean };
+export type SparklineMap = Record<string, AssetSparkline | undefined>;
 
 export const opportunityRefreshMs = 30 * 60 * 1000;
+
+export function AssetLogo({ symbol, name, logoUrl, size = 'md' }: { symbol: string; name?: string | null; logoUrl?: string | null; size?: 'sm' | 'md' }) {
+  const initials = assetInitials(symbol, name);
+  const tone = logoTone(symbol);
+  const className = 'asset-logo-pro asset-logo-' + size + ' ' + tone;
+  if (logoUrl && logoUrl.toLowerCase().startsWith('https://')) {
+    return <span className={className} aria-label={symbol + ' logo'}><img src={logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.style.display = 'none'; }} /><span className="asset-logo-fallback-text">{initials}</span></span>;
+  }
+  return <span className={className} role="img" aria-label={symbol + ' fallback logo'}><span>{initials}</span></span>;
+}
+
+export function AssetSparkline({ symbol, sparkline, compact = false }: { symbol: string; sparkline?: AssetSparkline; compact?: boolean }) {
+  const points = sparkline?.points ?? [];
+  const values = points.map((point) => point.close).filter((value): value is number => typeof value === 'number');
+  const change = sparkline?.change_percent ?? null;
+  const trend = change == null ? 'unavailable' : change > 0 ? 'positive' : change < 0 ? 'negative' : 'flat';
+  const label = change == null ? symbol + ' 7-day trend unavailable from provider' : symbol + ' 7-day trend ' + trend + ', ' + (change >= 0 ? 'up ' : 'down ') + Math.abs(change).toFixed(2) + ' percent';
+  if (values.length < 2) return <span className={'sparkline sparkline-empty ' + (compact ? 'sparkline-compact' : '')} role="img" aria-label={sparkline?.unavailable_reason ?? label}>N/A</span>;
+  const width = compact ? 76 : 112;
+  const height = compact ? 28 : 34;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const path = values.map((value, index) => {
+    const x = (index / Math.max(1, values.length - 1)) * (width - 4) + 2;
+    const y = height - 3 - ((value - min) / range) * (height - 6);
+    return (index === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  return <span className={'sparkline sparkline-' + trend + ' ' + (compact ? 'sparkline-compact' : '')} role="img" aria-label={label} title={sparkline?.stale ? 'Stale provider history: ' + sparkline.timestamp : label}><svg viewBox={'0 0 ' + width + ' ' + height} width={width} height={height} focusable="false" aria-hidden="true"><path d={path} /></svg>{sparkline?.stale && <small>stale</small>}</span>;
+}
+
+function assetInitials(symbol: string, name?: string | null): string {
+  const clean = symbol.replace(/[-.=^]/g, ' ').trim();
+  const parts = clean.split(/s+/).filter(Boolean);
+  if (parts[0] && parts[0].length >= 2) return parts[0].slice(0, 2).toUpperCase();
+  const source = name || symbol;
+  return source.split(/s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || symbol.slice(0, 2).toUpperCase();
+}
+
+function logoTone(symbol: string): string {
+  const tones = ['tone-cyan', 'tone-green', 'tone-gold', 'tone-red', 'tone-violet', 'tone-blue'];
+  const total = symbol.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[total % tones.length];
+}
+
 
 const usOpportunityUniverse = ['AAPL', 'MSFT', 'NVDA', 'AMD', 'TSM', 'SPY', 'QQQ', 'TLT', 'VNQ', 'SOXX', 'GLD', 'SLV'];
 const thaiOpportunityUniverse = ['PTT.BK', 'AOT.BK', 'SCB.BK', 'KBANK.BK', 'TTB.BK', 'CPALL.BK', 'DELTA.BK', 'ADVANC.BK'];
@@ -27,7 +73,7 @@ export function buildOpportunityScore(candidate: OpportunityCandidate | undefine
   if (!available.length) return null;
   const weights = available.reduce((sum, [, , weight]) => sum + weight, 0);
   const score = Math.round(available.reduce((sum, [, value, weight]) => sum + value * weight, 0) / weights);
-  return { symbol: quote.symbol, label: candidate.company_name ?? candidate.label ?? quote.name, price: quote.price, currency: quote.currency, changePercent: quote.change_percent, score, category: score >= 70 ? 'Strong Candidate' : score >= 50 ? 'Watch' : 'Weak', confidence: available.length >= 7 ? 'high' : available.length >= 5 ? 'medium' : 'low', reason: `Calculated from real data: ${available.slice(0, 4).map(([name]) => name).join(', ')}`, source: quote.source, timestamp: quote.timestamp, unavailableFactors: ['RSI', 'MACD', 'breakout', 'moving averages', 'volume spike'] };
+  return { symbol: quote.symbol, label: candidate.company_name ?? candidate.label ?? quote.name, price: quote.price, currency: quote.currency, changePercent: quote.change_percent, score, category: score >= 70 ? 'Strong Candidate' : score >= 50 ? 'Watch' : 'Weak', confidence: available.length >= 7 ? 'high' : available.length >= 5 ? 'medium' : 'low', reason: `Calculated from real data: ${available.slice(0, 4).map(([name]) => name).join(', ')}`, source: quote.source, timestamp: quote.timestamp, unavailableFactors: ['RSI', 'MACD', 'breakout', 'moving averages', 'volume spike'], logoUrl: quote.provider_logo_url ?? quote.logo_url ?? quote.icon_url ?? null, logoProvider: quote.logo_provider ?? null, logoAvailable: quote.logo_available ?? Boolean(quote.provider_logo_url ?? quote.logo_url ?? quote.icon_url) };
 }
 
 export function watchlistSignals(quote: AssetQuote | undefined): string[] {
@@ -52,10 +98,10 @@ export function contextPrompts(symbol: string, quote: AssetQuote | null): string
   return [`${symbol}: What are the key positive and negative factors?`, `${symbol}: What risks need a plan first?`, `${symbol}: Should I wait or keep monitoring?`];
 }
 
-export function TodayOpportunities({ language: _language, scores, loading, scanTime, onOpen }: { language: Language; scores: OpportunityScore[]; loading: boolean; scanTime?: string; onOpen: (symbol: string) => void }) {
+export function TodayOpportunities({ language: _language, scores, loading, scanTime, sparklines, onOpen }: { language: Language; scores: OpportunityScore[]; loading: boolean; scanTime?: string; sparklines: SparklineMap; onOpen: (symbol: string) => void }) {
   const us = scores.filter((item) => isUsOpportunityAsset({ symbol: item.symbol, label: item.label, asset_type: 'stock', market: 'United States' })).slice(0, 5);
   const thai = scores.filter((item) => item.symbol.endsWith('.BK')).slice(0, 5);
-  const renderGroup = (title: string, region: OpportunityRegion, items: OpportunityScore[]) => <div className="opportunity-group"><div className="opportunity-group-header"><h3>{title}</h3><span>{latestScanLabel(region)}</span></div><div className="grid gap-2">{items.length ? items.map((item) => { const changePositive = (item.changePercent ?? 0) >= 0; const recommendation = recommendationForScore(item.score); return <article className="opportunity-card" key={item.symbol}><div className="opportunity-main"><div><p className="opportunity-ticker">{item.symbol}</p><p className="opportunity-company">{item.label}</p></div><div className="opportunity-score"><span className={scoreToneClass(item.score)}>{item.score}</span><small>/100</small></div></div><div className="opportunity-metrics"><span className="opportunity-price">{formatNumber(item.price)} {item.currency}</span><span className={changePositive ? 'opportunity-up' : 'opportunity-down'}>{formatPercent(item.changePercent)}</span><span className={`recommendation-badge ${recommendation.className}`}>{recommendation.label}</span></div><div className="opportunity-reasons">{reasonChips(item).map((chip) => <span key={`${item.symbol}-${chip}`}>{chip}</span>)}</div><p className="opportunity-source">Source: {item.source} | {formatTime(item.timestamp)}</p><p className="opportunity-unavailable">Unavailable: {item.unavailableFactors.join(', ')}</p><button className="watch-button mt-3 w-full" onClick={() => onOpen(item.symbol)}>Open Asset</button></article>; }) : <div className="flex min-h-28 items-center justify-center rounded-md border border-dashed border-terminal-border bg-terminal-panel2 p-4 text-center text-sm text-terminal-muted">{loading ? 'Scanning real market data' : 'Not enough real data to rank opportunities'}</div>}</div></div>;
+  const renderGroup = (title: string, region: OpportunityRegion, items: OpportunityScore[]) => <div className="opportunity-group"><div className="opportunity-group-header"><h3>{title}</h3><span>{latestScanLabel(region)}</span></div><div className="grid gap-2">{items.length ? items.map((item) => { const changePositive = (item.changePercent ?? 0) >= 0; const recommendation = recommendationForScore(item.score); return <article className="opportunity-card opportunity-card-pro" key={item.symbol}><div className="opportunity-row-top"><AssetLogo symbol={item.symbol} name={item.label} logoUrl={item.logoUrl} /><div className="opportunity-identity"><p className="opportunity-ticker">{item.symbol}</p><p className="opportunity-company">{item.label}</p></div><div className="opportunity-price-stack"><span className="opportunity-price">{formatNumber(item.price)} {item.currency}</span><span className={changePositive ? 'opportunity-up' : 'opportunity-down'}>{formatPercent(item.changePercent)}</span></div><div className="opportunity-score"><span className={scoreToneClass(item.score)}>{item.score}</span><small>/100</small></div><AssetSparkline symbol={item.symbol} sparkline={sparklines[item.symbol]} /></div><div className="opportunity-metrics"><span className={`recommendation-badge ${recommendation.className}`}>{recommendation.label}</span></div><div className="opportunity-reasons">{reasonChips(item).map((chip) => <span key={`${item.symbol}-${chip}`}>{chip}</span>)}</div><p className="opportunity-source">Source: {item.source} | {formatTime(item.timestamp)}</p><p className="opportunity-unavailable">Unavailable: {item.unavailableFactors.join(', ')}</p><button className="watch-button mt-3 w-full" onClick={() => onOpen(item.symbol)}>Open Asset</button></article>; }) : <div className="flex min-h-28 items-center justify-center rounded-md border border-dashed border-terminal-border bg-terminal-panel2 p-4 text-center text-sm text-terminal-muted">{loading ? 'Scanning real market data' : 'Not enough real data to rank opportunities'}</div>}</div></div>;
   return <section className="panel-card professional-panel opportunity-section"><div className="professional-header opportunity-title"><Search size={18} /><h2>TODAY'S OPPORTUNITIES</h2></div><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-terminal-muted">PIA screens only provider-returned quote data. No simulated values are used.</p><span className="text-xs text-terminal-muted">{scanTime ? `Latest Scan ${formatTime(scanTime)}` : 'Awaiting data'}</span></div><div className="grid gap-3 xl:grid-cols-2">{renderGroup('US MARKET TOP 5', 'us', us)}{renderGroup('THAI MARKET TOP 5', 'thai', thai)}</div></section>;
 }
 

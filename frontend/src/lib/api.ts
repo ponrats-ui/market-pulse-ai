@@ -4,7 +4,7 @@ import type { AnalysisResponse, AssetSearchResponse, AssistantResponse, AssetHis
 const PRODUCTION_API_BASE_URL = 'https://market-pulse-ai-api.onrender.com';
 const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
 const API_BASE_URL = resolveApiBaseUrl(RAW_API_BASE_URL);
-const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 20000;
 
 if (!API_BASE_URL && import.meta.env.DEV) {
   console.warn('Market Pulse API base URL is not configured. Set VITE_API_BASE_URL to a running backend URL to load live market data.');

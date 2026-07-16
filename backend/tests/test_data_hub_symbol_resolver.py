@@ -11,6 +11,8 @@ def test_resolver_maps_common_set_aliases_to_canonical_symbols() -> None:
 def test_resolver_maps_thai_aliases() -> None:
     assert resolve_symbol("กสิกร").canonical_symbol == "KBANK.BK"
     assert resolve_symbol("ทหารไทยธนชาต").canonical_symbol == "TTB.BK"
+    assert resolve_symbol("ธนาคารกรุงเทพ").canonical_symbol == "BBL.BK"
+    assert resolve_symbol("ปตท").canonical_symbol == "PTT.BK"
 
 
 def test_resolver_rejects_unsupported_symbol() -> None:

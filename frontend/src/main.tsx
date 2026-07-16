@@ -99,7 +99,7 @@ function App() {
   const [activeIndicators, setActiveIndicators] = React.useState<string[]>(['EMA20', 'EMA50', 'RSI14', 'MACD', 'Volume']);
   const [compareSymbols, setCompareSymbols] = React.useState(comparePresets[0]);
   const [compare, setCompare] = React.useState<CompareResponse | null>(null);
-  const [question, setQuestion] = React.useState(language === 'th' ? 'BTC ตอนนี้เสี่ยงไหม' : 'Is BTC risky right now?');
+  const [question, setQuestion] = React.useState(language === 'th' ? 'สินทรัพย์ที่เลือกควรติดตามอะไรต่อ?' : 'What should I monitor next for the selected asset?');
   const [answer, setAnswer] = React.useState('');
   const [assistantHistory, setAssistantHistory] = React.useState<Array<{ question: string; response: AssistantResponse }>>([]);
   const [portfolio, setPortfolio] = React.useState<PortfolioHolding[]>(readPortfolio);

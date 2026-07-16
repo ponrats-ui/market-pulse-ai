@@ -26,19 +26,20 @@ def resolve_symbol(query: str, provider: str = "yfinance") -> ResolutionResult:
         return ResolutionResult(False, query, reason="empty_query")
     normalized = _normalize(term)
     assets = sorted(list_registry_assets(enabled_only=True, searchable_only=True), key=_asset_rank_priority)
-    for asset in assets:
-        if _matches(asset, normalized):
-            provider_symbol = asset.provider_symbols.get(provider)
-            if not provider_symbol:
-                return ResolutionResult(False, query, reason=f"provider_symbol_unavailable:{provider}")
-            return ResolutionResult(
-                True,
-                query,
-                canonical_symbol=asset.canonical_symbol,
-                display_symbol=asset.display_symbol,
-                provider_symbols=asset.provider_symbols,
-                asset=asset.to_dict(),
-            )
+    matches = [(score, asset) for asset in assets if (score := _match_score(asset, normalized)) > 0]
+    if matches:
+        _, asset = max(matches, key=lambda item: (item[0], -_asset_rank_priority(item[1])[0], item[1].canonical_symbol))
+        provider_symbol = asset.provider_symbols.get(provider)
+        if not provider_symbol:
+            return ResolutionResult(False, query, reason=f"provider_symbol_unavailable:{provider}")
+        return ResolutionResult(
+            True,
+            query,
+            canonical_symbol=asset.canonical_symbol,
+            display_symbol=asset.display_symbol,
+            provider_symbols=asset.provider_symbols,
+            asset=asset.to_dict(),
+        )
     return ResolutionResult(False, query, reason="unsupported_under_current_universe")
 
 
@@ -50,8 +51,21 @@ def provider_symbol(query: str, provider: str = "yfinance") -> str | None:
 
 
 def _matches(asset: MasterAsset, normalized: str) -> bool:
-    candidates = [asset.canonical_symbol, asset.display_symbol, asset.company_name, asset.thai_name, *asset.aliases]
-    return any(_normalize(candidate) == normalized for candidate in candidates if candidate)
+    return _match_score(asset, normalized) > 0
+
+
+def _match_score(asset: MasterAsset, normalized: str) -> int:
+    if _normalize(asset.canonical_symbol) == normalized:
+        return 100
+    if _normalize(asset.display_symbol) == normalized:
+        return 95
+    if asset.thai_name and _normalize(asset.thai_name) == normalized:
+        return 90
+    if asset.company_name and _normalize(asset.company_name) == normalized:
+        return 80
+    if any(_normalize(alias) == normalized for alias in asset.aliases if alias):
+        return 70
+    return 0
 
 
 def _normalize(value: str) -> str:

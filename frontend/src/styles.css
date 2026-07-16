@@ -360,3 +360,201 @@ option { background: #0a101c; color: #d9e7ff; }
     grid-template-columns: 1fr;
   }
 }
+
+/* Founder Polish 03: professional investment dashboard hierarchy */
+.professional-panel {
+  border: 1px solid rgba(46, 67, 98, 0.92);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, rgba(13, 21, 35, 0.98), rgba(8, 13, 23, 0.96));
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24);
+  padding: 1rem;
+}
+
+.professional-header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid rgba(46, 67, 98, 0.82);
+  color: #e7f1ff;
+}
+
+.professional-header h2 {
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.opportunity-title { color: #f7c948; }
+.opportunity-title::before { content: "★"; color: #f7c948; font-size: 0.95rem; }
+
+.opportunity-group {
+  border: 1px solid rgba(46, 67, 98, 0.78);
+  border-radius: 0.5rem;
+  background: rgba(16, 24, 39, 0.82);
+  padding: 0.85rem;
+}
+
+.opportunity-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.opportunity-group-header h3 {
+  color: #f7c948;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.opportunity-group-header span,
+.news-tag,
+.reason-chip {
+  border: 1px solid rgba(247, 201, 72, 0.24);
+  border-radius: 999px;
+  background: rgba(247, 201, 72, 0.08);
+  color: #ffd76a;
+  padding: 0.26rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.opportunity-card,
+.pro-news-card,
+.suggested-question-card,
+.financial-health-card,
+.status-tile-pro {
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+
+.opportunity-card {
+  border: 1px solid rgba(46, 67, 98, 0.78);
+  border-radius: 0.5rem;
+  background: rgba(10, 16, 28, 0.96);
+  padding: 0.85rem;
+}
+
+.opportunity-card:hover,
+.pro-news-card:hover,
+.suggested-question-card:hover,
+.financial-health-card:hover,
+.status-tile-pro:hover,
+.panel-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(53, 208, 255, 0.48);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+}
+
+.opportunity-main,
+.opportunity-metrics {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.opportunity-ticker { color: #ffffff; font-size: 1.25rem; font-weight: 900; line-height: 1; }
+.opportunity-company { margin-top: 0.28rem; color: #9fb0ca; font-size: 0.74rem; line-height: 1.35; }
+.opportunity-score { display: flex; align-items: baseline; gap: 0.12rem; }
+.opportunity-score span { font-size: 1.55rem; font-weight: 950; }
+.opportunity-score small { color: #9fb0ca; font-size: 0.75rem; }
+.score-green { color: #42e58b; }
+.score-light-green { color: #8ef5a1; }
+.score-yellow { color: #f7d35b; }
+.score-orange { color: #ffb454; }
+.score-red { color: #ff6f7d; }
+.opportunity-metrics { margin-top: 0.8rem; align-items: center; flex-wrap: wrap; font-size: 0.82rem; }
+.opportunity-price { color: #f4f8ff; font-weight: 800; }
+.opportunity-up { color: #42e58b; font-weight: 900; }
+.opportunity-down { color: #ff6f7d; font-weight: 900; }
+.recommendation-badge { border-radius: 999px; padding: 0.26rem 0.58rem; font-size: 0.7rem; font-weight: 900; }
+.badge-strong { background: rgba(51, 209, 122, 0.14); color: #42e58b; }
+.badge-watch { background: rgba(53, 208, 255, 0.14); color: #7ddfff; }
+.badge-neutral { background: rgba(247, 201, 72, 0.14); color: #f7d35b; }
+.badge-avoid { background: rgba(255, 95, 109, 0.14); color: #ff7b87; }
+.opportunity-reasons { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.75rem; }
+.opportunity-reasons span { border-radius: 999px; background: rgba(53, 208, 255, 0.1); color: #bfefff; padding: 0.22rem 0.5rem; font-size: 0.68rem; font-weight: 800; }
+.opportunity-source, .opportunity-unavailable { margin-top: 0.55rem; color: #9fb0ca; font-size: 0.7rem; }
+.opportunity-unavailable { color: #ffc968; }
+
+.news-scroll-panel {
+  max-height: 39.5rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  border: 1px solid rgba(46, 67, 98, 0.72);
+  border-radius: 0.5rem;
+  background: rgba(8, 13, 23, 0.9);
+}
+
+.news-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid rgba(46, 67, 98, 0.75);
+  background: rgba(8, 13, 23, 0.98);
+}
+.news-sticky-header span { color: #fff; font-weight: 900; }
+.news-sticky-header small { color: #9fb0ca; }
+.news-tag.muted { border-color: rgba(159, 176, 202, 0.22); background: rgba(159, 176, 202, 0.08); color: #b9c7db; }
+
+.market-mood-card {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid rgba(46, 67, 98, 0.78);
+  border-radius: 0.5rem;
+  background: rgba(16, 24, 39, 0.82);
+  padding: 1rem;
+}
+
+.mood-gauge {
+  aspect-ratio: 1;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border: 1px solid rgba(53, 208, 255, 0.28);
+  background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#35d0ff 0 62%, #1e2b3f 62% 100%);
+}
+.mood-gauge span, .mood-gauge small { color: #9fb0ca; font-size: 0.63rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
+.mood-gauge b { color: #fff; font-size: 1.75rem; font-weight: 950; }
+.mood-gauge.mood-on { background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#33d17a 0 78%, #1e2b3f 78% 100%); }
+.mood-gauge.mood-caution { background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#ffb454 0 52%, #1e2b3f 52% 100%); }
+.mood-gauge.mood-off { background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#ff5f6d 0 38%, #1e2b3f 38% 100%); }
+
+.financial-health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 0.75rem; }
+.financial-health-card { border: 1px solid rgba(46, 67, 98, 0.78); border-radius: 0.5rem; background: rgba(16, 24, 39, 0.88); padding: 0.85rem; }
+.health-icon { width: 0.7rem; height: 0.7rem; border-radius: 999px; margin-bottom: 0.65rem; box-shadow: 0 0 16px currentColor; }
+.financial-health-card p { color: #9fb0ca; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+.financial-health-card b { display: block; margin-top: 0.4rem; color: #fff; font-size: 1.2rem; }
+.financial-health-card small { display: block; margin-top: 0.35rem; color: #9fb0ca; font-size: 0.72rem; }
+.health-green { color: #33d17a; } .health-emerald { color: #42e58b; } .health-gold { color: #f7c948; } .health-blue { color: #35d0ff; } .health-purple { color: #a78bfa; } .health-cyan { color: #67e8f9; } .health-orange { color: #ffb454; } .health-teal { color: #2dd4bf; } .health-red { color: #ff6f7d; }
+.financial-health-summary { margin: 0.9rem 0; border: 1px solid rgba(247, 201, 72, 0.22); border-radius: 0.5rem; background: rgba(247, 201, 72, 0.08); padding: 0.9rem; }
+.financial-health-summary span { color: #f7c948; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; }
+.financial-health-summary b { display: block; margin-top: 0.25rem; color: #fff; font-size: 1.35rem; }
+.financial-health-summary strong { color: #f7c948; }
+.financial-health-summary p { margin-top: 0.45rem; color: #cbd8ed; font-size: 0.86rem; line-height: 1.55; }
+
+.status-tile-pro { border: 1px solid rgba(46, 67, 98, 0.76); border-radius: 0.5rem; background: rgba(16, 24, 39, 0.88); padding: 0.8rem; }
+.status-tile-pro p { color: #9fb0ca; font-size: 0.68rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+.status-tile-pro b { display: block; margin-top: 0.45rem; color: #ffd76a; font-size: 1.05rem; }
+
+.suggested-question-card { min-height: 5rem; border: 1px solid rgba(46, 67, 98, 0.78); border-radius: 0.5rem; background: rgba(16, 24, 39, 0.88); padding: 0.8rem; text-align: left; }
+.suggested-question-card span { display: inline-flex; border-radius: 999px; background: rgba(53, 208, 255, 0.12); color: #7ddfff; padding: 0.2rem 0.45rem; font-size: 0.67rem; font-weight: 900; }
+.suggested-question-card b { display: block; margin-top: 0.55rem; color: #e7f1ff; font-size: 0.82rem; line-height: 1.4; }
+
+@media (max-width: 640px) {
+  .market-mood-card { grid-template-columns: 1fr; }
+  .mood-gauge { width: 8rem; justify-self: center; }
+  .opportunity-main, .opportunity-metrics { align-items: flex-start; }
+}

@@ -24,6 +24,8 @@ def test_technical_analysis_returns_real_calculated_fields() -> None:
     payload = build_technical_analysis("NVDA", {"points": points, "source": "test"})
     assert payload["status"] == "ok"
     assert payload["indicators"]["EMA20"] is not None
+    assert payload["indicators"]["SMA20"] is not None
+    assert payload["series"][-1]["sma20"] is not None
     assert payload["indicators"]["RSI14"] is not None
     assert payload["indicators"]["MACD"]["line"] is not None
     assert payload["series"][-1]["bollinger_upper"] is not None

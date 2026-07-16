@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 
-INDICATORS = ("EMA20", "EMA50", "EMA200", "SMA50", "SMA200", "RSI14", "MACD", "Volume", "ATR", "VWAP", "Bollinger Bands")
+INDICATORS = ("EMA20", "EMA50", "EMA200", "SMA20", "SMA50", "SMA200", "RSI14", "MACD", "Volume", "ATR", "VWAP", "Bollinger Bands")
 
 
 def build_technical_analysis(symbol: str, history: Dict[str, Any]) -> Dict[str, Any]:
@@ -29,6 +29,7 @@ def build_technical_analysis(symbol: str, history: Dict[str, Any]) -> Dict[str, 
     ema20 = _ema(closes, 20)
     ema50 = _ema(closes, 50)
     ema200 = _ema(closes, 200)
+    sma20 = _sma(closes, 20)
     sma50 = _sma(closes, 50)
     sma200 = _sma(closes, 200)
     rsi14 = _rsi(closes, 14)
@@ -42,6 +43,7 @@ def build_technical_analysis(symbol: str, history: Dict[str, Any]) -> Dict[str, 
         "EMA20": _last(ema20),
         "EMA50": _last(ema50),
         "EMA200": _last(ema200),
+        "SMA20": _last(sma20),
         "SMA50": _last(sma50),
         "SMA200": _last(sma200),
         "RSI14": _last(rsi14),
@@ -57,7 +59,7 @@ def build_technical_analysis(symbol: str, history: Dict[str, Any]) -> Dict[str, 
         "status": "ok",
         "available_indicators": list(INDICATORS),
         "indicators": indicators,
-        "series": _series(rows, ema20, ema50, ema200, sma50, sma200, rsi14, macd_line, macd_signal, macd_histogram, atr14, vwap, upper_band, middle_band, lower_band),
+        "series": _series(rows, ema20, ema50, ema200, sma20, sma50, sma200, rsi14, macd_line, macd_signal, macd_histogram, atr14, vwap, upper_band, middle_band, lower_band),
         "interpretation": {
             "trend": trend,
             "evidence": _technical_evidence(latest_close, indicators),
@@ -188,7 +190,7 @@ def _bollinger(values: List[float], period: int) -> tuple[List[float | None], Li
 
 
 def _series(rows: List[Dict[str, Any]], *columns: List[float | None]) -> List[Dict[str, Any]]:
-    names = ("ema20", "ema50", "ema200", "sma50", "sma200", "rsi14", "macd", "macd_signal", "macd_histogram", "atr", "vwap", "bollinger_upper", "bollinger_middle", "bollinger_lower")
+    names = ("ema20", "ema50", "ema200", "sma20", "sma50", "sma200", "rsi14", "macd", "macd_signal", "macd_histogram", "atr", "vwap", "bollinger_upper", "bollinger_middle", "bollinger_lower")
     result: List[Dict[str, Any]] = []
     for index, row in enumerate(rows):
         item = {**row}

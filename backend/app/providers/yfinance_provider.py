@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 import pandas as pd
@@ -8,7 +8,7 @@ import yfinance as yf
 
 from app.providers.base import MarketDataProvider
 
-VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "5y", "max"}
+VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "3y", "5y", "max"}
 VALID_INTERVALS = {"1h", "1d", "1wk"}
 THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK", "SCB.BK", "TTB.BK", "ADVANC.BK"}
 GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META", "AMD", "TSM"}
@@ -94,7 +94,13 @@ class YFinanceProvider(MarketDataProvider):
         selected_range = range if range in VALID_RANGES else "1mo"
         selected_interval = interval if interval in VALID_INTERVALS else "1d"
         try:
-            history = yf.Ticker(symbol).history(period=selected_range, interval=selected_interval, auto_adjust=False)
+            ticker = yf.Ticker(symbol)
+            if selected_range == "3y":
+                end = datetime.now(timezone.utc)
+                start = end - timedelta(days=365 * 3 + 7)
+                history = ticker.history(start=start.date().isoformat(), end=end.date().isoformat(), interval=selected_interval, auto_adjust=False)
+            else:
+                history = ticker.history(period=selected_range, interval=selected_interval, auto_adjust=False)
             points = self._history_frame_to_points(history)
             response: Dict[str, Any] = {
                 "symbol": symbol,

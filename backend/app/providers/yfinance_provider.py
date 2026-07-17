@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 import pandas as pd
@@ -8,10 +8,13 @@ import yfinance as yf
 
 from app.providers.base import MarketDataProvider
 
-VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "5y"}
+VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "3y", "5y", "max"}
 VALID_INTERVALS = {"1h", "1d", "1wk"}
-THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK"}
-GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META"}
+THAI_STOCKS = {"SET.BK", "^SET.BK", "^SET50.BK", "PTT.BK", "AOT.BK", "CPALL.BK", "DELTA.BK", "KBANK.BK", "SCB.BK", "TTB.BK", "ADVANC.BK"}
+GLOBAL_STOCKS = {"AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOG", "GOOGL", "META", "AMD", "TSM"}
+ETFS = {"SPY", "VOO", "QQQ", "VTI", "GLD", "SLV", "SOXX"}
+BOND_ETFS = {"TLT"}
+REITS = {"VNQ"}
 GLOBAL_INDICES = {"^GSPC", "^IXIC", "^DJI", "^N225", "^HSI", "^GDAXI"}
 COMMODITIES = {"CL=F", "BZ=F", "NG=F", "GC=F", "SI=F", "PL=F", "HG=F"}
 MACRO = {"DX-Y.NYB", "^TNX"}
@@ -57,6 +60,27 @@ class YFinanceProvider(MarketDataProvider):
                 "low": self._first_float(info.get("regularMarketDayLow"), latest.get("Low")),
                 "volume": self._first_float(info.get("regularMarketVolume"), latest.get("Volume")),
                 "market_cap": self._first_float(info.get("marketCap"), self._fast_value(fast_info, "market_cap")),
+                "trailing_pe": self._safe_float(info.get("trailingPE")),
+                "price_to_book": self._safe_float(info.get("priceToBook")),
+                "price_to_sales": self._safe_float(info.get("priceToSalesTrailing12Months")),
+                "trailing_eps": self._safe_float(info.get("trailingEps")),
+                "earnings_growth": self._safe_float(info.get("earningsGrowth")),
+                "revenue_growth": self._safe_float(info.get("revenueGrowth")),
+                "debt_to_equity": self._safe_float(info.get("debtToEquity")),
+                "return_on_equity": self._safe_float(info.get("returnOnEquity")),
+                "return_on_assets": self._safe_float(info.get("returnOnAssets")),
+                "return_on_invested_capital": self._safe_float(info.get("returnOnCapital")),
+                "beta": self._safe_float(info.get("beta")),
+                "dividend_yield": self._safe_float(info.get("dividendYield")),
+                "sector": self._safe_string(info.get("sector")) if info.get("sector") else None,
+                "industry": self._safe_string(info.get("industry")) if info.get("industry") else None,
+                "exchange": self._safe_string(info.get("exchange") or info.get("fullExchangeName")) if info.get("exchange") or info.get("fullExchangeName") else None,
+                "country": self._safe_string(info.get("country")) if info.get("country") else None,
+                "logo_url": self._safe_string(info.get("logo_url") or info.get("logoUrl")) if info.get("logo_url") or info.get("logoUrl") else None,
+                "icon_url": self._safe_string(info.get("logo_url") or info.get("logoUrl")) if info.get("logo_url") or info.get("logoUrl") else None,
+                "provider_logo_url": self._safe_string(info.get("logo_url") or info.get("logoUrl")) if info.get("logo_url") or info.get("logoUrl") else None,
+                "logo_provider": self.name if info.get("logo_url") or info.get("logoUrl") else None,
+                "logo_available": bool(info.get("logo_url") or info.get("logoUrl")),
                 "source": self.name,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
@@ -70,17 +94,35 @@ class YFinanceProvider(MarketDataProvider):
         selected_range = range if range in VALID_RANGES else "1mo"
         selected_interval = interval if interval in VALID_INTERVALS else "1d"
         try:
-            history = yf.Ticker(symbol).history(period=selected_range, interval=selected_interval, auto_adjust=False)
-            points = self._history_frame_to_points(history)
+            ticker = yf.Ticker(symbol)
+            if selected_range == "3y":
+                end = datetime.now(timezone.utc)
+                start = end - timedelta(days=365 * 3 + 7)
+                history = ticker.history(start=start.date().isoformat(), end=end.date().isoformat(), interval=selected_interval, auto_adjust=False)
+            else:
+                history = ticker.history(period=selected_range, interval=selected_interval, auto_adjust=False)
+            requested_at = datetime.now(timezone.utc).isoformat()
+            points, skipped = self._history_frame_to_points(history)
             response: Dict[str, Any] = {
                 "symbol": symbol,
                 "range": selected_range,
                 "interval": selected_interval,
+                "timezone": self._history_timezone(history),
+                "currency": infer_currency(symbol),
+                "provider": self.name,
+                "requested_at": requested_at,
+                "data_timestamp": points[-1]["time"] if points else None,
+                "cache_age_seconds": 0,
+                "stale": False,
+                "unavailable_reason": None,
                 "points": points,
+                "candles": points,
+                "skipped_candles": skipped,
                 "source": self.name,
             }
             if not points:
                 response["error"] = "No historical prices were returned by yfinance for this symbol."
+                response["unavailable_reason"] = response["error"]
             return response
         except Exception as exc:
             return {
@@ -96,19 +138,51 @@ class YFinanceProvider(MarketDataProvider):
         try:
             ticker = yf.Ticker(symbol)
             info = self._safe_info(ticker)
-            return {
+            income = self._safe_statement(getattr(ticker, "financials", None))
+            balance = self._safe_statement(getattr(ticker, "balance_sheet", None))
+            cashflow = self._safe_statement(getattr(ticker, "cashflow", None))
+            revenue = self._statement_value(income, "Total Revenue")
+            gross_profit = self._statement_value(income, "Gross Profit")
+            operating_income = self._statement_value(income, "Operating Income")
+            net_income = self._statement_value(income, "Net Income")
+            operating_cash_flow = self._statement_value(cashflow, "Operating Cash Flow", "Total Cash From Operating Activities")
+            free_cash_flow = self._first_float(info.get("freeCashflow"), self._statement_value(cashflow, "Free Cash Flow"))
+            assets = self._statement_value(balance, "Total Assets")
+            liabilities = self._statement_value(balance, "Total Liabilities Net Minority Interest", "Total Liab")
+            equity = self._statement_value(balance, "Stockholders Equity", "Total Stockholder Equity")
+            cash = self._first_float(info.get("totalCash"), self._statement_value(balance, "Cash And Cash Equivalents", "Cash"))
+            debt = self._first_float(info.get("totalDebt"), self._statement_value(balance, "Total Debt"))
+            fields = {
                 "symbol": symbol,
-                "revenueTrend": None,
-                "netProfitTrend": None,
+                "revenue": revenue,
+                "grossProfit": gross_profit,
+                "operatingIncome": operating_income,
+                "netIncome": net_income,
+                "ebitda": self._first_float(info.get("ebitda"), self._statement_value(income, "EBITDA")),
+                "operatingCashFlow": operating_cash_flow,
+                "totalAssets": assets,
+                "totalLiabilities": liabilities,
+                "totalEquity": equity,
+                "totalDebt": debt,
+                "revenueTrend": self._safe_float(info.get("revenueGrowth")),
+                "netProfitTrend": self._safe_float(info.get("earningsGrowth")),
                 "grossMargin": self._safe_float(info.get("grossMargins")),
+                "operatingMargin": self._safe_float(info.get("operatingMargins")),
                 "netMargin": self._safe_float(info.get("profitMargins")),
                 "debtToEquity": self._safe_float(info.get("debtToEquity")),
-                "cashFlowQuality": None,
+                "cashFlowQuality": self._cash_flow_quality(operating_cash_flow, net_income),
                 "roe": self._safe_float(info.get("returnOnEquity")),
                 "roa": self._safe_float(info.get("returnOnAssets")),
                 "eps": self._safe_float(info.get("trailingEps")),
                 "pe": self._safe_float(info.get("trailingPE")),
                 "pbv": self._safe_float(info.get("priceToBook")),
+                "ps": self._safe_float(info.get("priceToSalesTrailing12Months")),
+                "peg": self._safe_float(info.get("pegRatio")),
+                "intrinsicValue": None,
+                "totalCash": cash,
+                "freeCashFlow": free_cash_flow,
+                "revenueGrowth": self._safe_float(info.get("revenueGrowth")),
+                "earningsGrowth": self._safe_float(info.get("earningsGrowth")),
                 "dividendYield": self._safe_float(info.get("dividendYield")),
                 "threeToFiveYearTrend": None,
                 "balanceSheetStrength": None,
@@ -116,23 +190,74 @@ class YFinanceProvider(MarketDataProvider):
                 "valuationRisk": None,
                 "source": self.name,
             }
+            fields["field_provenance"] = {
+                key: {
+                    "provider": self.name,
+                    "source": "yfinance.info" if key in {"roe", "roa", "eps", "pe", "pbv", "ps", "peg", "dividendYield", "revenueGrowth", "earningsGrowth"} else "yfinance.statements",
+                    "available": value is not None,
+                }
+                for key, value in fields.items()
+                if key not in {"symbol", "source", "field_provenance"}
+            }
+            return fields
         except Exception as exc:
             return {"symbol": symbol, "source": self.name, "error": str(exc)}
 
-    def _history_frame_to_points(self, history: Any) -> List[Dict[str, Any]]:
+    def _history_frame_to_points(self, history: Any) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         if history is None or history.empty:
-            return []
+            return [], []
         points: List[Dict[str, Any]] = []
+        skipped: List[Dict[str, Any]] = []
+        seen: set[str] = set()
         for index, row in history.iterrows():
-            points.append({
-                "time": self._to_iso(index),
+            timestamp = self._to_iso(index)
+            candle = {
+                "timestamp": timestamp,
+                "time": timestamp,
                 "open": self._safe_float(row.get("Open")),
                 "high": self._safe_float(row.get("High")),
                 "low": self._safe_float(row.get("Low")),
                 "close": self._safe_float(row.get("Close")),
+                "adjusted_close": self._safe_float(row.get("Adj Close")),
                 "volume": self._safe_float(row.get("Volume")),
-            })
-        return points
+            }
+            reason = self._invalid_candle_reason(candle, seen)
+            if reason:
+                skipped.append({"timestamp": timestamp, "reason": reason})
+                continue
+            seen.add(timestamp)
+            points.append(candle)
+        points.sort(key=lambda point: point["timestamp"])
+        return points, skipped
+
+    def _invalid_candle_reason(self, candle: Dict[str, Any], seen: set[str]) -> str | None:
+        timestamp = str(candle.get("timestamp") or "")
+        if not timestamp:
+            return "missing_timestamp"
+        if timestamp in seen:
+            return "duplicate_timestamp"
+        open_price = candle.get("open")
+        high = candle.get("high")
+        low = candle.get("low")
+        close = candle.get("close")
+        volume = candle.get("volume")
+        prices = [open_price, high, low, close]
+        if any(value is None or value <= 0 for value in prices):
+            return "invalid_ohlc"
+        if high < max(open_price, close, low):
+            return "high_below_ohlc"
+        if low > min(open_price, close, high):
+            return "low_above_ohlc"
+        if volume is not None and volume < 0:
+            return "negative_volume"
+        return None
+
+    def _history_timezone(self, history: Any) -> str:
+        try:
+            timezone_name = getattr(getattr(history, "index", None), "tz", None)
+            return str(timezone_name) if timezone_name else "UTC"
+        except Exception:
+            return "UTC"
 
     def _quote_error(self, symbol: str, exc: Exception) -> Dict[str, Any]:
         return {
@@ -149,6 +274,27 @@ class YFinanceProvider(MarketDataProvider):
             "low": None,
             "volume": None,
             "market_cap": None,
+            "trailing_pe": None,
+            "price_to_book": None,
+            "price_to_sales": None,
+            "trailing_eps": None,
+            "earnings_growth": None,
+            "revenue_growth": None,
+            "debt_to_equity": None,
+            "return_on_equity": None,
+            "return_on_assets": None,
+            "return_on_invested_capital": None,
+            "beta": None,
+            "dividend_yield": None,
+            "sector": None,
+            "industry": None,
+            "exchange": None,
+            "country": None,
+            "logo_url": None,
+            "icon_url": None,
+            "provider_logo_url": None,
+            "logo_provider": None,
+            "logo_available": False,
             "source": self.name,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "error": str(exc),
@@ -165,6 +311,35 @@ class YFinanceProvider(MarketDataProvider):
             return ticker.fast_info
         except Exception:
             return {}
+
+    def _safe_statement(self, statement: Any) -> Any:
+        try:
+            if statement is None or statement.empty:
+                return None
+            return statement
+        except Exception:
+            return None
+
+    def _statement_value(self, statement: Any, *labels: str) -> float | None:
+        if statement is None:
+            return None
+        for label in labels:
+            try:
+                if label in statement.index and len(statement.columns):
+                    return self._safe_float(statement.loc[label].iloc[0])
+            except Exception:
+                continue
+        return None
+
+    def _cash_flow_quality(self, operating_cash_flow: float | None, net_income: float | None) -> str | None:
+        if operating_cash_flow is None or net_income in (None, 0):
+            return None
+        ratio = operating_cash_flow / net_income
+        if ratio >= 1:
+            return "operating cash flow covers reported net income"
+        if ratio >= 0:
+            return "operating cash flow is positive but below reported net income"
+        return "operating cash flow is negative"
 
     def _fast_value(self, fast_info: Any, key: str) -> Any:
         try:
@@ -219,6 +394,12 @@ def infer_asset_type(symbol: str) -> str:
         return "thai_stock" if not symbol.startswith("^") else "index"
     if symbol in GLOBAL_STOCKS:
         return "global_stock"
+    if symbol in ETFS:
+        return "etf"
+    if symbol in BOND_ETFS:
+        return "bond_etf"
+    if symbol in REITS:
+        return "reit"
     if symbol in GLOBAL_INDICES or symbol.startswith("^"):
         return "index"
     if symbol in COMMODITIES or symbol.endswith("=F"):

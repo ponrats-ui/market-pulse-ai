@@ -659,3 +659,102 @@ option { background: #0a101c; color: #d9e7ff; }
   .pro-chart-fullscreen { inset: 0; border-radius: 0; }
   .pro-chart-fullscreen .pro-chart-canvas { height: 430px; min-height: 380px; }
 }
+
+/* FS-300: Founder terminal restoration */
+.terminal-shell { min-height: 100vh; }
+.fs300-header { display: grid; grid-template-columns: minmax(14rem, 0.9fr) minmax(0, auto); align-items: center; gap: 12px; border: 1px solid rgba(30, 43, 63, 0.9); border-radius: 8px; background: rgba(8, 17, 31, 0.86); padding: 10px 12px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.24); }
+.fs300-brand h1 { margin: 2px 0 0; color: #ffffff; font-size: clamp(1.15rem, 1.6vw, 1.65rem); font-weight: 800; line-height: 1.1; }
+.fs300-brand p { margin-top: 2px; color: #7e8da8; font-size: 0.76rem; font-weight: 700; }
+.fs300-header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.fs300-status-pill { min-height: 34px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(30, 43, 63, 0.9); border-radius: 7px; background: rgba(16, 24, 39, 0.92); padding: 0 10px; color: #d9e7ff; font-size: 0.74rem; font-weight: 800; }
+.fs300-nav { display: flex; gap: 6px; overflow: auto; border: 1px solid rgba(30, 43, 63, 0.9); border-radius: 8px; background: rgba(10, 16, 28, 0.78); padding: 6px; }
+.fs300-nav .watch-button { min-width: auto; white-space: nowrap; }
+.fs300-terminal-grid { display: grid; grid-template-columns: minmax(240px, 16%) minmax(0, 1fr) minmax(300px, 26%); gap: 12px; align-items: start; }
+.fs300-left-rail, .fs300-center-workspace, .fs300-right-rail { display: grid; gap: 12px; min-width: 0; }
+.fs300-left-rail > *, .fs300-center-workspace > *, .fs300-right-rail > * { min-width: 0; }
+.fs300-left-rail, .fs300-right-rail { position: sticky; top: 10px; align-self: start; max-height: calc(100vh - 20px); overflow: auto; padding-right: 2px; }
+.professional-panel { min-width: 0; overflow: hidden; border-radius: 8px; padding: 12px; }
+.professional-header { margin-bottom: 10px; padding-bottom: 8px; }
+.professional-header h2 { font-size: 0.78rem; letter-spacing: 0.14em; }
+.field-label { margin-bottom: 6px; font-size: 0.64rem; }
+.select-shell, .input-shell { min-height: 34px; padding: 8px 10px; font-size: 0.78rem; }
+.about-button, .watch-button, .icon-button { min-height: 34px; border-radius: 7px; font-size: 0.74rem; }
+.fs300-left-rail .screener-list { max-height: 260px; }
+.fs300-left-rail .screener-row { min-height: 42px; grid-template-columns: 1.75rem minmax(0, 1fr); gap: 8px; padding: 7px 8px; }
+.fs300-left-rail .screener-row > span:nth-child(n+3) { display: none; }
+.fs300-left-rail .professional-panel, .fs300-right-rail .professional-panel { padding: 10px; }
+.fs300-left-rail .professional-header, .fs300-right-rail .professional-header { margin-bottom: 8px; }
+.fs300-left-rail .watchlist-row-pro { padding: 7px; }
+.fs300-left-rail .watchlist-main-action { grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; }
+.fs300-left-rail .watchlist-signal-badge { display: none; }
+.fs300-left-rail .watchlist-row-pro .mt-2.flex { justify-content: flex-end; }
+.fs300-left-rail .watchlist-row-pro .mt-2.flex .watch-button { display: none; }
+.fs300-left-rail .watchlist-row-pro .mt-2.flex .icon-button { min-width: 30px; min-height: 30px; }
+.fs300-center-workspace > .grid:first-of-type { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.fs300-center-workspace .metric-card, .fs300-center-workspace > .grid:first-of-type > div { padding: 10px; }
+.fs300-center-workspace .metric-card p, .fs300-center-workspace > .grid:first-of-type p { font-size: 0.92rem; }
+.opportunity-section { border-color: rgba(247, 201, 72, 0.36); background: linear-gradient(180deg, rgba(16, 24, 39, 0.96), rgba(8, 17, 31, 0.94)); }
+.opportunity-section, .opportunity-section * { min-width: 0; }
+.opportunity-section > .mb-3 p { display: none; }
+.opportunity-card { padding: 9px; }
+.opportunity-row-top { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.opportunity-row-top .sparkline { display: none; }
+.opportunity-ticker { font-size: 0.95rem; }
+.opportunity-score span { font-size: 1.25rem; }
+.opportunity-reasons, .opportunity-source, .opportunity-unavailable, .opportunity-card .watch-button { display: none; }
+.pro-chart-layout { grid-template-columns: minmax(0, 1fr) 190px; }
+.pro-chart-canvas { height: min(62vh, 680px); min-height: 520px; }
+.pro-chart-side { padding: 10px; }
+.pro-chart-indicators { padding: 8px; }
+.toolbar-button { min-height: 30px; padding: 5px 8px; }
+.fs300-right-rail .news-scroll-panel { width: 100%; max-height: 360px; }
+.fs300-right-rail .pro-news-card { padding: 10px; }
+.fs300-right-rail .pro-news-card > p { display: none; }
+.fs300-right-rail .market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.fs300-right-rail .metric-card { padding: 9px; }
+.fs300-right-rail .market-mood-card { grid-template-columns: 5.8rem minmax(0, 1fr); gap: 10px; }
+.fs300-right-rail .mood-gauge { width: 5.4rem; height: 5.4rem; }
+.fs300-right-rail .mood-gauge b { font-size: 1.15rem; }
+.fs300-quick-assistant { display: grid; gap: 8px; }
+.fs300-quick-assistant .input-shell, .fs300-quick-assistant .watch-button, .fs300-quick-assistant .about-button { width: 100%; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.fs300-quick-assistant div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 7px; background: rgba(8, 17, 31, 0.78); padding: 8px; color: #7e8da8; font-size: 0.72rem; }
+.fs300-quick-assistant strong { color: #ffffff; font-size: 0.9rem; }
+.fs300-quick-assistant p { color: #7e8da8; font-size: 0.72rem; line-height: 1.45; }
+.fs300-right-rail [aria-label="Risk Analysis"] .mb-4.grid, .fs300-right-rail [aria-label="วิเคราะห์ความเสี่ยง"] .mb-4.grid { max-height: 280px; overflow: auto; }
+.fs300-right-rail [aria-label="Risk Analysis"] .mb-4.rounded-md, .fs300-right-rail [aria-label="วิเคราะห์ความเสี่ยง"] .mb-4.rounded-md { display: none; }
+.financial-health-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.financial-health-card { padding: 10px; }
+.financial-health-card b { font-size: 1rem; }
+.financial-health-summary { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 10px; }
+.financial-health-summary p { margin: 0; font-size: 0.78rem; }
+.status-tile-pro { padding: 9px; }
+.status-tile-pro b { font-size: 0.95rem; }
+@media (max-width: 1535px) {
+  .fs300-terminal-grid { grid-template-columns: minmax(230px, 17%) minmax(0, 1fr) minmax(280px, 25%); }
+  .financial-health-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1180px) {
+  .fs300-terminal-grid { grid-template-columns: minmax(260px, 0.38fr) minmax(0, 0.62fr); }
+  .fs300-right-rail { position: static; max-height: none; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .fs300-left-rail { position: static; max-height: none; }
+  .financial-health-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .fs300-header { grid-template-columns: 1fr; }
+  .fs300-header-actions { justify-content: flex-start; }
+  .fs300-terminal-grid, .fs300-right-rail { grid-template-columns: 1fr; }
+  .fs300-left-rail { display: contents; }
+  .fs300-left-rail .professional-panel:first-child { order: 1; max-height: 520px; overflow: auto; }
+  .fs300-center-workspace { order: 2; }
+  .fs300-left-rail .professional-panel:nth-child(2) { order: 3; }
+  .fs300-right-rail { order: 4; }
+  .fs300-center-workspace > .grid:first-of-type, .financial-health-grid { grid-template-columns: 1fr; }
+  .pro-chart-layout { grid-template-columns: 1fr; }
+  .pro-chart-canvas { height: 380px; min-height: 380px; }
+  .fs300-left-rail #asset-search-results { max-height: 170px; overflow: auto; }
+  .fs300-left-rail .screener-list { max-height: 150px; }
+  .fs300-left-rail .professional-panel:nth-child(2) { max-height: 280px; overflow: auto; }
+  .opportunity-row-top { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .opportunity-price-stack { justify-items: start; grid-column: 2 / 3; }
+  .opportunity-row-top .opportunity-score { grid-column: 3 / 4; grid-row: 1 / 3; }
+}

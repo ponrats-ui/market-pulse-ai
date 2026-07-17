@@ -629,6 +629,8 @@ option { background: #0a101c; color: #d9e7ff; }
 .toolbar-button.active { border-color: #35d0ff; background: rgba(53, 208, 255, 0.16); color: #ffffff; }
 .pro-chart-indicators { margin-bottom: 12px; border: 1px solid var(--terminal-border); border-radius: 8px; background: rgba(8, 17, 31, 0.75); padding: 10px; }
 .pro-chart-indicators summary { cursor: pointer; color: #d9e7ff; font-size: 0.78rem; font-weight: 800; }
+.pro-chart-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; color: #9fb0ca; font-size: 0.72rem; }
+.pro-chart-legend span { border: 1px solid rgba(46, 67, 98, 0.72); border-radius: 999px; background: rgba(8, 17, 31, 0.72); padding: 4px 8px; }
 .indicator-grid, .drawing-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .pro-chart-layout { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 12px; align-items: stretch; }
 .pro-chart-canvas { height: 600px; min-width: 0; border: 1px solid var(--terminal-border); border-radius: 8px; background: #08111f; overflow: hidden; }

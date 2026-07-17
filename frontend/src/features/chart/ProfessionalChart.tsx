@@ -1,11 +1,14 @@
 ﻿import React from 'react';
-import { api } from './lib/api';
-import type { AssetHistory, AssetQuote, TechnicalResponse } from './types/market';
-
-type ChartMode = 'candlestick' | 'ohlc' | 'area' | 'line';
-type DrawingTool = 'cursor' | 'trend' | 'horizontal' | 'rectangle' | 'text' | 'arrow';
-type Drawing = { id: string; type: DrawingTool; x1: number; y1: number; x2?: number; y2?: number; text?: string };
-type ChartRow = Record<string, string | number | null | undefined> & { time: string; open: number | null; high: number | null; low: number | null; close: number | null; volume: number | null; label: string };
+import { api } from '../../lib/api';
+import type { AssetHistory, AssetQuote, TechnicalResponse } from '../../types/market';
+import { ChartToolbar } from './ChartToolbar';
+import { ChartIndicatorPanel } from './ChartIndicatorPanel';
+import { ChartLegend } from './ChartLegend';
+import { ChartTooltip } from './ChartTooltip';
+import { ChartDrawingLayer } from './ChartDrawingLayer';
+import { ChartEventLayer } from './ChartEventLayer';
+import { ChartPiaOverlay } from './ChartPiaOverlay';
+import { maFields, comparePalettes, type ChartMode, type ChartRow, type Drawing, type DrawingTool } from './chartTypes';
 
 type Props = {
   t: Record<string, string>;
@@ -19,24 +22,6 @@ type Props = {
   setRange: (range: string) => void;
 };
 
-const chartRanges = ['1d', '5d', '1mo', '3mo', '6mo', 'ytd', '1y', '3y', '5y', 'max'];
-const chartModes: Array<{ id: ChartMode; label: string }> = [
-  { id: 'candlestick', label: 'Candlestick' },
-  { id: 'ohlc', label: 'OHLC' },
-  { id: 'area', label: 'Area' },
-  { id: 'line', label: 'Line' },
-];
-const indicatorToggles = ['EMA20', 'EMA50', 'EMA200', 'SMA20', 'SMA50', 'SMA200', 'RSI14', 'MACD', 'Bollinger Bands', 'ATR', 'VWAP', 'Volume MA'];
-const maFields: Record<string, { key: string; color: string }> = {
-  EMA20: { key: 'ema20', color: '#33d17a' },
-  EMA50: { key: 'ema50', color: '#f7c948' },
-  EMA200: { key: 'ema200', color: '#ff7a7a' },
-  SMA20: { key: 'sma20', color: '#35d0ff' },
-  SMA50: { key: 'sma50', color: '#a78bfa' },
-  SMA200: { key: 'sma200', color: '#94a3b8' },
-};
-const comparePalettes = ['#f7c948', '#a78bfa', '#fb923c'];
-
 export default function ProfessionalChartPanel({ t, l, history, technical, activeIndicators, toggleIndicator, quote, range, setRange }: Props) {
   const [mode, setMode] = React.useState<ChartMode>('candlestick');
   const [tool, setTool] = React.useState<DrawingTool>('cursor');
@@ -47,6 +32,17 @@ export default function ProfessionalChartPanel({ t, l, history, technical, activ
   const [fullscreen, setFullscreen] = React.useState(false);
   const [compareEnabled, setCompareEnabled] = React.useState(false);
   const [compareHistories, setCompareHistories] = React.useState<Record<string, ChartRow[]>>({});
+
+  React.useEffect(() => {
+    if (!fullscreen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fullscreen]);
 
   const rows = React.useMemo(() => normalizeRows(technical?.series?.length ? technical.series : history?.points ?? []), [technical, history]);
   const compareSymbols = React.useMemo(() => compareSetFor(quote?.symbol ?? ''), [quote?.symbol]);
@@ -88,7 +84,7 @@ export default function ProfessionalChartPanel({ t, l, history, technical, activ
   const reset = () => { setDrawings([]); setRedoStack([]); setDraft(null); setHoverIndex(null); };
   const download = () => downloadChartPng(quote?.symbol ?? 'chart');
 
-  return <section className={'panel-card professional-panel pro-chart-shell ' + (fullscreen ? 'pro-chart-fullscreen' : '')} aria-label="Professional Chart"><div className="professional-header"><span className="chart-pulse" aria-hidden="true" /><h2>Professional Chart</h2><span className="ml-auto text-xs text-terminal-muted">{history?.points.length ?? 0} {t.points ?? 'points'} | {technical?.source ?? history?.source ?? 'Unavailable'}</span></div><div className="pro-chart-toolbar" role="toolbar" aria-label="Professional chart toolbar"><div className="toolbar-group">{chartRanges.map((item) => <button key={item} className={range === item ? 'toolbar-button active' : 'toolbar-button'} onClick={() => setRange(item)}>{item.toUpperCase()}</button>)}</div><div className="toolbar-group">{chartModes.map((item) => <button key={item.id} className={mode === item.id ? 'toolbar-button active' : 'toolbar-button'} onClick={() => setMode(item.id)}>{item.label}</button>)}</div><div className="toolbar-group"><button className={compareEnabled ? 'toolbar-button active' : 'toolbar-button'} onClick={() => setCompareEnabled((value) => !value)}>Compare</button><button className="toolbar-button" onClick={() => setFullscreen((value) => !value)}>Fullscreen</button><button className="toolbar-button" onClick={reset}>Reset</button><button className="toolbar-button" onClick={download}>Download PNG</button></div></div><details className="pro-chart-indicators"><summary>Indicators and Drawing Tools</summary><div className="indicator-grid">{indicatorToggles.map((item) => <button key={item} className={show(item) ? 'pill watch-button-active' : 'pill'} aria-pressed={show(item)} onClick={() => toggleIndicator(item)}>{item}</button>)}</div><div className="drawing-grid">{(['cursor', 'trend', 'horizontal', 'rectangle', 'text', 'arrow'] as DrawingTool[]).map((item) => <button key={item} className={tool === item ? 'toolbar-button active' : 'toolbar-button'} onClick={() => setTool(item)}>{item}</button>)}<button className="toolbar-button" onClick={undo}>Undo</button><button className="toolbar-button" onClick={redo}>Redo</button><button className="toolbar-button" onClick={reset}>Delete</button></div></details><div className="pro-chart-layout"><div className="pro-chart-canvas">{hasData ? <svg className="pro-chart-svg" viewBox="0 0 1000 620" role="img" aria-label={`${quote?.symbol ?? 'Asset'} professional chart using real provider history`} onMouseMove={onPointerMove} onMouseLeave={() => setHoverIndex(null)} onClick={onChartClick}><defs><linearGradient id="chartAreaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#35d0ff" stopOpacity="0.28" /><stop offset="100%" stopColor="#35d0ff" stopOpacity="0.02" /></linearGradient><marker id="arrowHead" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#35d0ff" /></marker></defs><rect x="0" y="0" width="1000" height="620" fill="#08111f" rx="8" />{gridLines(domain).map((line) => <g key={line.value}><line x1="44" x2="956" y1={line.y} y2={line.y} stroke="#1e2b3f" strokeDasharray="4 4" /><text x="965" y={line.y + 4} fill="#7e8da8" fontSize="12">{formatNumber(line.value)}</text></g>)}{levels.map((level) => <g key={level.label}><line x1="44" x2="956" y1={yFor(level.value, domain)} y2={yFor(level.value, domain)} stroke={level.color} strokeDasharray="6 4" /><text x="52" y={yFor(level.value, domain) - 5} fill={level.color} fontSize="12">{level.label} {formatNumber(level.value)}</text></g>)}{show('Bollinger Bands') && lineFor(rows, 'bollinger_upper', domain, '#64748b')}{show('Bollinger Bands') && lineFor(rows, 'bollinger_lower', domain, '#64748b')}{mode === 'area' && areaFor(rows, domain)}{mode === 'line' && lineFor(rows, 'close', domain, '#35d0ff', 2.4)}{mode === 'candlestick' && candlesFor(rows, domain)}{mode === 'ohlc' && ohlcFor(rows, domain)}{Object.entries(maFields).map(([name, config]) => show(name) ? lineFor(rows, config.key, domain, config.color, 1.5) : null)}{show('VWAP') && lineFor(rows, 'vwap', domain, '#fb923c', 1.5)}{compareEnabled && Object.entries(compareHistories).map(([symbol, items], index) => compareLine(symbol, items, rows, comparePalettes[index % comparePalettes.length]))}{volumeBars(rows)}{show('Volume MA') && volumeAverage(rows)}{drawings.map(renderDrawing)}{draft && renderDrawing({ ...draft, x2: draft.x1 + 1, y2: draft.y1 + 1 })}{hover && hoverIndex != null && <g><line x1={xForIndex(hoverIndex, rows.length)} x2={xForIndex(hoverIndex, rows.length)} y1="24" y2="548" stroke="#35d0ff" strokeDasharray="3 3" /><circle cx={xForIndex(hoverIndex, rows.length)} cy={yFor(Number(hover.close), domain)} r="4" fill="#35d0ff" /></g>}</svg> : <div className="pro-chart-empty">{technical?.message ?? 'Historical data unavailable from provider.'}</div>}</div><aside className="pro-chart-side"><h3>{quote?.symbol ?? 'Asset'} Crosshair</h3>{hover ? <div className="crosshair-card"><b>{hover.label}</b><span>O {formatNumber(hover.open)}</span><span>H {formatNumber(hover.high)}</span><span>L {formatNumber(hover.low)}</span><span>C {formatNumber(hover.close)}</span><span>V {formatNumber(hover.volume, 0)}</span><span>Daily {formatPercent(dailyChange(rows, hoverIndex ?? 0))}</span></div> : <p className="text-sm text-terminal-muted">Hover the chart for OHLCV and daily percentage.</p>}<h3>PIA Overlay</h3><p>Support, resistance, risk zone and confidence are overlays only. Raw provider prices are never modified.</p><h3>Events</h3><p>Dividend, earnings, split, news and economic event overlays are hidden until a live provider returns event data.</p>{compareEnabled && <p>Compare: {compareSymbols.join(', ')}</p>}<h3>Indicator State</h3><p>RSI {formatNumber(technical?.indicators?.RSI14 as number | null)} | ATR {formatNumber(technical?.indicators?.ATR as number | null)}</p><p>MACD {formatNumber((technical?.indicators?.MACD as Record<string, number | null> | undefined)?.line)}</p></aside></div><div className="pro-chart-footer"><span>{l.realData ?? 'Real provider data only'}</span><span>Support/resistance and zones are educational overlays, not predictions.</span></div></section>;
+  return <section className={'panel-card professional-panel pro-chart-shell ' + (fullscreen ? 'pro-chart-fullscreen' : '')} aria-label="Professional Chart"><div className="professional-header"><span className="chart-pulse" aria-hidden="true" /><h2>Professional Chart</h2><span className="ml-auto text-xs text-terminal-muted">{history?.points.length ?? 0} {t.points ?? 'points'} | {technical?.source ?? history?.source ?? 'Unavailable'}</span></div><ChartToolbar range={range} setRange={setRange} mode={mode} setMode={setMode} compareEnabled={compareEnabled} setCompareEnabled={setCompareEnabled} fullscreen={fullscreen} setFullscreen={setFullscreen} reset={reset} download={download} /><ChartIndicatorPanel activeIndicators={activeIndicators} toggleIndicator={toggleIndicator} tool={tool} setTool={setTool} undo={undo} redo={redo} reset={reset} /><ChartLegend quote={quote} activeIndicators={activeIndicators} rows={rows} formatNumber={formatNumber} /><div className="pro-chart-layout"><div className="pro-chart-canvas">{hasData ? <svg className="pro-chart-svg" viewBox="0 0 1000 620" role="img" aria-label={`${quote?.symbol ?? 'Asset'} professional chart using real provider history`} onMouseMove={onPointerMove} onMouseLeave={() => setHoverIndex(null)} onClick={onChartClick}><defs><linearGradient id="chartAreaFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#35d0ff" stopOpacity="0.28" /><stop offset="100%" stopColor="#35d0ff" stopOpacity="0.02" /></linearGradient><marker id="arrowHead" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L7,3 z" fill="#35d0ff" /></marker></defs><rect x="0" y="0" width="1000" height="620" fill="#08111f" rx="8" />{gridLines(domain).map((line) => <g key={line.value}><line x1="44" x2="956" y1={line.y} y2={line.y} stroke="#1e2b3f" strokeDasharray="4 4" /><text x="965" y={line.y + 4} fill="#7e8da8" fontSize="12">{formatNumber(line.value)}</text></g>)}{levels.map((level) => <g key={level.label}><line x1="44" x2="956" y1={yFor(level.value, domain)} y2={yFor(level.value, domain)} stroke={level.color} strokeDasharray="6 4" /><text x="52" y={yFor(level.value, domain) - 5} fill={level.color} fontSize="12">{level.label} {formatNumber(level.value)}</text></g>)}{show('Bollinger Bands') && lineFor(rows, 'bollinger_upper', domain, '#64748b')}{show('Bollinger Bands') && lineFor(rows, 'bollinger_lower', domain, '#64748b')}{mode === 'area' && areaFor(rows, domain)}{mode === 'line' && lineFor(rows, 'close', domain, '#35d0ff', 2.4)}{mode === 'candlestick' && candlesFor(rows, domain)}{mode === 'ohlc' && ohlcFor(rows, domain)}{Object.entries(maFields).map(([name, config]) => show(name) ? lineFor(rows, config.key, domain, config.color, 1.5) : null)}{show('VWAP') && lineFor(rows, 'vwap', domain, '#fb923c', 1.5)}{compareEnabled && Object.entries(compareHistories).map(([symbol, items], index) => compareLine(symbol, items, rows, comparePalettes[index % comparePalettes.length]))}{volumeBars(rows)}{show('Volume MA') && volumeAverage(rows)}<ChartDrawingLayer drawings={drawings} draft={draft} renderDrawing={renderDrawing} />{hover && hoverIndex != null && <g><line x1={xForIndex(hoverIndex, rows.length)} x2={xForIndex(hoverIndex, rows.length)} y1="24" y2="548" stroke="#35d0ff" strokeDasharray="3 3" /><circle cx={xForIndex(hoverIndex, rows.length)} cy={yFor(Number(hover.close), domain)} r="4" fill="#35d0ff" /></g>}</svg> : <div className="pro-chart-empty">{technical?.message ?? 'Historical data unavailable from provider.'}</div>}</div><aside className="pro-chart-side"><ChartTooltip quote={quote} hover={hover} hoverIndex={hoverIndex} rows={rows} formatNumber={formatNumber} formatPercent={formatPercent} dailyChange={dailyChange} /><ChartPiaOverlay /><ChartEventLayer />{compareEnabled && <p>Compare: {compareSymbols.join(', ')}</p>}<h3>Indicator State</h3><p>RSI {formatNumber(technical?.indicators?.RSI14 as number | null)} | ATR {formatNumber(technical?.indicators?.ATR as number | null)}</p><p>MACD {formatNumber((technical?.indicators?.MACD as Record<string, number | null> | undefined)?.line)}</p></aside></div><div className="pro-chart-footer"><span>{l.realData ?? 'Real provider data only'}</span><span>Support/resistance and zones are educational overlays, not predictions.</span></div></section>;
 }
 
 function normalizeRows(points: Array<Record<string, unknown> | { time: string; open: number | null; high: number | null; low: number | null; close: number | null; volume: number | null }>): ChartRow[] {

@@ -435,8 +435,10 @@ def get_cached_history(symbol: str, range: str, interval: str) -> Dict[str, Any]
     resolved = resolve_symbol(symbol)
     canonical = resolved.canonical_symbol or symbol
     key = cache_key(DEFAULT_PROVIDER, "history", canonical, range, interval)
-    cached = cache.get(key)
+    cached, age = cache.get_with_age(key)
     if cached is not None:
+        if isinstance(cached, dict):
+            return {**cached, "cache_age_seconds": age}
         return cached
     return cache.set(key, provider_router.get_history(symbol, range, interval), HISTORICAL_TTL_SECONDS)
 

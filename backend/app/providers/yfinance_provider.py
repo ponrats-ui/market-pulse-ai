@@ -101,16 +101,28 @@ class YFinanceProvider(MarketDataProvider):
                 history = ticker.history(start=start.date().isoformat(), end=end.date().isoformat(), interval=selected_interval, auto_adjust=False)
             else:
                 history = ticker.history(period=selected_range, interval=selected_interval, auto_adjust=False)
-            points = self._history_frame_to_points(history)
+            requested_at = datetime.now(timezone.utc).isoformat()
+            points, skipped = self._history_frame_to_points(history)
             response: Dict[str, Any] = {
                 "symbol": symbol,
                 "range": selected_range,
                 "interval": selected_interval,
+                "timezone": self._history_timezone(history),
+                "currency": infer_currency(symbol),
+                "provider": self.name,
+                "requested_at": requested_at,
+                "data_timestamp": points[-1]["time"] if points else None,
+                "cache_age_seconds": 0,
+                "stale": False,
+                "unavailable_reason": None,
                 "points": points,
+                "candles": points,
+                "skipped_candles": skipped,
                 "source": self.name,
             }
             if not points:
                 response["error"] = "No historical prices were returned by yfinance for this symbol."
+                response["unavailable_reason"] = response["error"]
             return response
         except Exception as exc:
             return {
@@ -191,20 +203,61 @@ class YFinanceProvider(MarketDataProvider):
         except Exception as exc:
             return {"symbol": symbol, "source": self.name, "error": str(exc)}
 
-    def _history_frame_to_points(self, history: Any) -> List[Dict[str, Any]]:
+    def _history_frame_to_points(self, history: Any) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         if history is None or history.empty:
-            return []
+            return [], []
         points: List[Dict[str, Any]] = []
+        skipped: List[Dict[str, Any]] = []
+        seen: set[str] = set()
         for index, row in history.iterrows():
-            points.append({
-                "time": self._to_iso(index),
+            timestamp = self._to_iso(index)
+            candle = {
+                "timestamp": timestamp,
+                "time": timestamp,
                 "open": self._safe_float(row.get("Open")),
                 "high": self._safe_float(row.get("High")),
                 "low": self._safe_float(row.get("Low")),
                 "close": self._safe_float(row.get("Close")),
+                "adjusted_close": self._safe_float(row.get("Adj Close")),
                 "volume": self._safe_float(row.get("Volume")),
-            })
-        return points
+            }
+            reason = self._invalid_candle_reason(candle, seen)
+            if reason:
+                skipped.append({"timestamp": timestamp, "reason": reason})
+                continue
+            seen.add(timestamp)
+            points.append(candle)
+        points.sort(key=lambda point: point["timestamp"])
+        return points, skipped
+
+    def _invalid_candle_reason(self, candle: Dict[str, Any], seen: set[str]) -> str | None:
+        timestamp = str(candle.get("timestamp") or "")
+        if not timestamp:
+            return "missing_timestamp"
+        if timestamp in seen:
+            return "duplicate_timestamp"
+        open_price = candle.get("open")
+        high = candle.get("high")
+        low = candle.get("low")
+        close = candle.get("close")
+        volume = candle.get("volume")
+        prices = [open_price, high, low, close]
+        if any(value is None or value <= 0 for value in prices):
+            return "invalid_ohlc"
+        if high < max(open_price, close, low):
+            return "high_below_ohlc"
+        if low > min(open_price, close, high):
+            return "low_above_ohlc"
+        if volume is not None and volume < 0:
+            return "negative_volume"
+        return None
+
+    def _history_timezone(self, history: Any) -> str:
+        try:
+            timezone_name = getattr(getattr(history, "index", None), "tz", None)
+            return str(timezone_name) if timezone_name else "UTC"
+        except Exception:
+            return "UTC"
 
     def _quote_error(self, symbol: str, exc: Exception) -> Dict[str, Any]:
         return {

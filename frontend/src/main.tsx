@@ -10,7 +10,7 @@ import relaxStreamsConfig from '../../configs/relax_streams.json';
 import './styles.css';
 
 const repoUrl = 'https://github.com/ponrats-ui/market-pulse-ai';
-const ProfessionalChartPanel = React.lazy(() => import('./ProfessionalChart'));
+const ProfessionalChartPanel = React.lazy(() => import('./features/chart/ProfessionalChart'));
 const languageKey = 'market-pulse-language';
 const portfolioKey = 'market-pulse-portfolio';
 const watchlistKey = 'market-pulse-smart-watchlist';

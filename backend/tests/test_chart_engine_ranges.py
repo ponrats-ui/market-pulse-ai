@@ -65,3 +65,63 @@ def test_yfinance_provider_requests_three_year_history_with_dates(monkeypatch):
     assert "start" in calls[0]
     assert "end" in calls[0]
     assert "period" not in calls[0]
+
+
+def test_history_response_includes_normalized_candle_contract(monkeypatch):
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, **kwargs):
+            index = pd.date_range("2024-01-01", periods=2, freq="D")
+            return pd.DataFrame(
+                {
+                    "Open": [100, 101],
+                    "High": [103, 104],
+                    "Low": [99, 100],
+                    "Close": [102, 103],
+                    "Adj Close": [101.5, 102.5],
+                    "Volume": [1000, 1200],
+                },
+                index=index,
+            )
+
+    monkeypatch.setattr(yfinance_provider.yf, "Ticker", FakeTicker)
+
+    payload = YFinanceProvider().get_history("AAPL", "1mo", "1d")
+
+    assert payload["provider"] == "yfinance"
+    assert payload["currency"] == "USD"
+    assert payload["requested_at"]
+    assert payload["data_timestamp"] == payload["candles"][-1]["timestamp"]
+    assert payload["stale"] is False
+    assert payload["unavailable_reason"] is None
+    assert payload["points"] == payload["candles"]
+    assert payload["candles"][0]["adjusted_close"] == 101.5
+
+
+def test_history_contract_skips_duplicate_and_malformed_candles(monkeypatch):
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, **kwargs):
+            index = pd.to_datetime(["2024-01-01", "2024-01-01", "2024-01-02", "2024-01-03"])
+            return pd.DataFrame(
+                {
+                    "Open": [100, 100, 0, 105],
+                    "High": [103, 103, 104, 104],
+                    "Low": [99, 99, 98, 100],
+                    "Close": [102, 102, 101, 103],
+                    "Volume": [1000, 1000, 900, 1200],
+                },
+                index=index,
+            )
+
+    monkeypatch.setattr(yfinance_provider.yf, "Ticker", FakeTicker)
+
+    payload = YFinanceProvider().get_history("AAPL", "1mo", "1d")
+
+    assert len(payload["candles"]) == 1
+    assert payload["candles"][0]["timestamp"]
+    assert {item["reason"] for item in payload["skipped_candles"]} == {"duplicate_timestamp", "invalid_ohlc", "high_below_ohlc"}

@@ -140,7 +140,7 @@ After changing this value, redeploy the frontend.
 - [AI Investment Committee](docs/AI_COMMITTEE.md)
 - [MVP Stabilization](docs/MVP_STABILIZATION.md)
 
-## Documentation Freeze v1.0
+## Documentation Index
 
 - [01 Product Vision](docs/01_PRODUCT_VISION.md)
 - [02 System Architecture](docs/02_SYSTEM_ARCHITECTURE.md)
@@ -150,6 +150,20 @@ After changing this value, redeploy the frontend.
 - [06 Founder Bible](docs/06_FOUNDER_BIBLE.md)
 - [07 Glossary](docs/07_GLOSSARY.md)
 - [08 Contributing](docs/08_CONTRIBUTING.md)
+- [09 Engineering Handbook](docs/09_ENGINEERING_HANDBOOK.md)
+- [10 API Reference](docs/10_API_REFERENCE.md)
+- [11 Data Model](docs/11_DATA_MODEL.md)
+- [12 Sequence Diagrams](docs/12_SEQUENCE_DIAGRAMS.md)
+- [13 State Management](docs/13_STATE_MANAGEMENT.md)
+- [14 Testing Strategy](docs/14_TESTING_STRATEGY.md)
+- [15 Security Model](docs/15_SECURITY_MODEL.md)
+- [16 Performance Guide](docs/16_PERFORMANCE_GUIDE.md)
+- [17 Operations Runbook](docs/17_OPERATIONS_RUNBOOK.md)
+- [18 Incident Response](docs/18_INCIDENT_RESPONSE.md)
+- [19 Troubleshooting](docs/19_TROUBLESHOOTING.md)
+- [20 Provider Guide](docs/20_PROVIDER_GUIDE.md)
+- [21 Version History](docs/21_VERSION_HISTORY.md)
+- [22 Architecture Decision Records](docs/22_ARCHITECTURE_DECISION_RECORDS.md)
 
 ## Risk Disclaimer
 

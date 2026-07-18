@@ -1,5 +1,5 @@
 ﻿export const th = {
-  appName: 'Market Pulse AI', eyebrow: 'แพลตฟอร์มวิเคราะห์การลงทุน', tagline: 'แดชบอร์ดวิเคราะห์สินทรัพย์แบบมืออาชีพ พร้อมมุมมอง AI ที่สมดุลและระมัดระวัง',
+  appName: 'Market Pulse AI', eyebrow: 'Powered by PIA™', tagline: 'ผู้ช่วยการลงทุนส่วนตัวสำหรับเริ่มต้นวัน วิเคราะห์อย่างระมัดระวัง และแสดงที่มาของข้อมูลอย่างโปร่งใส',
   languageThai: 'ไทย', languageEnglish: 'EN', systemStatus: 'สถานะระบบ', refreshingData: 'กำลังอัปเดตข้อมูล', providerFallback: 'ใช้ข้อมูลสำรองบางส่วน', marketDataReady: 'ข้อมูลตลาดพร้อมใช้งาน',
   assetConsole: 'ศูนย์เลือกสินทรัพย์', category: 'หมวดสินทรัพย์', asset: 'สินทรัพย์', watchlist: 'รายการติดตาม', selectedAsset: 'สินทรัพย์ที่เลือก', lastPrice: 'ราคาล่าสุด', dailyChange: 'เปลี่ยนแปลงรายวัน', dataSource: 'แหล่งข้อมูล', quoteSource: 'แหล่งข้อมูลราคา', historySource: 'แหล่งข้อมูลกราฟ', providerNotice: 'หมายเหตุจากผู้ให้บริการ', updatedAt: 'อัปเดตล่าสุด', priceChart: 'กราฟราคา', points: 'จุดข้อมูล',
   aiCommittee: 'คณะกรรมการลงทุน AI', chiefInvestmentAI: 'Chief Investment AI', currentView: 'มุมมองปัจจุบัน', bullish: 'เชิงบวก', neutral: 'เป็นกลาง', bearish: 'เชิงลบ', confidence: 'ความเชื่อมั่น', low: 'ต่ำ', medium: 'ปานกลาง', high: 'สูง', riskScore: 'คะแนนความเสี่ยง', mainOpportunity: 'โอกาสหลัก', mainRisk: 'ความเสี่ยงหลัก', aiSummary: 'สรุปโดย AI',

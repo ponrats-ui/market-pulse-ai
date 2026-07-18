@@ -1,7 +1,7 @@
 {
   "name": "market-pulse-ai-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0-rc1",
   "type": "module",
   "scripts": { "dev": "vite", "build": "tsc -b && vite build", "preview": "vite preview" },
   "dependencies": {

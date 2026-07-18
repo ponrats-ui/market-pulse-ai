@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List
+
+from app.analysis_engine import build_adaptive_recommendation
 
 RESTRICTED_WORDS = ("guaranteed", "certain", "must buy", "sure profit")
 
@@ -23,8 +26,10 @@ def get_asset_type(symbol: str, quote: Dict[str, Any] | None = None) -> str:
     return "global_stock"
 
 
-def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[str, Any] | None = None, profile: str = "Balanced") -> Dict[str, Any]:
     quote = quote or {}
+    adaptive = build_adaptive_recommendation(symbol, quote, history, profile)
+    adaptive_aliases = _adaptive_aliases(adaptive)
     price = quote.get("price")
     change_percent = quote.get("change_percent")
     if price is None or change_percent is None:
@@ -42,6 +47,9 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
             "invalidation": "Unavailable until sufficient market data is available.",
             "cautious_action_plan": ["Wait for complete market data before forming a view."],
             "disclaimer": "This is not financial advice.",
+            "data_hub": quote.get("data_hub"),
+            "adaptive_engine": adaptive,
+            **adaptive_aliases,
         }
     trend = "sideways to constructive" if change_percent is None or change_percent >= 0 else "short-term pressure"
     risk_score = _risk_score(symbol, change_percent, quote)
@@ -85,6 +93,9 @@ def build_ai_analysis(symbol: str, quote: Dict[str, Any] | None = None) -> Dict[
             "Scale decisions gradually and avoid assuming any outcome is fixed.",
         ],
         "disclaimer": "This is not financial advice. No direct buy/sell instruction is provided.",
+        "data_hub": quote.get("data_hub"),
+        "adaptive_engine": adaptive,
+        **adaptive_aliases,
     }
     _validate_language(analysis)
     return analysis
@@ -105,7 +116,9 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
             "risk_controls": ["Wait for complete quote and historical price data before estimating risk."],
             "facts": ["Risk analysis requires real price movement and historical volatility data."],
             "interpretation": "Unable to estimate risk.",
+            "categories": _risk_categories(symbol, None, "unknown"),
             "disclaimer": "This is not financial advice.",
+            "data_hub": quote.get("data_hub"),
         }
     score = _risk_score(symbol, change_percent, quote)
     if realized_hint == "high":
@@ -129,7 +142,9 @@ def build_risk(symbol: str, quote: Dict[str, Any] | None = None, history: Dict[s
             f"Historical volatility hint is {realized_hint}.",
         ],
         "interpretation": "Higher scores suggest wider price swings and a need for tighter risk controls.",
+        "categories": _risk_categories(symbol, score, realized_hint),
         "disclaimer": "This is not financial advice.",
+        "data_hub": quote.get("data_hub"),
     }
 
 
@@ -167,8 +182,79 @@ def _history_volatility_hint(points: List[Dict[str, Any]]) -> str:
     return "low"
 
 
+def _risk_categories(symbol: str, score: int | None, volatility_hint: str) -> List[Dict[str, Any]]:
+    asset_type = get_asset_type(symbol)
+    base_score = score or 0
+    definitions = [
+        ("Volatility", base_score, volatility_hint, "Use position sizing and avoid leverage when volatility rises."),
+        ("Liquidity", 5 if asset_type in {"crypto", "thai_stock"} else 3, "medium", "Check spread, volume, and order size before entering."),
+        ("Gap Risk", 6 if asset_type in {"global_stock", "thai_stock", "crypto"} else 4, "medium", "Avoid oversized overnight exposure around events."),
+        ("Interest Rate", 7 if symbol in {"TLT", "^TNX"} or asset_type in {"macro", "reit"} else 4, "medium", "Review rate-sensitive exposure and duration."),
+        ("Macro", 6 if asset_type in {"index", "commodity", "fx", "macro"} else 4, "medium", "Track central bank, inflation, and growth releases."),
+        ("Correlation", 5, "medium", "Compare with existing portfolio exposures before adding risk."),
+        ("Currency", 6 if asset_type in {"thai_stock", "fx"} or symbol.endswith(".BK") else 3, "medium", "Consider base currency and FX movement."),
+        ("Concentration", 5, "medium", "Set maximum allocation per asset and sector."),
+        ("Tail Risk", 7 if asset_type == "crypto" else 5, "medium", "Plan for extreme moves and liquidity stress."),
+        ("Headline Risk", 6 if asset_type in {"crypto", "global_stock", "thai_stock"} else 4, "medium", "Monitor news and avoid reacting to unverified headlines."),
+    ]
+    return [
+        {
+            "category": category,
+            "score": _bounded_risk(value),
+            "probability": _probability(value),
+            "severity": _severity(value),
+            "trend": _risk_trend(value, volatility_hint),
+            "evidence": f"{category} risk uses asset class {asset_type} and volatility hint {hint}.",
+            "mitigation": mitigation,
+        }
+        for category, value, hint, mitigation in definitions
+    ]
+
+
+def _bounded_risk(value: int) -> int:
+    return max(1, min(10, int(value or 1)))
+
+
+def _probability(value: int) -> str:
+    return "high" if value >= 7 else "medium" if value >= 4 else "low"
+
+
+def _severity(value: int) -> str:
+    return "high" if value >= 7 else "medium" if value >= 4 else "low"
+
+
+def _risk_trend(value: int, volatility_hint: str) -> str:
+    if value >= 7 or volatility_hint == "high":
+        return "rising"
+    if value <= 3 and volatility_hint == "low":
+        return "contained"
+    return "stable"
+
+
 def _validate_language(payload: Dict[str, Any]) -> None:
     text = str(payload).lower()
     for word in RESTRICTED_WORDS:
-        if word in text:
+        pattern = re.escape(word) if " " in word else rf"\b{re.escape(word)}\b"
+        if re.search(pattern, text):
             raise ValueError(f"Restricted analysis wording detected: {word}")
+
+
+def _adaptive_aliases(adaptive: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "algorithm_version": adaptive["algorithm_version"],
+        "profile": adaptive["profile"],
+        "asset_class": adaptive["asset_class"],
+        "market_regime": adaptive["market_regime"],
+        "adaptive_weights": adaptive["adaptive_weights"],
+        "evidence": adaptive["evidence"],
+        "confidence": adaptive["confidence"],
+        "probability": adaptive["probability"],
+        "investment_thesis": adaptive["investment_thesis"],
+        "risk_engine": adaptive["risk_engine"],
+        "committee_opinions": adaptive["committee_opinions"],
+        "final_recommendation": adaptive["final_recommendation"],
+        "chief_investment_ai": adaptive["final_recommendation"],
+        "probability_engine": adaptive["probability_engine"],
+        "limitations": adaptive["limitations"],
+        "timestamp": adaptive["timestamp"],
+    }

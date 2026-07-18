@@ -1,5 +1,5 @@
 ﻿export const en = {
-  appName: 'Market Pulse AI', eyebrow: 'Professional Investment Dashboard', tagline: 'A professional asset intelligence dashboard with balanced, cautious AI views and transparent market data context.',
+  appName: 'Market Pulse AI', eyebrow: 'Powered by PIA™', tagline: 'Personal Investment Assistant for morning market decisions, cautious reasoning, and transparent data context.',
   languageThai: 'ไทย', languageEnglish: 'EN', systemStatus: 'System Status', refreshingData: 'Refreshing data', providerFallback: 'Provider fallback active', marketDataReady: 'Market data ready',
   assetConsole: 'Asset Console', category: 'Category', asset: 'Asset', watchlist: 'Watchlist', selectedAsset: 'Selected Asset', lastPrice: 'Last Price', dailyChange: 'Daily Change', dataSource: 'Data Source', quoteSource: 'Quote Source', historySource: 'History Source', providerNotice: 'Provider Notice', updatedAt: 'Updated At', priceChart: 'Price Chart', points: 'points',
   aiCommittee: 'AI Investment Committee', chiefInvestmentAI: 'Chief Investment AI', currentView: 'Current View', bullish: 'Bullish', neutral: 'Neutral', bearish: 'Bearish', confidence: 'Confidence', low: 'Low', medium: 'Medium', high: 'High', riskScore: 'Risk Score', mainOpportunity: 'Main Opportunity', mainRisk: 'Main Risk', aiSummary: 'AI Summary',

@@ -7,4 +7,6 @@ def test_assistant_thai_response_uses_context(monkeypatch):
     payload = main.AssistantRequest(question="BTC เสี่ยงไหม", selected_symbol="BTC-USD", language="th")
     response = main.assistant_ask(payload)
     assert "ข้อเท็จจริง" in response["answer"]
+    assert response["concise_overview"]
+    assert "evidence_used" in response
     assert response["disclaimer"] == "This is not financial advice."

@@ -63,7 +63,7 @@ Expected JSON:
 {
   "status": "ok",
   "service": "market-pulse-ai",
-  "version": "0.3.0"
+  "version": "1.0.0-rc1"
 }
 ```
 

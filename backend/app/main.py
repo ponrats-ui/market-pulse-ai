@@ -80,7 +80,7 @@ class DigestRequest(BaseModel):
     context: dict[str, Any] = {}
 
 
-app = FastAPI(title="Market Pulse AI API", version="0.3.0")
+app = FastAPI(title="Market Pulse AI API", version="1.0.0-rc1")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(_cors_allowed_origins()),
@@ -92,7 +92,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> Dict[str, str]:
-    return {"status": "ok", "service": "market-pulse-ai", "version": "0.3.0"}
+    return {"status": "ok", "service": "market-pulse-ai", "version": "1.0.0-rc1"}
 
 
 @app.get("/api/watchlist")

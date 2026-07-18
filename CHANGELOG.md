@@ -6,6 +6,36 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ## [Unreleased]
 
+No unreleased changes after the v1.0.0-rc1 readiness audit.
+
+## [1.0.0-rc1] - 2026-07-18
+
+### Added
+
+- Release candidate readiness checklist for production merge review.
+- Production audit coverage for Cloudflare Pages, Render, CI, environment variables, secrets, zero-mock behavior, API smoke, browser regression, and rollback readiness.
+- Founder UI freeze, documentation freeze, and engineering handbook knowledge base from the accepted release branch.
+- Professional dashboard experience with global asset search, watchlist, opportunities, Professional Chart, PIA analysis, risk, fundamentals, news impact, compare, paper portfolio, assistant, calendar, and optional PIA Relax Mode.
+
+### Changed
+
+- Aligned frontend package metadata, About dialog, backend API metadata, `/health`, and Render deployment documentation to version `1.0.0-rc1`.
+- Confirmed production frontend configuration resolves to the Render backend URL on Cloudflare Pages when no safe runtime override is configured.
+- Confirmed unavailable states remain transparent when a provider does not return live data.
+
+### Security
+
+- Verified no committed secrets, provider keys, access tokens, private keys, or payment credentials were found in the audited code and configuration paths.
+- Confirmed Render CORS production configuration is restricted to `https://market-pulse-ai.pages.dev`.
+- Confirmed YouTube audio is embedded only through source URLs and is not downloaded, restreamed, or stored.
+
+### Validation
+
+- Frontend build passed with Vite production output.
+- Backend test suite passed with 113 tests.
+- Local API smoke passed for release endpoints, including dashboard, quote, history, search, compare, portfolio, news, macro, premium, alert, and digest routes.
+- Browser regression passed on desktop and 390px mobile viewport with no current console errors after clean reload.
+
 ### Changed
 
 - Stabilized MVP API fallback behavior and cache age reporting.

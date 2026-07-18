@@ -140,6 +140,17 @@ After changing this value, redeploy the frontend.
 - [AI Investment Committee](docs/AI_COMMITTEE.md)
 - [MVP Stabilization](docs/MVP_STABILIZATION.md)
 
+## Documentation Freeze v1.0
+
+- [01 Product Vision](docs/01_PRODUCT_VISION.md)
+- [02 System Architecture](docs/02_SYSTEM_ARCHITECTURE.md)
+- [03 Algorithm Reference](docs/03_ALGORITHM_REFERENCE.md)
+- [04 System Decisions](docs/04_SYSTEM_DECISIONS.md)
+- [05 Release Engineering](docs/05_RELEASE_ENGINEERING.md)
+- [06 Founder Bible](docs/06_FOUNDER_BIBLE.md)
+- [07 Glossary](docs/07_GLOSSARY.md)
+- [08 Contributing](docs/08_CONTRIBUTING.md)
+
 ## Risk Disclaimer
 
 Market Pulse AI does not provide investment, tax, legal, or financial advice. All analysis is probabilistic, educational, and may be incomplete or incorrect. Users should verify data independently, define risk limits, and consult licensed professionals before making financial decisions.

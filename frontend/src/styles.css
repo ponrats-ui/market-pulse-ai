@@ -542,13 +542,14 @@ option { background: #0a101c; color: #d9e7ff; }
 
 .market-mood-card {
   display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr);
-  gap: 1rem;
-  align-items: center;
+  grid-template-columns: 9.25rem minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: stretch;
   border: 1px solid rgba(46, 67, 98, 0.78);
   border-radius: 0.5rem;
-  background: rgba(16, 24, 39, 0.82);
+  background: linear-gradient(135deg, rgba(16, 24, 39, 0.96), rgba(10, 16, 28, 0.98));
   padding: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 34px rgba(0, 0, 0, 0.22);
 }
 
 .mood-gauge {
@@ -557,14 +558,31 @@ option { background: #0a101c; color: #d9e7ff; }
   display: grid;
   place-items: center;
   align-content: center;
-  border: 1px solid rgba(53, 208, 255, 0.28);
+  border: 1px solid rgba(53, 208, 255, 0.36);
   background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#35d0ff 0 62%, #1e2b3f 62% 100%);
+  box-shadow: 0 0 28px rgba(53, 208, 255, 0.12);
 }
-.mood-gauge span, .mood-gauge small { color: #9fb0ca; font-size: 0.63rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
-.mood-gauge b { color: #fff; font-size: 1.75rem; font-weight: 950; }
+.mood-gauge span, .mood-gauge small { color: #b9c7db; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.08em; }
+.mood-gauge b { color: #fff; font-size: 2.2rem; font-weight: 950; line-height: 1; }
 .mood-gauge.mood-on { background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#33d17a 0 78%, #1e2b3f 78% 100%); }
 .mood-gauge.mood-caution { background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#ffb454 0 52%, #1e2b3f 52% 100%); }
 .mood-gauge.mood-off { background: radial-gradient(circle at center, #0a101c 56%, transparent 57%), conic-gradient(#ff5f6d 0 38%, #1e2b3f 38% 100%); }
+.market-mood-copy { min-width: 0; display: grid; align-content: center; gap: 0.7rem; }
+.market-mood-kicker { color: #7ddfff; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; }
+.market-mood-copy h3 { color: #ffffff; font-size: 1.65rem; font-weight: 950; line-height: 1.1; }
+.market-mood-status { width: fit-content; border: 1px solid rgba(126, 141, 168, 0.32); border-radius: 999px; background: rgba(126, 141, 168, 0.1); padding: 0.28rem 0.6rem; color: #d9e7ff; font-size: 0.72rem; font-weight: 900; }
+.market-mood-status.mood-on { border-color: rgba(51, 209, 122, 0.48); background: rgba(51, 209, 122, 0.12); color: #9af6bd; }
+.market-mood-status.mood-caution { border-color: rgba(255, 180, 84, 0.5); background: rgba(255, 180, 84, 0.14); color: #ffd7a3; }
+.market-mood-status.mood-off { border-color: rgba(255, 95, 109, 0.5); background: rgba(255, 95, 109, 0.13); color: #ffb5bd; }
+.market-mood-explain, .market-mood-actions { border-left: 2px solid rgba(53, 208, 255, 0.42); padding-left: 0.75rem; }
+.market-mood-explain h4, .market-mood-actions h4, .market-drivers-header h3 { color: #ffffff; font-size: 0.82rem; font-weight: 900; }
+.market-mood-explain p { margin-top: 0.35rem; color: #c8d8f2; font-size: 0.84rem; line-height: 1.62; }
+.market-mood-actions ul { margin: 0.45rem 0 0; display: grid; gap: 0.35rem; padding: 0; list-style: none; }
+.market-mood-actions li { color: #d9e7ff; font-size: 0.83rem; line-height: 1.45; }
+.market-mood-actions li::before { content: "✓"; margin-right: 0.45rem; color: #33d17a; font-weight: 900; }
+.market-drivers-header { margin-top: 1rem; border-bottom: 1px solid rgba(46, 67, 98, 0.72); padding-bottom: 0.65rem; }
+.market-drivers-header p { margin-top: 0.25rem; color: #9fb0ca; font-size: 0.78rem; line-height: 1.5; }
+.market-driver-card { min-height: 8.75rem; }
 
 .financial-health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 0.75rem; }
 .financial-health-card { border: 1px solid rgba(46, 67, 98, 0.78); border-radius: 0.5rem; background: rgba(16, 24, 39, 0.88); padding: 0.85rem; }
@@ -1606,7 +1624,7 @@ option { background: #0a101c; color: #d9e7ff; }
 .professional-header:has(+ .fs300a-committee-head)::before { content: 'Committee consensus shows whether viewpoints agree or conflict.'; color: #c8b8ff; }
 .professional-header:has(+ .financial-health-summary)::before,
 .professional-header:has(+ .financial-health-grid)::before { content: 'Business quality and balance-sheet strength from available fundamentals.'; color: #a7f3d0; }
-.professional-header:has(+ .market-mood-card)::before { content: 'Risk appetite and market condition from available macro signals.'; color: #bceeff; }
+.professional-header:has(+ .market-mood-card)::before { content: 'สรุปความเสี่ยงและภาวะตลาดจากสัญญาณมหภาคที่มีข้อมูลรองรับ'; color: #bceeff; }
 .professional-header:has(+ .news-scroll-panel)::before { content: 'Recent headlines that may explain market movement.'; color: #bceeff; }
 .professional-header:has(+ .fs300a-risk-score)::before { content: 'Downside, volatility, and risk-control priorities.'; color: #ffcf9e; }
 
@@ -1692,7 +1710,7 @@ option { background: #0a101c; color: #d9e7ff; }
 .professional-panel:has(.fs300a-committee-head) > .professional-header::before { content: 'Committee consensus shows whether viewpoints agree or conflict.'; color: #c8b8ff; }
 .professional-panel:has(.financial-health-summary) > .professional-header::before,
 .professional-panel:has(.financial-health-grid) > .professional-header::before { content: 'Business quality and balance-sheet strength from available fundamentals.'; color: #a7f3d0; }
-.professional-panel:has(.market-mood-card) > .professional-header::before { content: 'Risk appetite and market condition from available macro signals.'; color: #bceeff; }
+.professional-panel:has(.market-mood-card) > .professional-header::before { content: 'สรุปความเสี่ยงและภาวะตลาดจากสัญญาณมหภาคที่มีข้อมูลรองรับ'; color: #bceeff; }
 .professional-panel:has(.news-scroll-panel) > .professional-header::before { content: 'Recent headlines that may explain market movement.'; color: #bceeff; }
 .professional-panel:has(.fs300a-risk-score) > .professional-header::before { content: 'Downside, volatility, and risk-control priorities.'; color: #ffcf9e; }
 .professional-panel.panel-financial > .professional-header::before { content: 'Business quality and balance-sheet strength from available fundamentals.'; color: #a7f3d0; }
@@ -1795,7 +1813,7 @@ option { background: #0a101c; color: #d9e7ff; }
 }
 .financial-health-summary::before { content: 'Main concern: review profitability and cash generation'; }
 .fs300a-summary::before { content: 'Why: combines price, risk, confidence, and position context'; }
-.market-mood-card::before { content: 'So what: read market regime before adding exposure'; grid-column: 1 / -1; }
+.market-mood-card::before { content: 'สรุปสั้น: อ่านภาวะตลาดก่อนเพิ่มน้ำหนักการลงทุน'; grid-column: 1 / -1; }
 .fs300a-risk-score::before { content: 'Risk meter: size positions around downside uncertainty'; grid-column: 1 / -1; }
 .financial-health-card small::before {
   content: 'Signal: ';

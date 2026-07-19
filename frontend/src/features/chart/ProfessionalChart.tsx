@@ -10,6 +10,9 @@ import { ChartEventLayer } from './ChartEventLayer';
 import { ChartPiaOverlay } from './ChartPiaOverlay';
 import { maFields, comparePalettes, type ChartMode, type ChartRow, type Drawing, type DrawingTool } from './chartTypes';
 
+const chartModePreferenceKey = 'market-pulse-chart-mode';
+const validChartModes: ChartMode[] = ['line', 'candlestick', 'area', 'ohlc'];
+
 type Props = {
   t: Record<string, string>;
   l: Record<string, string>;
@@ -23,7 +26,7 @@ type Props = {
 };
 
 export default function ProfessionalChartPanel({ t, l, history, technical, activeIndicators, toggleIndicator, quote, range, setRange }: Props) {
-  const [mode, setMode] = React.useState<ChartMode>('candlestick');
+  const [mode, setMode] = React.useState<ChartMode>(() => readChartModePreference());
   const [tool, setTool] = React.useState<DrawingTool>('cursor');
   const [drawings, setDrawings] = React.useState<Drawing[]>([]);
   const [redoStack, setRedoStack] = React.useState<Drawing[]>([]);
@@ -32,6 +35,14 @@ export default function ProfessionalChartPanel({ t, l, history, technical, activ
   const [fullscreen, setFullscreen] = React.useState(false);
   const [compareEnabled, setCompareEnabled] = React.useState(false);
   const [compareHistories, setCompareHistories] = React.useState<Record<string, ChartRow[]>>({});
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(chartModePreferenceKey, mode);
+    } catch {
+      // Preference persistence is optional; chart rendering should continue if storage is unavailable.
+    }
+  }, [mode]);
 
   React.useEffect(() => {
     if (!fullscreen) return;
@@ -89,6 +100,14 @@ export default function ProfessionalChartPanel({ t, l, history, technical, activ
 
 function normalizeRows(points: Array<Record<string, unknown> | { time: string; open: number | null; high: number | null; low: number | null; close: number | null; volume: number | null }>): ChartRow[] {
   return points.map((point) => ({ ...point, time: String(point.time ?? ''), open: num(point.open), high: num(point.high), low: num(point.low), close: num(point.close), volume: num(point.volume), label: point.time ? new Date(String(point.time)).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A' })).filter((row) => row.close != null);
+}
+function readChartModePreference(): ChartMode {
+  try {
+    const saved = localStorage.getItem(chartModePreferenceKey) as ChartMode | null;
+    return saved && validChartModes.includes(saved) ? saved : 'line';
+  } catch {
+    return 'line';
+  }
 }
 function num(value: unknown): number | null { return typeof value === 'number' && Number.isFinite(value) ? value : value == null ? null : Number.isFinite(Number(value)) ? Number(value) : null; }
 function priceDomain(rows: ChartRow[], active: string[]) { const values = rows.flatMap((row) => [row.high, row.low, row.close, ...Object.values(maFields).map((config) => active.includes(fieldName(config.key)) ? num(row[config.key]) : null), active.includes('Bollinger Bands') ? num(row.bollinger_upper) : null, active.includes('Bollinger Bands') ? num(row.bollinger_lower) : null]).filter((value): value is number => typeof value === 'number'); const min = Math.min(...values); const max = Math.max(...values); const pad = (max - min || Math.abs(max) || 1) * 0.08; return { min: min - pad, max: max + pad }; }

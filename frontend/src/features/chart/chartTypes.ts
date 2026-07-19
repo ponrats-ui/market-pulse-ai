@@ -5,10 +5,10 @@ export type ChartRow = Record<string, string | number | null | undefined> & { ti
 
 export const chartRanges = ['1d', '5d', '1mo', '3mo', '6mo', 'ytd', '1y', '3y', '5y', 'max'];
 export const chartModes: Array<{ id: ChartMode; label: string }> = [
-  { id: 'candlestick', label: 'Candlestick' },
-  { id: 'ohlc', label: 'OHLC' },
-  { id: 'area', label: 'Area' },
   { id: 'line', label: 'Line' },
+  { id: 'candlestick', label: 'Candlestick' },
+  { id: 'area', label: 'Area' },
+  { id: 'ohlc', label: 'OHLC' },
 ];
 export const indicatorToggles = ['EMA20', 'EMA50', 'EMA200', 'SMA20', 'SMA50', 'SMA200', 'RSI14', 'MACD', 'Bollinger Bands', 'ATR', 'VWAP', 'Volume MA'];
 export const maFields: Record<string, { key: string; color: string }> = {

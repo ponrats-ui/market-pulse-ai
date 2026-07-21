@@ -11,12 +11,54 @@ export type SparklineMap = Record<string, AssetSparkline | undefined>;
 
 export const opportunityRefreshMs = 30 * 60 * 1000;
 
+const assetLogoDomains: Record<string, string> = {
+  AAPL: 'apple.com',
+  MSFT: 'microsoft.com',
+  NVDA: 'nvidia.com',
+  AMD: 'amd.com',
+  INTC: 'intel.com',
+  META: 'meta.com',
+  TSLA: 'tesla.com',
+  GOOGL: 'google.com',
+  GOOG: 'google.com',
+  AMZN: 'amazon.com',
+  NFLX: 'netflix.com',
+  TSM: 'tsmc.com',
+  SPY: 'ssga.com',
+  GLD: 'ssga.com',
+  QQQ: 'invesco.com',
+  VOO: 'vanguard.com',
+  VTI: 'vanguard.com',
+  VNQ: 'vanguard.com',
+  TLT: 'blackrock.com',
+  SOXX: 'blackrock.com',
+  SLV: 'blackrock.com',
+  PTT: 'pttplc.com',
+  'PTT.BK': 'pttplc.com',
+  AOT: 'airportthai.co.th',
+  'AOT.BK': 'airportthai.co.th',
+  SCB: 'scb.co.th',
+  'SCB.BK': 'scb.co.th',
+  KBANK: 'kasikornbank.com',
+  'KBANK.BK': 'kasikornbank.com',
+  TTB: 'ttbbank.com',
+  'TTB.BK': 'ttbbank.com',
+  CPALL: 'cpall.co.th',
+  'CPALL.BK': 'cpall.co.th',
+  DELTA: 'deltathailand.com',
+  'DELTA.BK': 'deltathailand.com',
+  ADVANC: 'advancedinfo.com',
+  'ADVANC.BK': 'advancedinfo.com',
+};
+const assetLogoUrlCache = new Map<string, string | null>();
+
 export function AssetLogo({ symbol, name, logoUrl, size = 'md' }: { symbol: string; name?: string | null; logoUrl?: string | null; size?: 'sm' | 'md' }) {
   const initials = assetInitials(symbol, name);
   const tone = logoTone(symbol);
   const className = 'asset-logo-pro asset-logo-' + size + ' ' + tone;
-  if (logoUrl && logoUrl.toLowerCase().startsWith('https://')) {
-    return <span className={className} aria-label={symbol + ' logo'}><img src={logoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.style.display = 'none'; }} /><span className="asset-logo-fallback-text">{initials}</span></span>;
+  const resolvedLogoUrl = resolveAssetLogoUrl(symbol, logoUrl);
+  if (resolvedLogoUrl) {
+    return <span className={className} aria-label={symbol + ' logo'}><img src={resolvedLogoUrl} alt={(name ?? symbol) + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.style.display = 'none'; }} /><span className="asset-logo-fallback-text">{initials}</span></span>;
   }
   return <span className={className} role="img" aria-label={symbol + ' fallback logo'}><span>{initials}</span></span>;
 }
@@ -43,10 +85,20 @@ export function AssetSparkline({ symbol, sparkline, compact = false }: { symbol:
 
 function assetInitials(symbol: string, name?: string | null): string {
   const clean = symbol.replace(/[-.=^]/g, ' ').trim();
-  const parts = clean.split(/s+/).filter(Boolean);
+  const parts = clean.split(/\s+/).filter(Boolean);
   if (parts[0] && parts[0].length >= 2) return parts[0].slice(0, 2).toUpperCase();
   const source = name || symbol;
-  return source.split(/s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || symbol.slice(0, 2).toUpperCase();
+  return source.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || symbol.slice(0, 2).toUpperCase();
+}
+
+function resolveAssetLogoUrl(symbol: string, logoUrl?: string | null): string | null {
+  if (logoUrl && logoUrl.toLowerCase().startsWith('https://')) return logoUrl;
+  const key = symbol.trim().toUpperCase();
+  if (assetLogoUrlCache.has(key)) return assetLogoUrlCache.get(key) ?? null;
+  const domain = assetLogoDomains[key] ?? assetLogoDomains[key.replace(/\.BK$/, '')] ?? null;
+  const resolved = domain ? `https://logo.clearbit.com/${domain}` : null;
+  assetLogoUrlCache.set(key, resolved);
+  return resolved;
 }
 
 function logoTone(symbol: string): string {

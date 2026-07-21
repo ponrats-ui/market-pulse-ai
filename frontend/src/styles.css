@@ -1291,15 +1291,13 @@ option { background: #0a101c; color: #d9e7ff; }
 }
 
 .score-popover {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.55rem);
-  z-index: 30;
-  width: min(20rem, calc(100vw - 2rem));
-  border: 1px solid rgba(53, 208, 255, 0.42);
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  border: 1px solid rgba(53, 208, 255, 0.54);
   border-radius: 0.5rem;
-  background: #0a101c;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+  background: #050913;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.58);
   padding: 0.85rem;
   color: #d9e7ff;
   text-align: left;

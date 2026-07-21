@@ -1126,6 +1126,11 @@ option { background: #0a101c; color: #d9e7ff; }
   background: #101827;
 }
 
+.about-accordion-item[open] {
+  height: auto;
+  overflow: visible;
+}
+
 .about-accordion-trigger {
   width: 100%;
   min-height: 3rem;

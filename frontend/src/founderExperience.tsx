@@ -11,7 +11,7 @@ export type SparklineMap = Record<string, AssetSparkline | undefined>;
 
 export const opportunityRefreshMs = 30 * 60 * 1000;
 
-const assetLogoDomains: Record<string, string> = {
+const assetLogoDomains: Record<string, string | string[]> = {
   AAPL: 'apple.com',
   MSFT: 'microsoft.com',
   NVDA: 'nvidia.com',
@@ -33,32 +33,37 @@ const assetLogoDomains: Record<string, string> = {
   TLT: 'blackrock.com',
   SOXX: 'blackrock.com',
   SLV: 'blackrock.com',
-  PTT: 'pttplc.com',
-  'PTT.BK': 'pttplc.com',
+  PTT: ['pttplc.com', 'www.pttplc.com'],
+  'PTT.BK': ['pttplc.com', 'www.pttplc.com'],
   AOT: 'airportthai.co.th',
   'AOT.BK': 'airportthai.co.th',
-  SCB: 'scb.co.th',
-  'SCB.BK': 'scb.co.th',
-  KBANK: 'kasikornbank.com',
-  'KBANK.BK': 'kasikornbank.com',
+  SCB: ['scb.co.th', 'www.scb.co.th'],
+  'SCB.BK': ['scb.co.th', 'www.scb.co.th'],
+  KBANK: ['kasikornbank.com', 'www.kasikornbank.com'],
+  'KBANK.BK': ['kasikornbank.com', 'www.kasikornbank.com'],
   TTB: 'ttbbank.com',
   'TTB.BK': 'ttbbank.com',
-  CPALL: 'cpall.co.th',
-  'CPALL.BK': 'cpall.co.th',
+  CPALL: ['cpall.co.th', 'www.cpall.co.th'],
+  'CPALL.BK': ['cpall.co.th', 'www.cpall.co.th'],
   DELTA: 'deltathailand.com',
   'DELTA.BK': 'deltathailand.com',
-  ADVANC: 'advancedinfo.com',
-  'ADVANC.BK': 'advancedinfo.com',
+  ADVANC: ['advancedinfo.com', 'investor.ais.co.th', 'ais.th'],
+  'ADVANC.BK': ['advancedinfo.com', 'investor.ais.co.th', 'ais.th'],
+  PTTEP: ['pttep.com', 'www.pttep.com'],
+  'PTTEP.BK': ['pttep.com', 'www.pttep.com'],
 };
-const assetLogoUrlCache = new Map<string, string | null>();
+const assetLogoUrlCache = new Map<string, string[]>();
 
 export function AssetLogo({ symbol, name, logoUrl, size = 'md' }: { symbol: string; name?: string | null; logoUrl?: string | null; size?: 'sm' | 'md' }) {
   const initials = assetInitials(symbol, name);
   const tone = logoTone(symbol);
   const className = 'asset-logo-pro asset-logo-' + size + ' ' + tone;
-  const resolvedLogoUrl = resolveAssetLogoUrl(symbol, logoUrl);
+  const logoCandidates = React.useMemo(() => resolveAssetLogoUrls(symbol, logoUrl), [symbol, logoUrl]);
+  const [logoIndex, setLogoIndex] = React.useState(0);
+  React.useEffect(() => setLogoIndex(0), [symbol, logoUrl]);
+  const resolvedLogoUrl = logoCandidates[logoIndex] ?? null;
   if (resolvedLogoUrl) {
-    return <span className={className} aria-label={symbol + ' logo'}><img src={resolvedLogoUrl} alt={(name ?? symbol) + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.style.display = 'none'; }} /><span className="asset-logo-fallback-text">{initials}</span></span>;
+    return <span className={className} aria-label={symbol + ' logo'}><img key={resolvedLogoUrl} src={resolvedLogoUrl} alt={(name ?? symbol) + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setLogoIndex((current) => current + 1)} /><span className="asset-logo-fallback-text">{initials}</span></span>;
   }
   return <span className={className} role="img" aria-label={symbol + ' fallback logo'}><span>{initials}</span></span>;
 }
@@ -91,14 +96,49 @@ function assetInitials(symbol: string, name?: string | null): string {
   return source.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || symbol.slice(0, 2).toUpperCase();
 }
 
-function resolveAssetLogoUrl(symbol: string, logoUrl?: string | null): string | null {
-  if (logoUrl && logoUrl.toLowerCase().startsWith('https://')) return logoUrl;
+function resolveAssetLogoUrls(symbol: string, logoUrl?: string | null): string[] {
   const key = symbol.trim().toUpperCase();
-  if (assetLogoUrlCache.has(key)) return assetLogoUrlCache.get(key) ?? null;
-  const domain = assetLogoDomains[key] ?? assetLogoDomains[key.replace(/\.BK$/, '')] ?? null;
-  const resolved = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : null;
-  assetLogoUrlCache.set(key, resolved);
-  return resolved;
+  const cacheKey = `${key}|${logoUrl ?? ''}`;
+  const cached = assetLogoUrlCache.get(cacheKey);
+  if (cached) return cached;
+  const normalized = normalizeLogoSymbol(key);
+  const domains = uniqueStrings([...domainsForLogoKey(key), ...domainsForLogoKey(normalized)]);
+  const candidates = uniqueStrings([
+    logoUrl && logoUrl.toLowerCase().startsWith('https://') ? logoUrl : null,
+    ...tickerLogoProviders(key),
+    ...tickerLogoProviders(normalized),
+    ...domains.flatMap((domain) => domainLogoProviders(domain)),
+  ]);
+  assetLogoUrlCache.set(cacheKey, candidates);
+  return candidates;
+}
+
+function normalizeLogoSymbol(symbol: string): string {
+  return symbol.replace(/\.(BK|SET|MAI)$/i, '').replace(/^\^/, '');
+}
+
+function domainsForLogoKey(key: string): string[] {
+  const value = assetLogoDomains[key];
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function tickerLogoProviders(symbol: string): string[] {
+  if (!symbol || /[^A-Z0-9.-]/.test(symbol)) return [];
+  return [`https://financialmodelingprep.com/image-stock/${encodeURIComponent(symbol)}.png`];
+}
+
+function domainLogoProviders(domain: string): string[] {
+  const clean = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  return [
+    `https://www.google.com/s2/favicons?domain=${encodeURIComponent(clean)}&sz=128`,
+    `https://icons.duckduckgo.com/ip3/${encodeURIComponent(clean)}.ico`,
+    `https://${clean}/favicon.ico`,
+  ];
+}
+
+function uniqueStrings(values: Array<string | null | undefined>): string[] {
+  return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
 }
 
 function logoTone(symbol: string): string {

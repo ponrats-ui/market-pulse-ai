@@ -2158,3 +2158,204 @@ option { background: #0a101c; color: #d9e7ff; }
 .ds-info-row span { color: var(--mp-text-muted); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 .ds-info-row strong { color: var(--mp-text-primary); font-size: 0.86rem; }
 .ds-tooltip { text-decoration: underline dotted rgba(198, 211, 230, 0.42); text-underline-offset: 3px; }
+
+
+.market-assessment-panel {
+  display: grid;
+  gap: 1rem;
+}
+.market-assessment-heading p {
+  max-width: 34rem;
+  color: #9fb0ca;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.market-assessment-asset-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  border: 1px solid rgba(53, 208, 255, 0.24);
+  border-radius: 0.55rem;
+  background: linear-gradient(135deg, rgba(53, 208, 255, 0.08), rgba(8, 17, 31, 0.72));
+  padding: 0.95rem 0.95rem 0.9rem;
+}
+.market-assessment-asset-title {
+  min-width: 0;
+  padding-right: 0.5rem;
+}
+.market-assessment-asset-title p {
+  color: #ffffff;
+  font-size: clamp(1.45rem, 3vw, 2.05rem);
+  font-weight: 950;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.market-assessment-asset-title h3 {
+  margin-top: 0.42rem;
+  color: #b9c7db;
+  font-size: 0.92rem;
+  font-weight: 750;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.market-assessment-follow {
+  position: static;
+  width: 2rem;
+  height: 2rem;
+  margin-top: -0.1rem;
+  flex-shrink: 0;
+}
+.market-assessment-main {
+  display: grid;
+  grid-template-columns: minmax(8.2rem, 9.35rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+.market-assessment-gauge {
+  width: min(9.35rem, 100%);
+  min-height: auto;
+  justify-self: center;
+  padding: 0.65rem;
+}
+.market-assessment-gauge span,
+.market-assessment-gauge small,
+.market-assessment-gauge em {
+  color: #9fb0ca;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+.market-assessment-gauge b {
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+}
+.market-assessment-gauge strong {
+  max-width: 6.9rem;
+  color: #d9e7ff;
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1.16;
+}
+.market-assessment-score-stack {
+  display: grid;
+  gap: 0.7rem;
+  align-content: center;
+}
+.market-assessment-score-cards {
+  gap: 0.65rem;
+}
+.market-assessment-score-cards span {
+  min-height: 4.6rem;
+  display: grid;
+  align-content: center;
+}
+.market-assessment-reference {
+  border: 1px solid rgba(46, 67, 98, 0.74);
+  border-radius: 0.5rem;
+  background: rgba(5, 7, 13, 0.34);
+  padding: 0.72rem 0.78rem;
+}
+.market-assessment-reference small,
+.market-assessment-section-title {
+  display: block;
+  color: #7ddfff;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.market-assessment-reference b {
+  display: block;
+  margin-top: 0.32rem;
+  color: #ffffff;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+.market-assessment-summary {
+  border-top: 1px solid rgba(46, 67, 98, 0.72);
+  padding-top: 0.9rem;
+}
+.market-assessment-summary p:last-child {
+  margin-top: 0.38rem;
+  color: #d9e7ff;
+  font-size: 0.88rem;
+  line-height: 1.62;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.market-assessment-sections {
+  display: grid;
+  gap: 0.85rem;
+}
+.market-assessment-list ul {
+  display: grid;
+  gap: 0.48rem;
+  margin-top: 0.5rem;
+}
+.market-assessment-list li {
+  display: grid;
+  grid-template-columns: 1.35rem minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: start;
+  border: 1px solid rgba(46, 67, 98, 0.58);
+  border-radius: 0.48rem;
+  background: rgba(8, 13, 23, 0.52);
+  padding: 0.58rem 0.65rem;
+}
+.market-assessment-list li span {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1;
+}
+.market-assessment-list-positive li span { background: rgba(51, 209, 122, 0.14); color: #9af6bd; }
+.market-assessment-list-risk li span { background: rgba(255, 180, 84, 0.14); color: #ffd79a; }
+.market-assessment-list-ai li span { background: rgba(167, 139, 250, 0.14); color: #c4b5fd; }
+.market-assessment-list li p {
+  min-width: 0;
+  color: #c8d8f2;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.market-assessment-why {
+  justify-self: center;
+  width: min(100%, 24rem);
+  text-align: left;
+}
+.market-assessment-why summary {
+  text-align: center;
+}
+.market-assessment-source {
+  color: #7e8da8;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+@media (max-width: 760px) {
+  .market-assessment-main {
+    grid-template-columns: 1fr;
+  }
+  .market-assessment-gauge {
+    width: min(8.2rem, 72vw);
+  }
+  .market-assessment-score-cards {
+    grid-template-columns: 1fr;
+  }
+  .market-assessment-asset-row {
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+}
+

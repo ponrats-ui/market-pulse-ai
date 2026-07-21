@@ -96,7 +96,7 @@ function resolveAssetLogoUrl(symbol: string, logoUrl?: string | null): string | 
   const key = symbol.trim().toUpperCase();
   if (assetLogoUrlCache.has(key)) return assetLogoUrlCache.get(key) ?? null;
   const domain = assetLogoDomains[key] ?? assetLogoDomains[key.replace(/\.BK$/, '')] ?? null;
-  const resolved = domain ? `https://logo.clearbit.com/${domain}` : null;
+  const resolved = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : null;
   assetLogoUrlCache.set(key, resolved);
   return resolved;
 }

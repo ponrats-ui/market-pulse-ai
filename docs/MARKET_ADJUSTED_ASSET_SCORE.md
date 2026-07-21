@@ -28,7 +28,7 @@ The selected asset remains the primary subject. Market context is supporting evi
 | --- | --- |
 | Thai equities ending in `.BK` | SET market proxy |
 | US equities | S&P 500 market proxy |
-| US technology equities and technology ETFs | NASDAQ100 market proxy |
+| Technology-focused ETFs such as `QQQ` and `SOXX` | NASDAQ100 market proxy |
 | Crypto assets | Bitcoin market proxy |
 | Gold and precious metals | Gold market proxy |
 | Oil and energy assets | Oil market proxy |

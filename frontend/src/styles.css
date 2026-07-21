@@ -2162,7 +2162,7 @@ option { background: #0a101c; color: #d9e7ff; }
 
 .market-assessment-panel {
   display: grid;
-  gap: 1rem;
+  gap: 0.78rem;
 }
 .market-assessment-heading p {
   max-width: 34rem;
@@ -2179,7 +2179,7 @@ option { background: #0a101c; color: #d9e7ff; }
   border: 1px solid rgba(53, 208, 255, 0.24);
   border-radius: 0.55rem;
   background: linear-gradient(135deg, rgba(53, 208, 255, 0.08), rgba(8, 17, 31, 0.72));
-  padding: 0.95rem 0.95rem 0.9rem;
+  padding: 0.78rem 0.85rem 0.72rem;
 }
 .market-assessment-asset-title {
   min-width: 0;
@@ -2193,7 +2193,7 @@ option { background: #0a101c; color: #d9e7ff; }
   overflow-wrap: anywhere;
 }
 .market-assessment-asset-title h3 {
-  margin-top: 0.42rem;
+  margin-top: 0.28rem;
   color: #b9c7db;
   font-size: 0.92rem;
   font-weight: 750;
@@ -2217,10 +2217,10 @@ option { background: #0a101c; color: #d9e7ff; }
   align-items: center;
 }
 .market-assessment-gauge {
-  width: min(9.35rem, 100%);
+  width: min(8.55rem, 100%);
   min-height: auto;
   justify-self: center;
-  padding: 0.65rem;
+  padding: 0.54rem;
 }
 .market-assessment-gauge span,
 .market-assessment-gauge small,
@@ -2244,14 +2244,14 @@ option { background: #0a101c; color: #d9e7ff; }
 }
 .market-assessment-score-stack {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.55rem;
   align-content: center;
 }
 .market-assessment-score-cards {
   gap: 0.65rem;
 }
 .market-assessment-score-cards span {
-  min-height: 4.6rem;
+  min-height: 3.75rem;
   display: grid;
   align-content: center;
 }
@@ -2259,7 +2259,7 @@ option { background: #0a101c; color: #d9e7ff; }
   border: 1px solid rgba(46, 67, 98, 0.74);
   border-radius: 0.5rem;
   background: rgba(5, 7, 13, 0.34);
-  padding: 0.72rem 0.78rem;
+  padding: 0.58rem 0.68rem;
 }
 .market-assessment-reference small,
 .market-assessment-section-title {
@@ -2280,13 +2280,13 @@ option { background: #0a101c; color: #d9e7ff; }
 }
 .market-assessment-summary {
   border-top: 1px solid rgba(46, 67, 98, 0.72);
-  padding-top: 0.9rem;
+  padding-top: 0.65rem;
 }
 .market-assessment-summary p:last-child {
-  margin-top: 0.38rem;
+  margin-top: 0.28rem;
   color: #d9e7ff;
   font-size: 0.88rem;
-  line-height: 1.62;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -2294,12 +2294,12 @@ option { background: #0a101c; color: #d9e7ff; }
 }
 .market-assessment-sections {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.62rem;
 }
 .market-assessment-list ul {
   display: grid;
-  gap: 0.48rem;
-  margin-top: 0.5rem;
+  gap: 0.36rem;
+  margin-top: 0.38rem;
 }
 .market-assessment-list li {
   display: grid;
@@ -2309,7 +2309,7 @@ option { background: #0a101c; color: #d9e7ff; }
   border: 1px solid rgba(46, 67, 98, 0.58);
   border-radius: 0.48rem;
   background: rgba(8, 13, 23, 0.52);
-  padding: 0.58rem 0.65rem;
+  padding: 0.42rem 0.55rem;
 }
 .market-assessment-list li span {
   width: 1.25rem;
@@ -2327,12 +2327,12 @@ option { background: #0a101c; color: #d9e7ff; }
 .market-assessment-list li p {
   min-width: 0;
   color: #c8d8f2;
-  font-size: 0.82rem;
-  line-height: 1.55;
+  font-size: 0.78rem;
+  line-height: 1.42;
 }
 .market-assessment-why {
   justify-self: center;
-  width: min(100%, 24rem);
+  width: min(100%, 20rem);
   text-align: left;
 }
 .market-assessment-why summary {
@@ -2357,5 +2357,28 @@ option { background: #0a101c; color: #d9e7ff; }
     gap: 0.75rem;
     padding: 0.85rem;
   }
+}
+
+
+
+.market-assessment-more {
+  margin-top: 0.36rem;
+  border-radius: 0.45rem;
+  background: rgba(5, 7, 13, 0.24);
+  padding: 0.34rem 0.48rem;
+}
+.market-assessment-more summary {
+  cursor: pointer;
+  color: #7ddfff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-align: center;
+}
+.market-assessment-more summary:focus-visible {
+  outline: 2px solid #35d0ff;
+  outline-offset: 2px;
+}
+.market-assessment-more ul {
+  margin-top: 0.38rem;
 }
 

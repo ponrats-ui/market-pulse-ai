@@ -3,184 +3,197 @@
 ## Table of Contents
 
 - [Purpose](#purpose)
-- [Global Equity Markets](#global-equity-markets)
-- [Asset Classes](#asset-classes)
+- [Regional Expansion](#regional-expansion)
+- [Priority Tiers](#priority-tiers)
+- [Covered Market Targets](#covered-market-targets)
 - [Cross-Market Intelligence](#cross-market-intelligence)
-- [Example Relationship Maps](#example-relationship-maps)
-- [Architecture Principles](#architecture-principles)
-- [Long-Term Product Standard](#long-term-product-standard)
+- [Relationship Examples](#relationship-examples)
+- [Expansion Principles](#expansion-principles)
 
 ## Purpose
 
-Market Pulse AI should eventually understand global markets as connected systems, not isolated tickers.
+Market Pulse AI should become a global investment intelligence platform that understands assets, markets, sectors, currencies, commodities, yields, and macro relationships.
 
-The long-term strategy is to expand coverage across regions, asset classes, and market relationships while preserving explainability, transparent unavailable states, and production data integrity.
+Global expansion must be disciplined. Market coverage should grow only when data quality, provider attribution, unavailable-state handling, and symbol normalization can be trusted.
 
-## Global Equity Markets
+## Regional Expansion
 
-Long-term market coverage should include:
+### North America
 
-| Region | Markets |
-| --- | --- |
-| Southeast Asia | Thailand, Singapore, Vietnam, Indonesia, Malaysia, Philippines |
-| North America | USA, Canada, Mexico |
-| Europe | United Kingdom, Germany, France, Netherlands, Switzerland, Italy, Spain |
-| East Asia | Japan, South Korea, China, Hong Kong, Taiwan |
-| South Asia | India |
-| Oceania | Australia |
-| Latin America | Brazil |
-| Africa | South Africa |
-| Middle East | Saudi Arabia, United Arab Emirates |
+North America is a core strategic region because of global equity leadership, ETFs, technology concentration, bond markets, and reserve-currency influence.
 
-Coverage should expand only when data quality, symbol normalization, exchange mapping, and unavailable-state handling are reliable enough for production.
+### Europe
 
-## Asset Classes
+Europe adds major developed-market exposure, global industrial companies, banks, luxury goods, healthcare, energy, and currency relationships.
 
-Long-term asset-class coverage should include:
+### Asia
 
-- Stocks
-- ETF
-- REIT
-- Crypto
-- Forex
-- Indices
-- Government Bonds
-- Corporate Bonds
-- Precious Metals
-- Energy
-- Agriculture
+Asia is central to Market Pulse AI because of Thailand, Japan, China, South Korea, India, Singapore, Taiwan, and Southeast Asian growth markets.
 
-Each asset class may require different analysis methods. The product should not force stock-style financial statement analysis onto assets where it is not applicable.
+### Middle East
+
+The Middle East is important for energy, sovereign capital, financial hubs, and regional market development.
+
+### South America
+
+South America adds commodity, currency, emerging-market, and resource-cycle exposure.
+
+### Africa
+
+Africa adds long-term emerging-market opportunity, commodity exposure, financial-market development, and regional growth context.
+
+## Priority Tiers
+
+### Tier 1
+
+Initial strategic priority:
+
+- Thailand
+- USA
+- Japan
+- Hong Kong
+- Singapore
+- United Kingdom
+- Germany
+- Canada
+- Australia
+
+### Tier 2
+
+Secondary expansion priority:
+
+- France
+- Netherlands
+- Switzerland
+- Italy
+- Spain
+- South Korea
+- China
+- India
+- Taiwan
+- Brazil
+- Mexico
+
+### Tier 3
+
+Longer-term expansion priority:
+
+- Vietnam
+- Indonesia
+- Malaysia
+- Philippines
+- Saudi Arabia
+- United Arab Emirates
+- South Africa
+
+## Covered Market Targets
+
+The long-term market list includes:
+
+- Thailand
+- USA
+- Canada
+- United Kingdom
+- Germany
+- France
+- Netherlands
+- Switzerland
+- Italy
+- Spain
+- Japan
+- South Korea
+- China
+- Hong Kong
+- Singapore
+- India
+- Australia
+- Taiwan
+- Vietnam
+- Indonesia
+- Malaysia
+- Philippines
+- Brazil
+- Mexico
+- Saudi Arabia
+- United Arab Emirates
+- South Africa
 
 ## Cross-Market Intelligence
 
-The platform should eventually understand relationships between assets instead of analysing each asset independently.
+Market Pulse AI should eventually understand relationships between markets instead of analysing assets independently.
 
-Cross-market intelligence should help answer questions such as:
+Cross-market intelligence should identify which external variables may affect an asset, sector, market, or portfolio. It should explain the relationship, the evidence, the confidence level, the missing data, and the conditions that could change the view.
 
-- Which macro variables matter for this asset?
-- Which commodities, currencies, yields, or indices influence this company or sector?
-- Which related markets confirm or contradict the asset signal?
-- Which risks come from the broader market rather than the selected asset?
-- Which relationships are supported by current evidence and which are only theoretical?
-
-Cross-market output must remain explainable. It should show the relationship, evidence, confidence, and limitations.
-
-## Example Relationship Maps
+## Relationship Examples
 
 ### PTT
 
-```text
-PTT
-↓
-Oil
-USDTHB
-Energy Index
-OPEC
-```
+Relationship map:
 
-Potential interpretation:
+- PTT
+- Oil
+- USDTHB
+- Energy Index
+- OPEC
 
-- Oil prices may affect revenue and margins.
-- USDTHB may affect imported costs, exports, and reported financials.
-- Energy sector strength may influence investor appetite.
-- OPEC decisions may influence supply expectations and oil volatility.
+PTT may be influenced by oil prices, exchange rates, energy-sector sentiment, and OPEC supply decisions.
 
 ### AOT
 
-```text
-AOT
-↓
-Tourism
-Oil
-Airlines
-USDTHB
-```
+Relationship map:
 
-Potential interpretation:
+- AOT
+- Tourism
+- Oil
+- Airlines
+- USDTHB
+- Airport Traffic
 
-- Tourism flows may affect passenger volume.
-- Oil prices may influence airline profitability and travel costs.
-- Airline capacity may affect airport traffic.
-- USDTHB may affect tourist affordability and international flows.
+AOT may be influenced by tourism flows, airline capacity, fuel prices, currency movements, and airport traffic trends.
 
 ### NVDA
 
-```text
-NVDA
-↓
-NASDAQ
-Semiconductor Index
-US Bond Yield
-Dollar Index
-AI Sector
-Data Center
-```
+Relationship map:
 
-Potential interpretation:
+- NVDA
+- NASDAQ
+- Semiconductor Index
+- US Bond Yield
+- Dollar Index
+- AI Sector
+- Data Center
 
-- NASDAQ direction may affect growth-stock sentiment.
-- Semiconductor index movement may confirm or weaken sector momentum.
-- US bond yields may affect valuation multiples.
-- Dollar strength may affect global revenue translation.
-- AI and data-center demand may influence growth expectations.
+NVDA may be influenced by technology-sector appetite, semiconductor momentum, valuation sensitivity to yields, dollar movement, AI investment cycles, and data-center demand.
 
 ### Gold
 
-```text
-Gold
-↓
-Dollar Index
-Real Yield
-Inflation
-Federal Reserve
-```
+Relationship map:
 
-Potential interpretation:
+- Gold
+- Dollar Index
+- Real Yield
+- Inflation
+- Federal Reserve
 
-- Dollar strength can pressure gold prices.
-- Real yields may influence opportunity cost.
-- Inflation expectations may affect safe-haven demand.
-- Federal Reserve policy can change liquidity and yield expectations.
+Gold may be influenced by the dollar, real yields, inflation expectations, safe-haven demand, and Federal Reserve policy.
 
 ### Bitcoin
 
-```text
-Bitcoin
-↓
-Dollar
-Nasdaq
-Risk Appetite
-Liquidity
-```
+Relationship map:
 
-Potential interpretation:
+- Bitcoin
+- Dollar
+- Liquidity
+- Risk Appetite
+- Nasdaq
 
-- Dollar strength can affect crypto market liquidity and risk appetite.
-- Nasdaq movement may reflect appetite for high-beta assets.
-- Global liquidity can influence speculative demand.
-- Market stress can change correlations quickly.
+Bitcoin may be influenced by liquidity, dollar strength, risk appetite, technology-market sentiment, and speculative capital flows.
 
-## Architecture Principles
+## Expansion Principles
 
-Future architecture should preserve these principles:
-
-- **Single Source of Truth:** Each data domain should have a clear owner and a clear normalized contract.
-- **Production is Source of Truth:** A feature is not accepted only because it works locally. Production verification is required for production-facing changes.
-- **One Prompt, One Commit, One Deploy, Founder Review, Approve:** Future work should remain reviewable and reversible.
-- **Explainability above complexity:** Prefer understandable models and visible evidence over opaque sophistication.
-- **Avoid black-box AI whenever possible:** If a score or view can be explained deterministically, it should be.
-- **Transparent fallback:** If a relationship, data provider, or macro input is unavailable, the product should say so directly.
-
-## Long-Term Product Standard
-
-Global expansion must not weaken trust.
-
-Before adding a new market, provider, or asset class, the product should confirm:
-
-- Symbol normalization is reliable.
-- Provider attribution is clear.
-- Missing data behavior is honest.
-- Analysis logic is appropriate for the asset type.
-- UI labels and explanations remain understandable.
-- The user can distinguish facts, interpretation, risk, and educational actions.
+- Expand coverage only when data quality is acceptable.
+- Preserve transparent unavailable states.
+- Do not fabricate relationship evidence.
+- Avoid black-box cross-market conclusions.
+- Keep explanations understandable for investors.
+- Separate facts, interpretation, risks, and limitations.

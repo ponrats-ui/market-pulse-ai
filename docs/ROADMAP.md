@@ -2,168 +2,119 @@
 
 ## Table of Contents
 
-- [Roadmap Purpose](#roadmap-purpose)
+- [Purpose](#purpose)
 - [Completed](#completed)
 - [Current](#current)
+- [Next](#next)
 - [Future](#future)
-- [After Version 1](#after-version-1)
-- [Development Principles](#development-principles)
-- [Definition of Progress](#definition-of-progress)
+- [Long-Term](#long-term)
+- [Roadmap Principles](#roadmap-principles)
 
-## Roadmap Purpose
+## Purpose
 
-This roadmap defines the long-term product direction for Market Pulse AI. It should guide future prompts, commits, reviews, and release decisions without locking the team into obsolete sprint details.
+This roadmap defines the long-term direction of Market Pulse AI. It is a founder-level guide, not a sprint implementation log.
 
-The roadmap is intentionally phase-based. Each phase should improve reliability, explainability, usability, or production readiness without compromising the Zero Mock Policy.
+The roadmap should remain future-proof, executive-readable, and aligned with the product mission: explainable investment intelligence based on real evidence.
 
 ## Completed
 
-### Phase A: Engineering Foundation
+### Engineering Foundation
 
-Focus: establish the technical base for a production-capable investment intelligence product.
+Market Pulse AI has established its core engineering foundation:
 
-Completed outcomes:
+- Frontend application foundation
+- Backend API foundation
+- Data provider abstraction
+- Production deployment path
+- Documentation workflow
+- Zero Mock Policy
+- Founder review workflow
 
-- React, Vite, TypeScript frontend foundation.
-- FastAPI backend foundation.
-- Provider abstraction for real market data.
-- Cloudflare Pages frontend deployment path.
-- Render backend deployment path.
-- Git and documentation workflow.
-- Zero Mock policy established as a product rule.
+### UI Polish RC1
 
-### Phase B: UI Polish RC1
+The product has completed a major UI polish milestone:
 
-Focus: make the dashboard feel credible, readable, and production-quality.
-
-Completed outcomes:
-
-- Professional dashboard visual direction.
-- Thai-first localization improvements.
-- Company logo support with safe fallbacks.
-- Knowledge Center and explainability surfaces.
-- Opportunity Score explanations.
-- Market Mood and market context improvements.
-- Responsive dashboard polish.
-- Founder UI freeze and Phase B checkpoint.
+- Professional dashboard direction
+- Improved visual hierarchy
+- Company logo support
+- Knowledge Center
+- Opportunity Score explanations
+- Market Mood explanations
+- Responsive layout improvements
+- Founder UI checkpoint
 
 ## Current
 
-### Phase C: UX & Explainability
+### UX
 
-Focus: improve how users understand scores, AI reasoning, market context, and selected-asset analysis.
+Current work focuses on making the product clearer, more compact, more responsive, and easier to understand.
 
-Current priorities:
+### Explainability
 
-- Clearer explanation for Market and Asset Assessment.
-- Better compact presentation without losing information.
-- Safer visual hierarchy for executive decision support.
-- Consistent contextual explanations for AI and scoring.
-- Continued production verification after each UI polish prompt.
+Current work improves the explanation of scores, AI views, market context, and dashboard signals.
+
+### Feedback Collection
+
+Founder feedback is being used to refine details that affect daily usability, trust, and production quality.
+
+## Next
+
+### Production Hardening
+
+Improve reliability, security, error handling, observability, dependency review, and operational readiness.
+
+### Founder Acceptance Test
+
+Conduct full founder review across production workflows, responsive layouts, browser behavior, API behavior, console errors, and data integrity.
+
+### Release Candidate
+
+Prepare the product for a controlled release candidate with release notes, rollback plan, known limitations, and production verification.
+
+### Public Beta
+
+Open the product to broader feedback while preserving safety, transparency, and clear expectations.
+
+### Version 1.0
+
+Release a stable public version with documented scope, known limitations, and founder approval.
 
 ## Future
 
-### Phase D: Production Hardening
+### Portfolio Intelligence
 
-Focus: improve release confidence and operational safety.
+Develop deeper portfolio analysis, allocation awareness, concentration warnings, risk explanations, and educational coaching.
 
-Expected outcomes:
+### Macro Intelligence
 
-- Stronger error handling.
-- Provider timeout and degradation policy review.
-- Performance audits.
-- Accessibility audits.
-- Security and dependency audits.
-- Production smoke-test discipline.
+Add broader macro context including rates, inflation, currency, liquidity, central bank policy, and economic regimes.
 
-### Phase E: Founder Acceptance Test
+### Alert Engine
 
-Focus: final founder review before release candidate status.
+Create intelligent alerts, briefs, summaries, and monitoring rules that save user time without overwhelming them.
 
-Expected outcomes:
+### Strategy Lab
 
-- Full walkthrough of every major workflow.
-- Production-only verification.
-- Console and network validation.
-- Responsive validation.
-- Known limitations review.
+Support educational scenario analysis and transparent strategy exploration based on evidence and clear assumptions.
 
-### Phase F: Release Candidate
+### Personal AI
 
-Focus: prepare a controlled release candidate.
+Build a personal assistant that understands the user's watchlist, portfolio context, research style, and risk preferences while remaining transparent and user-controlled.
 
-Expected outcomes:
+### Enterprise Features
 
-- Release notes.
-- Rollback plan.
-- Deployment checklist.
-- Version confirmation.
-- Final release decision.
+Explore professional workflows, team research, auditability, provider configuration, compliance-friendly explanations, and enterprise-grade reliability.
 
-### Phase G: Public Beta
+## Long-Term
 
-Focus: expose the product to broader real-user feedback while preserving safety.
+Market Pulse AI should become a global, multi-asset, explainable investment intelligence platform that helps users understand market relationships rather than view assets in isolation.
 
-Expected outcomes:
+Long-term work should expand only when quality, reliability, explainability, and production readiness can be preserved.
 
-- Feedback collection workflow.
-- Issue triage process.
-- Monitoring and operational review.
-- Documentation for early users.
+## Roadmap Principles
 
-### Phase H: Version 1.0
-
-Focus: first stable public production release.
-
-Expected outcomes:
-
-- Stable production frontend and backend.
-- Public documentation.
-- Clear legal and educational disclaimers.
-- Known limitations documented.
-- Founder-approved release tag.
-
-## After Version 1
-
-Long-term product expansion areas:
-
-- **Portfolio Intelligence:** portfolio risk, concentration, allocation, performance, and educational coaching.
-- **Alert System:** intelligent alerts, morning briefs, evening wraps, and saved monitoring rules.
-- **Cross-Market Intelligence:** relationships between assets, sectors, macro variables, commodities, currencies, and yields.
-- **Macro Intelligence:** central bank, inflation, currency, liquidity, and economic regime context.
-- **Personal AI:** user-specific research preferences, portfolio-aware summaries, and explainable watchlist monitoring.
-- **Strategy Lab:** educational scenario analysis, hypothesis testing, and transparent rules-based research workflows.
-
-## Development Principles
-
-Future roadmap work should follow this operating rhythm:
-
-```text
-One Prompt
-↓
-One Commit
-↓
-One Deploy
-↓
-Founder Review
-↓
-Approve
-```
-
-Each phase must preserve:
-
-- Zero Mock Policy.
-- Production as Source of Truth.
-- Explainability above complexity.
-- No black-box AI where transparent reasoning is possible.
-- No release approval based on localhost alone.
-
-## Definition of Progress
-
-A roadmap item is complete only when:
-
-- The implementation or documentation is committed.
-- The change is validated in the appropriate environment.
-- Production behavior is verified when the task affects production UI or behavior.
-- Known limitations are documented honestly.
-- The founder can review the result without hidden assumptions.
+- Keep explainability above complexity.
+- Keep production behavior above demo behavior.
+- Keep evidence above opinion.
+- Keep user trust above feature count.
+- Keep maintainability above shortcuts.

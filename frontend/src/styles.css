@@ -1137,7 +1137,13 @@ option { background: #0a101c; color: #d9e7ff; }
   background: transparent;
   color: #d9e7ff;
   padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  list-style: none;
   text-align: left;
+}
+
+.about-accordion-trigger::-webkit-details-marker {
+  display: none;
 }
 
 .about-accordion-trigger span {
@@ -1164,6 +1170,11 @@ option { background: #0a101c; color: #d9e7ff; }
 }
 
 .about-chevron-open {
+  transform: rotate(180deg);
+  color: #35d0ff;
+}
+
+.about-accordion-item[open] .about-chevron {
   transform: rotate(180deg);
   color: #35d0ff;
 }

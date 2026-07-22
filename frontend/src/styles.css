@@ -471,6 +471,12 @@ option { background: #0a101c; color: #d9e7ff; }
   border-radius: 0.5rem;
   background: rgba(10, 16, 28, 0.96);
   padding: 0.85rem;
+  cursor: pointer;
+}
+
+.opportunity-card:focus-visible {
+  outline: 2px solid #35d0ff;
+  outline-offset: 2px;
 }
 
 .opportunity-card:hover,
@@ -917,15 +923,15 @@ option { background: #0a101c; color: #d9e7ff; }
   .fs300-header-actions { justify-content: flex-start; }
   .fs300-terminal-grid, .fs300-right-rail { grid-template-columns: 1fr; }
   .fs300-left-rail { display: contents; }
-  .fs300-left-rail .professional-panel:first-child { order: 1; max-height: 520px; overflow: auto; }
+  .fs300-left-rail .professional-panel:first-child { order: 1; max-height: none; overflow: visible; }
   .fs300-center-workspace { order: 2; }
   .fs300-left-rail .professional-panel:nth-child(2) { order: 3; }
   .fs300-right-rail { order: 4; }
   .fs300-center-workspace > .grid:first-of-type, .financial-health-grid { grid-template-columns: 1fr; }
   .pro-chart-layout { grid-template-columns: 1fr; }
   .pro-chart-canvas { height: 380px; min-height: 380px; }
-  .fs300-left-rail #asset-search-results { max-height: 170px; overflow: auto; }
-  .fs300-left-rail .screener-list { max-height: 150px; }
+  .fs300-left-rail #asset-search-results { max-height: none; overflow: visible; }
+  .fs300-left-rail .screener-list { max-height: none; overflow: visible; }
   .fs300-left-rail .professional-panel:nth-child(2) { max-height: 280px; overflow: auto; }
   .opportunity-row-top { grid-template-columns: minmax(0, 1fr) auto auto; }
   .opportunity-price-stack { justify-items: start; grid-column: 2 / 3; }
@@ -2411,4 +2417,3 @@ option { background: #0a101c; color: #d9e7ff; }
 .market-assessment-more ul {
   margin-top: 0.38rem;
 }
-

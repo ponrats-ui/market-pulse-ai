@@ -24,6 +24,12 @@ Market Pulse AI is a Global AI Investment Intelligence Platform focused on expla
 
 - Investors need better reasoning, not louder signals.
 - AI should explain before it recommends.
+- Every score must be explainable.
+- Every algorithm must be inspectable.
+- Every opportunity must display its risks.
+- Every rank must disclose its reasoning.
+- Every exclusion must be reviewable.
+- Every methodology change must be versioned, justified, and accompanied by expected impact.
 - Real market data is more valuable than artificial completeness.
 - Missing data must stay visible.
 - Opportunity discovery requires evidence, risk context, and confidence disclosure.

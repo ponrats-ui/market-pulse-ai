@@ -69,6 +69,8 @@ The first production implementation is documented in `docs/PENNY_OPPORTUNITY_SCA
 
 Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe. The final ranking score is the positive weighted factor score minus risk penalty, bounded between 0 and 100. Data Confidence and Data Completeness are qualification, explanation, and tie-breaking signals only; they are not added to the Opportunity Score.
 
+Transparent Intelligence requires each displayed Penny score to reconcile from weighted factor contributions minus risk penalties. The score is accompanied by version metadata, missing evidence, confidence explanation, completeness explanation, and ranking rationale.
+
 ## Catalyst Score
 
 ### Purpose

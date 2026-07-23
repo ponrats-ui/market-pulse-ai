@@ -12,11 +12,12 @@ from typing import Any, Callable, Dict, Iterable, List, Literal
 from uuid import uuid4
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
-from app.opportunities.models import OpportunityEngineDefinition, OpportunityEngineRuntime
+from app.opportunities.models import AlgorithmChangeRecord, AlgorithmDefinition, AlgorithmFactorDefinition, AlgorithmIdentity, AlgorithmRiskDefinition, AlgorithmTextBlock, OpportunityEngineDefinition, OpportunityEngineRuntime
 from app.opportunities.ranking import rank_candidates
 from app.opportunities.registry import register_engine
 from app.opportunities.scheduler import OpportunityScheduler
 from app.opportunities.snapshots import OpportunitySnapshotStore
+from app.opportunities.transparency import algorithm_to_dict, validate_algorithm_definition
 from app.providers.registry import get_provider
 
 SignalState = Literal["PASS", "FAIL", "UNKNOWN"]
@@ -150,6 +151,101 @@ PENNY_ENGINE_DEFINITION = OpportunityEngineDefinition(
     ],
 )
 
+
+def build_penny_algorithm_definition() -> AlgorithmDefinition:
+    identity = AlgorithmIdentity(
+        engine_id=PENNY_ENGINE_DEFINITION.engine_id,
+        algorithm_id="penny-opportunity-v1",
+        category=PENNY_ENGINE_DEFINITION.category,
+        display_name_th="อัลกอริทึมหาโอกาสหุ้นราคาต่ำ",
+        display_name_en="Penny Opportunity Algorithm",
+        short_description_th="ค้นหาหุ้นราคาต่ำที่มีหลักฐานสนับสนุนหลายด้าน พร้อมหักคะแนนความเสี่ยงอย่างโปร่งใส",
+        short_description_en="Discovers low-priced equities with multi-factor evidence while transparently deducting risk penalties.",
+        methodology_name="Evidence-Based Penny Opportunity Discovery",
+        methodology_version=PENNY_ENGINE_DEFINITION.methodology_version,
+        score_version=PENNY_ENGINE_DEFINITION.score_version,
+        policy_version=PENNY_ENGINE_DEFINITION.policy_version,
+        config_version=PENNY_ENGINE_DEFINITION.config_version,
+        release_date="2026-07-23",
+        last_updated_at="2026-07-23",
+        status="active",
+        supported_markets=PENNY_ENGINE_DEFINITION.supported_markets,
+        schedule_frequency_minutes=PENNY_ENGINE_DEFINITION.schedule_frequency_minutes,
+        maximum_results=PENNY_ENGINE_DEFINITION.maximum_results,
+    )
+    factors = [
+        _factor_definition("liquidity", "สภาพคล่อง", "Liquidity", "วัดว่าหุ้นมีปริมาณและมูลค่าการซื้อขายเพียงพอหรือไม่", "Measures whether trading volume and traded value are sufficient.", "หุ้นราคาต่ำที่ซื้อขายเบาบางอาจเข้าออกยากและมีความเสี่ยงสูง", "Low-priced stocks with weak liquidity may be difficult to trade and carry higher execution risk.", ["volume", "average_volume", "price"], ["quote", "history"]),
+        _factor_definition("financial", "สุขภาพการเงิน", "Financial Health", "ตรวจสอบความอยู่รอดทางการเงินจากตัวชี้วัดพื้นฐานที่มีข้อมูล", "Checks financial survivability using available fundamental indicators.", "หุ้นราคาต่ำที่ฐานะการเงินอ่อนแออาจเป็นภาวะวิกฤต ไม่ใช่โอกาส", "A low-priced company with weak finances may represent distress rather than opportunity.", ["debt_to_equity", "return_on_equity", "return_on_assets", "trailing_pe", "price_to_book"], ["quote"]),
+        _factor_definition("growth", "การเติบโต", "Growth", "ดูหลักฐานการเติบโตหรือการฟื้นตัวของรายได้และกำไร", "Looks for evidence of revenue or earnings growth and recovery.", "การเติบโตช่วยแยกหุ้นราคาต่ำที่มีพัฒนาการออกจากหุ้นที่ราคาถูกเพราะธุรกิจถดถอย", "Growth helps distinguish improving low-priced businesses from structurally declining ones.", ["revenue_growth", "earnings_growth"], ["quote"]),
+        _factor_definition("technical", "แรงส่งทางเทคนิค", "Technical Strength", "วัดแนวโน้มราคา โมเมนตัม และการมีส่วนร่วมของตลาดจากประวัติราคา", "Measures price trend, momentum, and market participation from historical prices.", "แรงส่งที่ยืนยันด้วยข้อมูลราคาช่วยบอกว่าตลาดเริ่มให้ความสนใจหรือไม่", "Price and volume participation can indicate whether the market is beginning to recognize the candidate.", ["history.close", "history.volume"], ["history"]),
+        _factor_definition("catalyst", "ปัจจัยเร่ง", "Catalyst Evidence", "นับเฉพาะข่าวหรือเหตุการณ์ที่ผู้ให้บริการส่งกลับมาอย่างตรวจสอบได้", "Uses only provider-returned verifiable news or event evidence.", "ปัจจัยเร่งช่วยอธิบายว่าทำไมตลาดอาจกลับมาสนใจ แต่ถ้าไม่มีข้อมูลจะไม่สร้างคะแนนปลอม", "Catalysts may explain renewed interest, but missing catalyst evidence must not create synthetic score support.", ["news.items"], ["news"]),
+        _factor_definition("market_context", "บริบทตลาด", "Market Context", "สะท้อนแรงส่งระยะสั้นจากการเปลี่ยนแปลงราคาปัจจุบัน", "Reflects short-term market context from current price change.", "บริบทตลาดช่วยลดการดูหุ้นแยกจากสภาวะการซื้อขายล่าสุด", "Market context prevents viewing the stock in isolation from recent trading conditions.", ["change_percent"], ["quote"]),
+    ]
+    risks = [
+        AlgorithmRiskDefinition("invalid_price", "data_quality", "critical", "ไม่มีราคาปัจจุบันที่ใช้ได้ จึงไม่สามารถจัดอันดับอย่างโปร่งใส", "A valid current price is required for transparent ranking.", True),
+        AlgorithmRiskDefinition("outside_price_policy", "eligibility", "medium", "ราคาอยู่นอกขอบเขตหุ้นราคาต่ำของตลาดนั้น", "The price is outside the configured low-price policy.", False),
+        AlgorithmRiskDefinition("insufficient_trading_history", "data_coverage", "high", "ประวัติราคาน้อยเกินไปทำให้การวัดแนวโน้มไม่น่าเชื่อถือ", "Too little price history makes trend evidence unreliable.", True),
+        AlgorithmRiskDefinition("insufficient_liquidity", "liquidity", "critical", "สภาพคล่องต่ำทำให้ความเสี่ยงในการซื้อขายสูง", "Low liquidity creates material trading and execution risk.", True),
+        AlgorithmRiskDefinition("extreme_volatility", "volatility", "high", "ความผันผวนสูงมากทำให้ความเสี่ยงด้านขาลงเพิ่มขึ้น", "Extreme volatility increases downside uncertainty.", False),
+    ]
+    return AlgorithmDefinition(
+        identity=identity,
+        objective=AlgorithmTextBlock(
+            th="ระบบค้นหาหุ้นราคาต่ำที่มีหลักฐานสนับสนุนด้านความอยู่รอดทางการเงิน การเติบโต สภาพคล่อง แรงส่งของตลาด และปัจจัยเร่งที่ตรวจสอบได้ จากนั้นหักคะแนนความเสี่ยงอย่างโปร่งใส ราคาหุ้นต่ำเพียงอย่างเดียวไม่ถือเป็นหลักฐานของโอกาสการลงทุน",
+            en="The engine discovers low-priced equities supported by evidence of financial survivability, growth, liquidity, market participation, and verified catalysts. Material risks are deducted transparently. Low share price alone is not treated as evidence of investment opportunity.",
+        ),
+        hypothesis=AlgorithmTextBlock(
+            th="หุ้นราคาต่ำอาจควรศึกษาต่อเมื่อหลักฐานหลายกลุ่มสอดคล้องกัน ไม่ใช่เพราะราคาถูก ข่าวเดียว หรือความนิยมระยะสั้น",
+            en="A low-priced security may deserve further research only when multiple independent evidence groups agree, not because of price alone, a single headline, or popularity.",
+        ),
+        universe={"markets": PENNY_ENGINE_DEFINITION.supported_markets, "asset_class": "equity", "source": "Master Asset Registry", "scan_frequency_minutes": SCAN_FREQUENCY_MINUTES},
+        eligibility={"minimum_score": PENNY_ENGINE_DEFINITION.minimum_score, "minimum_confidence": PENNY_ENGINE_DEFINITION.minimum_confidence, "minimum_completeness": PENNY_ENGINE_DEFINITION.minimum_completeness, "hard_disqualifiers": ["invalid_price", "insufficient_trading_history", "insufficient_liquidity", "critical_confirmed_risk"]},
+        factors=factors,
+        risks=risks,
+        score_formula={"en": "Sum of weighted positive factor contributions minus evidence-supported risk penalties, bounded 0-100.", "th": "คะแนนโอกาสเกิดจากผลรวมของคะแนนปัจจัยเชิงบวกตามน้ำหนักที่กำหนด แล้วหักด้วยค่าปรับความเสี่ยงที่มีหลักฐานรองรับ", "bounds": [0, 100], "weights": PENNY_FACTOR_WEIGHTS},
+        confidence={"en": "Data Confidence measures evidence quality and availability. It is not probability of profit.", "th": "ความเชื่อมั่นของข้อมูลวัดคุณภาพและความพร้อมของหลักฐาน ไม่ใช่โอกาสทำกำไร"},
+        completeness={"en": "Completeness measures which required evidence groups were available, missing, stale, or failed.", "th": "ความครบถ้วนวัดว่ากลุ่มข้อมูลสำคัญใดมีพร้อม ขาดหาย ล่าช้า หรือดึงข้อมูลไม่สำเร็จ"},
+        ranking={"policy": PENNY_ENGINE_DEFINITION.tie_breaker_policy, "en": "Candidates rank by final score first; confidence and completeness break ties only.", "th": "จัดอันดับจากคะแนนสุดท้ายก่อน ความเชื่อมั่นและความครบถ้วนใช้เฉพาะกรณีคะแนนเท่ากัน"},
+        data_dependencies=[{"provider": "yfinance", "data": ["quote", "history"]}, {"provider": "configured_news", "data": ["verified catalyst evidence"], "optional": True}],
+        limitations=[
+            AlgorithmTextBlock("ผู้ให้บริการข้อมูลอาจล่าช้า ไม่ครบถ้วน หรือไม่พร้อมใช้งาน", "Provider data may be delayed, incomplete, or unavailable."),
+            AlgorithmTextBlock("วิธีนี้เป็น heuristic เพื่อจัดลำดับการศึกษาต่อ ไม่ใช่แบบจำลองทำนายผลตอบแทน", "This heuristic prioritizes research candidates; it is not a return prediction model."),
+        ],
+        non_claims=[
+            AlgorithmTextBlock("ไม่ใช่คำแนะนำให้ซื้อหรือขาย", "This is not a buy or sell recommendation."),
+            AlgorithmTextBlock("ไม่ทำนายผลตอบแทนในอนาคต", "The algorithm does not predict future returns."),
+            AlgorithmTextBlock("อันดับสูงไม่รับประกันว่าราคาจะปรับขึ้น", "A higher rank does not guarantee price appreciation."),
+        ],
+        change_history=[AlgorithmChangeRecord("penny-opportunity-v1", "2026-07-23", "Initial transparent Penny Opportunity methodology.", "Introduces score-first ranking, risk penalties, confidence, completeness, and explainable Top 5 output.")],
+    )
+
+
+def _factor_definition(factor_id: str, name_th: str, name_en: str, purpose_th: str, purpose_en: str, rationale_th: str, rationale_en: str, input_fields: List[str], providers: List[str]) -> AlgorithmFactorDefinition:
+    weight = PENNY_FACTOR_WEIGHTS[factor_id]
+    return AlgorithmFactorDefinition(
+        factor_id=factor_id,
+        display_name_th=name_th,
+        display_name_en=name_en,
+        purpose_th=purpose_th,
+        purpose_en=purpose_en,
+        rationale_th=rationale_th,
+        rationale_en=rationale_en,
+        weight=weight,
+        maximum_contribution=round(weight * 100, 2),
+        input_fields=input_fields,
+        evidence_requirements=["provider_returned_data"],
+        provider_dependencies=providers,
+        freshness_expectation="latest available provider snapshot",
+        missing_data_behavior="reported as missing and reduces data completeness/confidence",
+        partial_data_behavior="uses available measured evidence; does not fabricate unavailable fields",
+        score_interpretation="higher means stronger evidence for this factor under the active methodology",
+        limitations=["Provider availability and field coverage may vary by market and symbol."],
+        factor_version="v1",
+    )
+
+
+PENNY_ALGORITHM_DEFINITION = build_penny_algorithm_definition()
+
 THAI_CANDIDATE_SYMBOLS = [
     "TTB.BK",
     "TRUE.BK",
@@ -211,6 +307,7 @@ def build_penny_opportunities(
     generated_at = scan_started_iso
     registry = _candidate_registry(selected_markets)
     candidates = []
+    why_not_index: Dict[str, Any] = {}
     excluded = 0
     unknown = 0
     classified = 0
@@ -247,8 +344,10 @@ def build_penny_opportunities(
             classified += 1
         if candidate["hard_disqualified"]:
             excluded += 1
+            why_not_index[candidate["symbol"]] = _candidate_exclusion_explanation(candidate, "disqualified")
             continue
         if not candidate["eligible_for_top5"]:
+            why_not_index[candidate["symbol"]] = _candidate_exclusion_explanation(candidate, "below_threshold")
             if candidate["data_completeness"] < policy.minimum_data_completeness:
                 unknown += 1
             else:
@@ -256,7 +355,7 @@ def build_penny_opportunities(
             continue
         candidates.append(candidate)
 
-    items = rank_candidates(candidates, score_field="penny_opportunity_score", limit=safe_limit)
+    items = _add_ranking_explanations(rank_candidates(candidates, score_field="penny_opportunity_score", limit=safe_limit))
     completed_at = datetime.now(timezone.utc)
     completed_iso = completed_at.isoformat()
     scan_duration_ms = round((monotonic() - timer_started) * 1000)
@@ -303,6 +402,7 @@ def build_penny_opportunities(
             "unknown_count": unknown,
         },
         "items": [_public_item(item) for item in items],
+        "why_not_index": dict(list(why_not_index.items())[:250]),
         "limitations": [
             "The scanner evaluates the complete currently supported Thai and US equity universe before ranking qualified candidates.",
             "Catalyst evidence is shown only when a configured provider returns verifiable items.",
@@ -439,6 +539,9 @@ def reset_penny_opportunity_snapshots_for_tests() -> None:
 
 
 def register_penny_opportunity_engine() -> None:
+    validation = validate_penny_algorithm_definition()
+    if not validation["valid"]:
+        raise ValueError(f"Penny algorithm transparency validation failed: {validation['errors']}")
     register_engine(
         OpportunityEngineRuntime(
             definition=PENNY_ENGINE_DEFINITION,
@@ -448,6 +551,70 @@ def register_penny_opportunity_engine() -> None:
             stop_scheduler=stop_penny_opportunity_scheduler,
         )
     )
+
+
+def get_penny_algorithm_definition() -> Dict[str, Any]:
+    definition = algorithm_to_dict(PENNY_ALGORITHM_DEFINITION)
+    validation = validate_penny_algorithm_definition()
+    return {
+        "status": "ok" if validation["valid"] else "failed",
+        "algorithm": definition,
+        "validation": validation,
+        "cache": {"cacheable": True, "recommended_ttl_seconds": 3600},
+        "disclaimer": "This is not financial advice.",
+    }
+
+
+def validate_penny_algorithm_definition() -> Dict[str, Any]:
+    return validate_algorithm_definition(PENNY_ALGORITHM_DEFINITION, PENNY_FACTOR_WEIGHTS).__dict__
+
+
+def get_penny_candidate_explanation(symbol: str) -> Dict[str, Any]:
+    requested = symbol.strip().upper()
+    snapshot = get_penny_opportunities_snapshot()
+    for item in snapshot.get("items", []):
+        if item.get("symbol", "").upper() == requested:
+            return {
+                "status": "ok",
+                "symbol": item.get("symbol"),
+                "engine": snapshot.get("engine"),
+                "scan": snapshot.get("scan"),
+                "score_explanation": item.get("score_explanation"),
+                "score_breakdown": item.get("score_breakdown"),
+                "risk_explanation": item.get("risks", []),
+                "confidence_explanation": item.get("confidence_explanation"),
+                "completeness_explanation": item.get("completeness_explanation"),
+                "ranking_explanation": item.get("ranking_explanation"),
+                "disclaimer": "This is not financial advice.",
+            }
+    why_not = get_penny_why_not(symbol)
+    return {"status": "not_ranked", "symbol": symbol, "why_not": why_not, "disclaimer": "This is not financial advice."}
+
+
+def get_penny_why_not(symbol: str) -> Dict[str, Any]:
+    requested = symbol.strip().upper()
+    snapshot = get_penny_opportunities_snapshot()
+    for item in snapshot.get("items", []):
+        if item.get("symbol", "").upper() == requested:
+            return {
+                "status": "ranked",
+                "symbol": item.get("symbol"),
+                "rank": item.get("rank"),
+                "explanation_en": "This symbol is already ranked in the latest Penny Opportunity snapshot.",
+                "explanation_th": "สัญลักษณ์นี้ติดอันดับใน Penny Opportunity snapshot ล่าสุดแล้ว",
+                "scan": snapshot.get("scan"),
+            }
+    index = snapshot.get("why_not_index") or {}
+    row = index.get(requested)
+    if row:
+        return {**row, "scan": snapshot.get("scan")}
+    return {
+        "status": "not_in_universe",
+        "symbol": symbol,
+        "explanation_en": "This symbol is not present in the bounded Why Not index for the latest snapshot. The endpoint does not trigger a new scan.",
+        "explanation_th": "ไม่พบสัญลักษณ์นี้ใน Why Not index ของ snapshot ล่าสุด endpoint นี้ไม่เริ่มการสแกนใหม่",
+        "scan": snapshot.get("scan"),
+    }
 
 
 def _empty_snapshot(status: str, reason: str, failure: Dict[str, Any] | None = None) -> Dict[str, Any]:
@@ -561,14 +728,17 @@ def evaluate_candidate(
     completeness = _data_completeness(quote, history, catalyst)
     confidence = _data_confidence(completeness, liquidity, financial, growth, technical, catalyst, risk_flags)
     risk_penalty = _risk_penalty([*hard_flags, *risk_flags], liquidity, technical)
-    base_score = (
-        liquidity["score"] * PENNY_FACTOR_WEIGHTS["liquidity"]
-        + financial["score"] * PENNY_FACTOR_WEIGHTS["financial"]
-        + growth["score"] * PENNY_FACTOR_WEIGHTS["growth"]
-        + technical["score"] * PENNY_FACTOR_WEIGHTS["technical"]
-        + (catalyst["score"] if catalyst["score"] is not None else 35) * PENNY_FACTOR_WEIGHTS["catalyst"]
-        + _market_context_score(asset, quote) * PENNY_FACTOR_WEIGHTS["market_context"]
-    )
+    market_context = _market_context_score(asset, quote)
+    factor_scores = {
+        "financial": financial["score"],
+        "growth": growth["score"],
+        "technical": technical["score"],
+        "liquidity": liquidity["score"],
+        "catalyst": catalyst["score"],
+        "market_context": market_context,
+    }
+    score_breakdown = _score_breakdown(factor_scores, risk_penalty, [*hard_flags, *risk_flags], missing_data)
+    base_score = score_breakdown["raw_positive_score"]
     score = _clamp(round(base_score - risk_penalty), 0, 100)
     risk_level = _risk_level(risk_penalty, [*hard_flags, *risk_flags])
     hard_disqualified = bool(hard_flags) or completeness < policy.minimum_data_completeness
@@ -594,14 +764,7 @@ def evaluate_candidate(
         "penny_opportunity_score": score,
         "data_confidence": confidence,
         "data_completeness": completeness,
-        "scores": {
-            "financial": financial["score"],
-            "growth": growth["score"],
-            "technical": technical["score"],
-            "liquidity": liquidity["score"],
-            "catalyst": catalyst["score"],
-            "market_context": _market_context_score(asset, quote),
-        },
+        "scores": factor_scores,
         "factor_availability": {
             "price": "PASS" if price is not None else "FAIL",
             "liquidity": liquidity["status"],
@@ -618,6 +781,10 @@ def evaluate_candidate(
         "missing_data": sorted(set(missing_data)),
         "catalysts": catalyst["items"],
         "explanation": _explanation(symbol, score, confidence, [*hard_flags, *risk_flags], missing_data, catalyst),
+        "score_explanation": _candidate_score_explanation(symbol, score, score_breakdown, confidence, completeness, factor_scores, [*hard_flags, *risk_flags], missing_data),
+        "score_breakdown": score_breakdown,
+        "confidence_explanation": _confidence_explanation(confidence, completeness, liquidity, financial, growth, technical, catalyst, risk_flags),
+        "completeness_explanation": _completeness_explanation(completeness, quote, history, catalyst),
         "provider_attribution": _provider_attribution(quote, history, catalyst),
         "provider_status": provider_status,
         "hard_disqualified": hard_disqualified,
@@ -882,6 +1049,104 @@ def _data_confidence(completeness: int, liquidity: Dict[str, Any], financial: Di
     return _clamp(round(score), 0, 100)
 
 
+def _score_breakdown(factor_scores: Dict[str, Any], risk_penalty: int, risks: List[Dict[str, Any]], missing_data: List[str]) -> Dict[str, Any]:
+    contributions = []
+    raw_positive = 0.0
+    for factor_id, weight in PENNY_FACTOR_WEIGHTS.items():
+        measured = factor_scores.get(factor_id)
+        raw_score = 35 if measured is None else _number(measured) or 0
+        weighted = round(raw_score * weight, 2)
+        raw_positive += weighted
+        contributions.append({
+            "factor_id": factor_id,
+            "raw_score": measured,
+            "substituted_score": raw_score if measured is None else None,
+            "weight": weight,
+            "weighted_contribution": weighted,
+            "status": "unavailable" if measured is None else "available",
+            "missing": measured is None,
+        })
+    risk_penalties = [{"code": risk["code"], "severity": risk["severity"], "status": risk["status"], "penalty": risk["penalty"], "evidence": risk["evidence"]} for risk in risks]
+    explicit_penalty = sum(_number(item.get("penalty")) or 0 for item in risk_penalties)
+    residual_penalty = max(0, risk_penalty - explicit_penalty)
+    if residual_penalty:
+        risk_penalties.append({"code": "data_uncertainty_penalty", "severity": "medium", "status": "unknown", "penalty": residual_penalty, "evidence": "Penalty added for unavailable liquidity or technical evidence."})
+    final_before_bound = raw_positive - risk_penalty
+    return {
+        "raw_positive_score": round(raw_positive, 2),
+        "factor_contributions": contributions,
+        "total_risk_penalty": risk_penalty,
+        "risk_penalties": risk_penalties,
+        "final_score_before_bound": round(final_before_bound, 2),
+        "rounding_policy": "round weighted positive score minus risk penalty, then bound to 0-100",
+        "score_version": SCORE_VERSION,
+        "config_version": CONFIGURATION_VERSION,
+        "missing_evidence": sorted(set(missing_data)),
+    }
+
+
+def _candidate_score_explanation(symbol: str, score: int, breakdown: Dict[str, Any], confidence: int, completeness: int, factor_scores: Dict[str, Any], risks: List[Dict[str, Any]], missing_data: List[str]) -> Dict[str, Any]:
+    available = [row for row in breakdown["factor_contributions"] if not row["missing"]]
+    strongest = sorted(available, key=lambda row: row["weighted_contribution"], reverse=True)[:2]
+    weakest = sorted(available, key=lambda row: row["weighted_contribution"])[:1]
+    largest_risk = sorted(risks, key=lambda risk: risk.get("penalty", 0), reverse=True)[:1]
+    strongest_names = ", ".join(row["factor_id"] for row in strongest) or "no measured positive factor"
+    weakest_name = weakest[0]["factor_id"] if weakest else "unavailable measured factors"
+    risk_text = largest_risk[0]["code"] if largest_risk else "no explicit risk penalty"
+    return {
+        "title_th": "ทำไมได้คะแนนนี้",
+        "title_en": "Why this score",
+        "summary_th": f"{symbol} ได้คะแนน {score}/100 จากปัจจัยเด่นคือ {strongest_names} โดยมีปัจจัยอ่อนคือ {weakest_name} และความเสี่ยงหลักคือ {risk_text}",
+        "summary_en": f"{symbol} scored {score}/100. Strongest contributors: {strongest_names}. Weakest measured factor: {weakest_name}. Largest risk: {risk_text}.",
+        "strongest_factors": strongest,
+        "weakest_factors": weakest,
+        "largest_risks": largest_risk,
+        "missing_evidence": sorted(set(missing_data)),
+        "confidence_note_en": f"Data Confidence is {confidence}/100 and does not represent probability of profit.",
+        "confidence_note_th": f"ความเชื่อมั่นของข้อมูลอยู่ที่ {confidence}/100 และไม่ใช่โอกาสทำกำไร",
+        "completeness_note_en": f"Data Completeness is {completeness}/100 based on available evidence groups.",
+        "completeness_note_th": f"ความครบถ้วนของข้อมูลอยู่ที่ {completeness}/100 จากกลุ่มหลักฐานที่มีอยู่",
+        "factor_scores": factor_scores,
+    }
+
+
+def _confidence_explanation(confidence: int, completeness: int, liquidity: Dict[str, Any], financial: Dict[str, Any], growth: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any], risks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    factor_status = {name: value.get("status") for name, value in {"liquidity": liquidity, "financial": financial, "growth": growth, "technical": technical, "catalyst": catalyst}.items()}
+    reducers = [name for name, status in factor_status.items() if status in {"UNKNOWN", "FAIL"}]
+    return {
+        "score": confidence,
+        "completeness_input": completeness,
+        "factor_status": factor_status,
+        "positive_drivers": [name for name, status in factor_status.items() if status == "PASS"],
+        "negative_drivers": reducers,
+        "unknown_risk_count": len([risk for risk in risks if risk.get("status") == "unknown"]),
+        "statement_en": "Data Confidence measures evidence quality and availability. It is not probability of profit.",
+        "statement_th": "ความเชื่อมั่นของข้อมูลวัดคุณภาพและความพร้อมของหลักฐาน ไม่ใช่โอกาสทำกำไร",
+    }
+
+
+def _completeness_explanation(completeness: int, quote: Dict[str, Any], history: Dict[str, Any], catalyst: Dict[str, Any]) -> Dict[str, Any]:
+    checks = {
+        "price": quote.get("price") is not None,
+        "volume": quote.get("volume") is not None,
+        "change_percent": quote.get("change_percent") is not None,
+        "market_cap": quote.get("market_cap") is not None,
+        "debt_to_equity": quote.get("debt_to_equity") is not None,
+        "return_on_equity": quote.get("return_on_equity") is not None,
+        "revenue_growth": quote.get("revenue_growth") is not None,
+        "history_coverage": len(_history_closes(history)) >= 10,
+        "verified_catalyst": catalyst.get("status") == "PASS",
+        "timestamp": quote.get("timestamp") is not None,
+    }
+    return {
+        "score": completeness,
+        "available": [key for key, ok in checks.items() if ok],
+        "missing": [key for key, ok in checks.items() if not ok],
+        "statement_en": "Completeness shows which evidence groups were available, missing, stale, or failed.",
+        "statement_th": "ความครบถ้วนแสดงว่ากลุ่มหลักฐานใดมีพร้อม ขาดหาย ล่าช้า หรือดึงข้อมูลไม่สำเร็จ",
+    }
+
+
 def _risk_penalty(risks: List[Dict[str, Any]], liquidity: Dict[str, Any], technical: Dict[str, Any]) -> int:
     penalty = sum(_number(risk.get("penalty")) or 0 for risk in risks)
     if liquidity.get("status") == "UNKNOWN":
@@ -900,6 +1165,94 @@ def _market_context_score(asset: MasterAsset, quote: Dict[str, Any]) -> int:
 
 def _public_item(item: Dict[str, Any]) -> Dict[str, Any]:
     return {key: value for key, value in item.items() if key not in {"hard_disqualified", "eligible_for_top5", "severe_risk_count", "provider_status"}}
+
+
+def _add_ranking_explanations(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    rows = []
+    for index, item in enumerate(items):
+        previous_item = items[index - 1] if index > 0 else None
+        next_item = items[index + 1] if index + 1 < len(items) else None
+        gap_previous = None if previous_item is None else round(previous_item["penny_opportunity_score"] - item["penny_opportunity_score"], 2)
+        gap_next = None if next_item is None else round(item["penny_opportunity_score"] - next_item["penny_opportunity_score"], 2)
+        tie_breaker = _ranking_tie_breaker(previous_item, item) if previous_item else None
+        rank = item.get("rank")
+        if rank == 1 and next_item:
+            reason_en = f"Rank 1 because its final score is {gap_next} points above Rank 2 under the active score-first policy."
+            reason_th = f"อยู่อันดับ 1 เพราะคะแนนสุดท้ายสูงกว่าอันดับ 2 อยู่ {gap_next} คะแนนตามนโยบายจัดอันดับจากคะแนนก่อน"
+        elif previous_item:
+            reason_en = f"Rank {rank} because it is {gap_previous} points below the previous candidate and {gap_next if gap_next is not None else 'no'} points above the next candidate."
+            reason_th = f"อยู่อันดับ {rank} เพราะคะแนนต่ำกว่าตัวก่อนหน้า {gap_previous} คะแนน และสูงกว่าตัวถัดไป {gap_next if gap_next is not None else 'ไม่มี'} คะแนน"
+        else:
+            reason_en = "Only one qualified candidate is available in the current snapshot."
+            reason_th = "มีผู้ผ่านเกณฑ์เพียงตัวเดียวใน snapshot ปัจจุบัน"
+        rows.append({
+            **item,
+            "ranking_explanation": {
+                "rank": rank,
+                "final_score": item["penny_opportunity_score"],
+                "score_gap_to_previous": gap_previous,
+                "score_gap_to_next": gap_next,
+                "tie_breaker_used": tie_breaker,
+                "ranking_reason_en": reason_en,
+                "ranking_reason_th": reason_th,
+                "non_suitability_note_en": "Rank does not imply personal suitability or a buy recommendation.",
+                "non_suitability_note_th": "อันดับไม่ได้แปลว่าเหมาะกับนักลงทุนทุกคนหรือเป็นคำแนะนำให้ซื้อ",
+            },
+        })
+    return rows
+
+
+def _ranking_tie_breaker(previous_item: Dict[str, Any] | None, item: Dict[str, Any]) -> str | None:
+    if previous_item is None or previous_item.get("penny_opportunity_score") != item.get("penny_opportunity_score"):
+        return None
+    checks = [
+        ("data_confidence", True),
+        ("data_completeness", True),
+        ("liquidity_score", True),
+        ("risk_penalty", False),
+        ("symbol", True),
+    ]
+    for field, higher_is_better in checks:
+        previous_value = (previous_item.get("scores") or {}).get("liquidity") if field == "liquidity_score" else previous_item.get(field)
+        value = (item.get("scores") or {}).get("liquidity") if field == "liquidity_score" else item.get(field)
+        if previous_value != value:
+            return field + (" DESC" if higher_is_better else " ASC")
+    return "symbol ASC"
+
+
+def _candidate_exclusion_explanation(candidate: Dict[str, Any], reason: str) -> Dict[str, Any]:
+    risks = candidate.get("risks", [])
+    missing = candidate.get("missing_data", [])
+    if candidate.get("hard_disqualified"):
+        status = "disqualified"
+        primary = risks[0]["code"] if risks else "data_completeness_below_minimum"
+    elif candidate.get("data_confidence", 0) < PENNY_ENGINE_DEFINITION.minimum_confidence:
+        status = "low_confidence"
+        primary = "data_confidence_below_minimum"
+    elif candidate.get("data_completeness", 0) < PENNY_ENGINE_DEFINITION.minimum_completeness:
+        status = "low_completeness"
+        primary = "data_completeness_below_minimum"
+    elif candidate.get("penny_opportunity_score", 0) < PENNY_ENGINE_DEFINITION.minimum_score:
+        status = "below_cutoff"
+        primary = "score_below_minimum"
+    else:
+        status = reason
+        primary = "not_in_top_results"
+    return {
+        "symbol": candidate.get("symbol"),
+        "status": status,
+        "primary_reason": primary,
+        "score": candidate.get("penny_opportunity_score"),
+        "minimum_score": PENNY_ENGINE_DEFINITION.minimum_score,
+        "data_confidence": candidate.get("data_confidence"),
+        "minimum_confidence": PENNY_ENGINE_DEFINITION.minimum_confidence,
+        "data_completeness": candidate.get("data_completeness"),
+        "minimum_completeness": PENNY_ENGINE_DEFINITION.minimum_completeness,
+        "risks": risks[:5],
+        "missing_evidence": missing,
+        "explanation_en": f"{candidate.get('symbol')} did not qualify because {primary}. This explanation uses the latest snapshot and does not trigger a new scan.",
+        "explanation_th": f"{candidate.get('symbol')} ไม่ผ่านเกณฑ์เพราะ {primary} คำอธิบายนี้อ้างอิง snapshot ล่าสุดและไม่เริ่มการสแกนใหม่",
+    }
 
 
 def _strengths(liquidity: Dict[str, Any], financial: Dict[str, Any], growth: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any]) -> List[str]:

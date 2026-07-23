@@ -37,6 +37,9 @@ Market Pulse AI should explain:
 - What evidence was used
 - What evidence was missing
 - Why a view exists
+- How a score was formed at a user-understandable level
+- Why an asset ranked where it ranked
+- Why an asset did not qualify when it is excluded
 - Which risks matter
 - What could invalidate the view
 - How confident the system is
@@ -69,6 +72,8 @@ Catalysts are useful only when supported by evidence.
 
 Risk penalties protect users from confusing excitement with quality.
 
+Opportunity discovery must remain inspectable. A ranked candidate should show why it appeared, how the score reconciles, what risks reduced it, what evidence is incomplete, and why the rank is appropriate. A non-ranked candidate should explain why it did not qualify without triggering a hidden scan or fabricating evidence.
+
 ## User Trust
 
 Trust is the product.
@@ -86,6 +91,7 @@ Market Pulse AI commits to:
 - Zero Mock Policy
 - Explainable AI
 - Evidence-based opportunity discovery
+- Transparent algorithm governance
 - Conservative financial language
 - Human decision authority
 - Documentation as part of Definition of Done

@@ -93,6 +93,8 @@ For Penny Opportunities, every ranked item must also show market-aware classific
 
 Opportunity engines must use the shared Opportunity Engine Framework so future categories inherit the same standards for version metadata, deterministic ranking, snapshot publication, confidence separation, completeness disclosure, and failure transparency.
 
+Transparent Intelligence extends this standard: every active opportunity algorithm must expose an Algorithm Card, score formula, factor rationale, risk deductions, confidence and completeness explanation, ranking reason, Why Not explanation, version metadata, and change history.
+
 ## User Understanding
 
 Users should understand every score and recommendation well enough to challenge it.

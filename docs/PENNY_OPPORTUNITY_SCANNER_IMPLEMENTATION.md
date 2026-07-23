@@ -152,6 +152,14 @@ The endpoint returns:
 
 Each item contains rank, symbol, market, exchange, currency, classification, price, scores, risk flags, missing data, catalyst evidence, explanation, timestamp, and provider attribution.
 
+Transparent Intelligence endpoints:
+
+- `GET /api/opportunities/penny/algorithm` returns the cacheable Penny Algorithm Card.
+- `GET /api/opportunities/penny/explain/{symbol}` returns snapshot-derived score reconciliation and ranking explanation.
+- `GET /api/opportunities/penny/why-not/{symbol}` returns snapshot-derived exclusion status without starting a scan.
+
+Candidate explanations include raw positive score, factor contributions, total risk penalty, final score reconciliation, confidence explanation, completeness explanation, and ranking explanation.
+
 ## UI Behavior
 
 The frontend adds a Penny Opportunities section inside the existing Today's Opportunities area. Cards are fully clickable and use the existing selected-asset state path:

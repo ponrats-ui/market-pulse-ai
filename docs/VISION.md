@@ -57,10 +57,11 @@ Future Market Pulse AI should include:
 - Explainable Discovery AI
 - Cross-Market Intelligence
 - Early Opportunity Detection
+- Transparent Intelligence
 
 Market Pulse AI does not search for cheap stocks. It searches for asymmetric opportunities.
 
-Price is only one signal. Every opportunity must be supported by evidence, risk context, catalyst analysis, and confidence disclosure.
+Price is only one signal. Every opportunity must be supported by evidence, risk context, catalyst analysis, confidence disclosure, and a clear explanation of why it appeared or why it did not qualify.
 
 ## Product DNA
 
@@ -84,6 +85,7 @@ The permanent Product DNA is documented in [PRODUCT_DNA.md](PRODUCT_DNA.md) and 
 - Context-aware intelligence
 - Zero Mock Policy
 - Long-term maintainability
+- Algorithm transparency
 
 These values should guide product decisions, engineering decisions, design decisions, and release decisions.
 
@@ -126,6 +128,8 @@ PIA should eventually understand the user's watchlist, portfolio context, risk p
 ### Explainable AI Leadership
 
 Market Pulse AI should set a high standard for financial AI transparency. Users should understand why an output exists, what evidence supports it, what is missing, and what could change the conclusion.
+
+Opportunity discovery must be transparent by design: users should be able to inspect the algorithm purpose, active factor model, score reconciliation, ranking reason, risk penalties, confidence, data completeness, and exclusion reason without treating the system as a black box.
 
 ## Product Standard
 

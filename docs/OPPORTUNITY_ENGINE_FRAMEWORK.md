@@ -245,3 +245,15 @@ To add a future engine:
 11. Enable scheduler entry after validation.
 
 No future engine should be enabled without an Algorithm Card and explainability coverage.
+
+## Transparent Intelligence
+
+Every enabled engine must also pass Algorithm Transparency validation. The Penny engine validates its Algorithm Definition before registration. If objective, hypothesis, factor labels, factor rationale, version metadata, limitations, non-claims, or factor-weight consistency are missing, the engine must not activate.
+
+Reference documents:
+
+- `docs/ALGORITHM_TRANSPARENCY_FRAMEWORK.md`
+- `docs/ALGORITHM_LAB.md`
+- `docs/WHY_THIS_EXPLANATION.md`
+- `docs/WHY_NOT_EXPLANATION.md`
+- `docs/ALGORITHM_GOVERNANCE.md`

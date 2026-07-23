@@ -115,6 +115,8 @@ AI should answer:
 
 Primary reference: [EXPLAINABLE_AI.md](EXPLAINABLE_AI.md)
 
+Transparent Intelligence extends Explainable AI into opportunity discovery. Every registered opportunity algorithm should expose its identity, objective, hypothesis, active factors, scoring formula, risk penalties, confidence model, data completeness model, ranking policy, limitations, non-claims, and change history at a level users can understand without revealing proprietary implementation details.
+
 ## 9. Zero Mock Policy
 
 Production must never display fabricated market data, charts, scores, news, financial values, indicators, or recommendations as real.
@@ -185,6 +187,8 @@ Opportunity Ranking should prioritize assets for research using opportunity stre
 
 The RC2 Penny Opportunity Scanner implements this principle for low-priced Thailand and United States equities where the current provider stack exposes sufficient real data. It is the first registered engine on the shared Opportunity Engine Framework, which standardizes scheduling, snapshot publication, deterministic ranking, confidence separation, completeness disclosure, and failure fallback. See `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`.
 
+RC3 adds the Transparent Intelligence layer for this engine. Users and reviewers can inspect the Penny Opportunity Algorithm card, see score reconciliation for ranked candidates, understand why a candidate appeared, and request a Why Not explanation for symbols that did not qualify in the latest snapshot. This layer keeps opportunity discovery auditable while preserving the Zero Mock Policy.
+
 ### Multi-Bagger Similarity
 
 Multi-Bagger Similarity compares current companies against historical high-growth companies such as NVIDIA, AMD, Netflix, Monster Beverage, Tesla, and Shopify.
@@ -194,6 +198,8 @@ The engine does not predict future winners. It identifies companies sharing meas
 ### Explainable AI
 
 Every discovered opportunity must explain why it appeared, which evidence supported it, what risks reduced it, what data is unavailable, what could invalidate it, and why confidence is high, medium, or low.
+
+Every excluded opportunity should also explain why it did not appear when the user asks, using only the latest completed snapshot and transparent unavailable states.
 
 ### Future Expansion
 

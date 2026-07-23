@@ -8,14 +8,18 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Added
 
+- Transparent Intelligence framework with Penny Algorithm Definition, activation validation, score reconciliation, ranking explanation, and Why Not snapshot explanations.
+- Penny algorithm endpoints for methodology, candidate score explanation, and Why Not analysis.
 - Explainable Penny Opportunity Scanner for Thailand and United States low-priced equity discovery across the complete supported lightweight registry universe.
 - `GET /api/opportunities/penny` endpoint with hourly backend scan snapshots, market-aware classification, risk penalties, data confidence, missing-data disclosure, and provider attribution.
 - Penny Opportunities UI section inside Today's Opportunities with a visible Thai/English risk warning and full-card selected-asset navigation.
 - Shared Opportunity Engine Framework with reusable engine contracts, registry, deterministic ranking, scheduler shell, and atomic snapshot store for future opportunity categories.
+- Penny UI score breakdown panel with Algorithm Lab, factor contributions, risk penalty reconciliation, missing evidence, and rank rationale.
 
 ### Documentation
 
 - Added `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, then linked the framework and scanner across roadmap, product bible, AI architecture, scoring, and explainability docs.
+- Added Algorithm Transparency, Algorithm Lab, Why This, Why Not, Algorithm Governance, and Penny Algorithm documentation.
 
 ## [1.0.0-rc1] - 2026-07-18
 

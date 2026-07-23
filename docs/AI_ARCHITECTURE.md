@@ -47,6 +47,7 @@ The discovery engine must preserve the separation between:
 - Similarity evidence
 - Confidence
 - Educational recommendation
+- Algorithm explanation and version governance
 
 Opportunity discovery must never become a black-box signal.
 

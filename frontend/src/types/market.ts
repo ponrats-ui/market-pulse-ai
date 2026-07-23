@@ -50,8 +50,25 @@ export interface PennyOpportunityItem {
   missing_data: string[];
   catalysts: PennyCatalyst[];
   explanation: { th: string; en: string };
+  score_explanation?: Record<string, unknown>;
+  score_breakdown?: {
+    raw_positive_score: number;
+    total_risk_penalty: number;
+    final_score_before_bound: number;
+    factor_contributions: Array<{ factor_id: string; raw_score: number | null; weight: number; weighted_contribution: number; status: string; missing: boolean }>;
+    risk_penalties: Array<Record<string, string | number | null>>;
+    missing_evidence: string[];
+    rounding_policy: string;
+    score_version: string;
+    config_version: string;
+  };
+  confidence_explanation?: Record<string, unknown>;
+  completeness_explanation?: { score?: number; available?: string[]; missing?: string[]; statement_en?: string; statement_th?: string };
+  ranking_explanation?: { rank: number; final_score: number; score_gap_to_previous: number | null; score_gap_to_next: number | null; tie_breaker_used: string | null; ranking_reason_en: string; ranking_reason_th: string; non_suitability_note_en: string; non_suitability_note_th: string };
   provider_attribution: string[];
 }
+export interface PennyAlgorithmResponse { status: string; algorithm: { identity: Record<string, unknown>; objective: { th: string; en: string }; hypothesis: { th: string; en: string }; factors: Array<Record<string, unknown>>; risks: Array<Record<string, unknown>>; score_formula: Record<string, unknown>; confidence: Record<string, unknown>; completeness: Record<string, unknown>; ranking: Record<string, unknown>; limitations: Array<{ th: string; en: string }>; non_claims: Array<{ th: string; en: string }>; change_history: Array<Record<string, unknown>> }; validation: { valid: boolean; errors: string[]; warnings?: string[] }; cache?: Record<string, unknown>; disclaimer: string; }
+export interface PennyCandidateExplanationResponse { status: string; symbol: string; score_explanation?: Record<string, unknown>; score_breakdown?: PennyOpportunityItem['score_breakdown']; risk_explanation?: PennyRiskFlag[]; confidence_explanation?: Record<string, unknown>; completeness_explanation?: PennyOpportunityItem['completeness_explanation']; ranking_explanation?: PennyOpportunityItem['ranking_explanation']; why_not?: Record<string, unknown>; disclaimer: string; }
 export interface PennyOpportunitiesResponse {
   status: 'running' | 'ok' | 'partial' | 'unavailable' | string;
   category: 'penny_opportunity' | string;

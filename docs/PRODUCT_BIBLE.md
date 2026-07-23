@@ -401,3 +401,17 @@ For future work, Definition of Done includes:
 - Founder review can evaluate the change without hidden assumptions.
 
 After this sprint, the repository contains a complete product knowledge base. Future work should focus on product development and maintain these foundational documents instead of creating unnecessary parallel documentation.
+
+## Trust Foundation Update
+
+The Product Bible adopts the Trust Foundation as a permanent governance layer. Scores and rankings must be explainable, evidence-based, neutral, and non-directive. Missing data must remain visible. Commercial influence, popularity signals, and hidden editorial preference must not affect algorithmic rank.
+
+Primary references:
+
+- [Trust Foundation](TRUST_FOUNDATION.md)
+- [Algorithm Neutrality](ALGORITHM_NEUTRALITY.md)
+- [Evidence Integrity Policy](EVIDENCE_INTEGRITY_POLICY.md)
+- [Uncertainty Disclosure Policy](UNCERTAINTY_DISCLOSURE_POLICY.md)
+- [Ranking Integrity Policy](RANKING_INTEGRITY_POLICY.md)
+- [Conflict of Interest Policy](CONFLICT_OF_INTEREST_POLICY.md)
+- [Decision Boundary](DECISION_BOUNDARY.md)

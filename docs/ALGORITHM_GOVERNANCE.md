@@ -22,3 +22,14 @@ Every scoring or methodology change must update:
 ## Activation Validation
 
 An engine cannot register if required transparency metadata is missing or if documented factor weights drift from active scoring configuration.
+
+## Trust Foundation Update
+
+Algorithm governance now requires trust review before production activation. Any scoring or ranking change must validate:
+
+- Neutrality exclusions.
+- Evidence metadata.
+- Uncertainty disclosure.
+- Conflict-of-interest boundaries.
+- Ranking integrity.
+- Decision-boundary language.

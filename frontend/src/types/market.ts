@@ -61,14 +61,19 @@ export interface PennyOpportunityItem {
     rounding_policy: string;
     score_version: string;
     config_version: string;
+    trust_policy_version?: string;
   };
   confidence_explanation?: Record<string, unknown>;
   completeness_explanation?: { score?: number; available?: string[]; missing?: string[]; statement_en?: string; statement_th?: string };
   ranking_explanation?: { rank: number; final_score: number; score_gap_to_previous: number | null; score_gap_to_next: number | null; tie_breaker_used: string | null; ranking_reason_en: string; ranking_reason_th: string; non_suitability_note_en: string; non_suitability_note_th: string };
+  uncertainty_disclosure?: Record<string, unknown>;
+  evidence_integrity?: Array<Record<string, unknown>>;
+  trust?: TrustMetadata;
   provider_attribution: string[];
 }
-export interface PennyAlgorithmResponse { status: string; algorithm: { identity: Record<string, unknown>; objective: { th: string; en: string }; hypothesis: { th: string; en: string }; factors: Array<Record<string, unknown>>; risks: Array<Record<string, unknown>>; score_formula: Record<string, unknown>; confidence: Record<string, unknown>; completeness: Record<string, unknown>; ranking: Record<string, unknown>; limitations: Array<{ th: string; en: string }>; non_claims: Array<{ th: string; en: string }>; change_history: Array<Record<string, unknown>> }; validation: { valid: boolean; errors: string[]; warnings?: string[] }; cache?: Record<string, unknown>; disclaimer: string; }
-export interface PennyCandidateExplanationResponse { status: string; symbol: string; score_explanation?: Record<string, unknown>; score_breakdown?: PennyOpportunityItem['score_breakdown']; risk_explanation?: PennyRiskFlag[]; confidence_explanation?: Record<string, unknown>; completeness_explanation?: PennyOpportunityItem['completeness_explanation']; ranking_explanation?: PennyOpportunityItem['ranking_explanation']; why_not?: Record<string, unknown>; disclaimer: string; }
+export interface TrustMetadata { evidence_based?: boolean; methodology_inspectable?: boolean; score_is_not_probability?: boolean; confidence_is_not_profit_probability?: boolean; completeness_is_not_investment_quality?: boolean; user_decision_required?: boolean; commercial_influence_on_ranking?: boolean; engagement_influence_on_ranking?: boolean; popularity_influence_on_ranking?: boolean; editorial_influence_on_ranking?: boolean; limitations_visible?: boolean; uncertainty_visible?: boolean; trust_policy_version?: string; decision_boundary?: { th?: string; en?: string }; compact_disclosure?: { th?: string; en?: string }; founder_trust_statement?: { th?: string; en?: string }; }
+export interface PennyAlgorithmResponse { status: string; algorithm: { identity: Record<string, unknown>; objective: { th: string; en: string }; hypothesis: { th: string; en: string }; factors: Array<Record<string, unknown>>; risks: Array<Record<string, unknown>>; score_formula: Record<string, unknown>; confidence: Record<string, unknown>; completeness: Record<string, unknown>; ranking: Record<string, unknown>; trust?: Record<string, unknown>; limitations: Array<{ th: string; en: string }>; non_claims: Array<{ th: string; en: string }>; change_history: Array<Record<string, unknown>> }; trust?: TrustMetadata; validation: { valid: boolean; errors: string[]; warnings?: string[] }; cache?: Record<string, unknown>; disclaimer: string; }
+export interface PennyCandidateExplanationResponse { status: string; symbol: string; score_explanation?: Record<string, unknown>; score_breakdown?: PennyOpportunityItem['score_breakdown']; risk_explanation?: PennyRiskFlag[]; confidence_explanation?: Record<string, unknown>; completeness_explanation?: PennyOpportunityItem['completeness_explanation']; ranking_explanation?: PennyOpportunityItem['ranking_explanation']; trust?: TrustMetadata; why_not?: Record<string, unknown>; disclaimer: string; }
 export interface PennyOpportunitiesResponse {
   status: 'running' | 'ok' | 'partial' | 'unavailable' | string;
   category: 'penny_opportunity' | string;
@@ -84,6 +89,7 @@ export interface PennyOpportunitiesResponse {
   score_version?: string;
   policy_version?: string;
   configuration_version: string;
+  trust?: TrustMetadata;
   generated_at: string;
   scan?: {
     snapshot_id?: string | null;

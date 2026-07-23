@@ -78,6 +78,26 @@ Opportunity discovery must remain inspectable. A ranked candidate should show wh
 
 Trust is the product.
 
+## Our Commitment to Users
+
+We do not ask users to trust a score without seeing why it exists.
+
+Every ranking must be supported by declared evidence, declared methodology, visible risk, visible uncertainty, and a clear decision boundary.
+
+Market Pulse AI ranks assets from evidence and published methodology, not from advertising, popularity, commercial preference, or hidden editorial influence.
+
+We accept uncertainty rather than manufacturing confidence that evidence cannot support.
+
+## คำมั่นสัญญาต่อผู้ใช้
+
+เราไม่ขอให้ผู้ใช้เชื่อคะแนนโดยไม่เห็นที่มาของคะแนน
+
+ทุกการจัดอันดับต้องมีหลักฐาน วิธีคำนวณ ความเสี่ยง ความไม่แน่นอน และขอบเขตการตัดสินใจที่มองเห็นได้
+
+เราจัดอันดับสินทรัพย์จากหลักฐานและวิธีคำนวณที่ประกาศไว้ ไม่ใช่จากโฆษณา ความนิยม หรือผลประโยชน์ทางการค้า
+
+เรายอมรับความไม่แน่นอน มากกว่าสร้างความมั่นใจที่ไม่มีหลักฐานรองรับ
+
 Every feature, score, chart, panel, and AI response should protect user trust by being honest, explainable, and disciplined.
 
 The product should help users become better investors, not more impulsive ones.

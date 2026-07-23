@@ -104,3 +104,9 @@ The product should not ask users to trust unexplained outputs. It should teach u
 ## Trust Boundaries
 
 Explainable AI does not mean exposing proprietary implementation details. It means showing enough reasoning, evidence categories, limitations, and uncertainty for the user to understand the product's output.
+
+## Trust Foundation Update
+
+Explainable AI must include evidence integrity, uncertainty disclosure, and a visible decision boundary. The system may summarize, compare, and interpret evidence, but it must not hide missing data or convert confidence into a profit claim.
+
+See [Trust Foundation](TRUST_FOUNDATION.md), [Evidence Integrity Policy](EVIDENCE_INTEGRITY_POLICY.md), and [Decision Boundary](DECISION_BOUNDARY.md).

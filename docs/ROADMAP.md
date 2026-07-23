@@ -180,3 +180,7 @@ Long-term work should expand only when quality, reliability, explainability, and
 - Keep evidence above opinion.
 - Keep user trust above feature count.
 - Keep maintainability above shortcuts.
+
+## Trust Foundation Milestone
+
+The Trust Foundation establishes a permanent release gate for evidence integrity, neutrality, uncertainty disclosure, conflict-of-interest safeguards, ranking integrity, and decision boundaries. Future roadmap items must update trust documents when they change scoring, ranking, provider behavior, or AI explanations.

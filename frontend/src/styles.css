@@ -2461,6 +2461,31 @@ option { background: #0a101c; color: #d9e7ff; }
   font-size: 0.82rem;
   line-height: 1.55;
 }
+.penny-trust-disclosure {
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  border-left: 3px solid rgba(34, 211, 238, 0.72);
+  border-radius: 0.55rem;
+  background: rgba(8, 47, 73, 0.36);
+  padding: 0.62rem 0.75rem;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.penny-trust-disclosure b {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #67e8f9;
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.penny-trust-disclosure p {
+  margin: 0 0 0.2rem;
+}
+.penny-trust-disclosure small {
+  color: #94a3b8;
+}
 .penny-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

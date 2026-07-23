@@ -212,3 +212,9 @@ Every score should explain:
 - Confidence versus opportunity distinction
 
 Scores should support investor judgment, not replace it.
+
+## Trust Foundation Update
+
+Scores must be interpreted as model outputs from declared evidence and declared weights. They must not be described as probability of profit, guaranteed return, investment quality, or personal suitability.
+
+Confidence measures evidence reliability. Completeness measures evidence availability. Neither should be merged into the score meaning.

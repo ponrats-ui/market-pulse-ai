@@ -257,3 +257,7 @@ Reference documents:
 - `docs/WHY_THIS_EXPLANATION.md`
 - `docs/WHY_NOT_EXPLANATION.md`
 - `docs/ALGORITHM_GOVERNANCE.md`
+
+## Trust Foundation Update
+
+New opportunity engines must implement trust disclosure before production activation. The framework expects engines to publish evidence integrity, neutrality, uncertainty, conflict-of-interest, ranking integrity, and decision-boundary metadata with their methodology.

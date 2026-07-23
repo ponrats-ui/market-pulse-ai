@@ -41,3 +41,16 @@ Missing data reduces confidence or completeness. It is not replaced with synthet
 - Does not predict future returns.
 - High rank does not guarantee price appreciation.
 - Provider data may be delayed, incomplete, or incorrect.
+
+## Trust Foundation
+
+The Penny Opportunity Algorithm now publishes `trust-policy-v1` with:
+
+- Evidence integrity metadata.
+- Algorithm neutrality declarations.
+- Uncertainty disclosure.
+- Conflict-of-interest safeguards.
+- Ranking integrity policy.
+- Decision-boundary disclosure.
+
+The Penny Opportunity Score is a ranking heuristic over available evidence. It is not a probability of profit, not a personal suitability score, and not a buy or sell recommendation.

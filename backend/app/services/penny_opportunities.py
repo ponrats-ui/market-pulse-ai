@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Literal
 from uuid import uuid4
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
-from app.opportunities.models import AlgorithmChangeRecord, AlgorithmDefinition, AlgorithmFactorDefinition, AlgorithmIdentity, AlgorithmRiskDefinition, AlgorithmTextBlock, OpportunityEngineDefinition, OpportunityEngineRuntime
+from app.opportunities.models import AlgorithmChangeRecord, AlgorithmDefinition, AlgorithmFactorDefinition, AlgorithmIdentity, AlgorithmNeutralityDeclaration, AlgorithmRiskDefinition, AlgorithmTextBlock, ConflictOfInterestPolicy, DecisionBoundaryPolicy, EvidenceIntegrityPolicy, OpportunityEngineDefinition, OpportunityEngineRuntime, ProviderLimitationDisclosure, RankingIntegrityPolicy, TrustDisclosure, TrustPrinciple, UncertaintyDisclosurePolicy
 from app.opportunities.ranking import rank_candidates
 from app.opportunities.registry import register_engine
 from app.opportunities.scheduler import OpportunityScheduler
@@ -26,6 +26,7 @@ METHODOLOGY_VERSION = "penny-opportunity-v1"
 POLICY_VERSION = "penny-policy-v1"
 CONFIGURATION_VERSION = "penny-config-v1"
 SCORE_VERSION = "penny-score-v1"
+TRUST_POLICY_VERSION = "trust-policy-v1"
 SCAN_FREQUENCY_MINUTES = 60
 SCAN_MAX_WORKERS = max(1, min(int(os.getenv("PENNY_SCAN_MAX_WORKERS", "6")), 12))
 _DEFAULT_SNAPSHOT_KEY = ("ALL", 5)
@@ -152,6 +153,97 @@ PENNY_ENGINE_DEFINITION = OpportunityEngineDefinition(
 )
 
 
+def build_penny_trust_disclosure() -> TrustDisclosure:
+    principles = [
+        TrustPrinciple("evidence_over_opinion", "หลักฐานมาก่อนความเห็น", "Evidence over Opinion", "ระบบให้ความสำคัญกับหลักฐานมากกว่าความเห็นหรือกระแส", "Evidence takes priority over opinion and market hype."),
+        TrustPrinciple("transparency_over_mystery", "ความโปร่งใสมาก่อนความลึกลับ", "Transparency over Mystery", "ระบบต้องอธิบายวิธีคิด ไม่ขอให้ผู้ใช้เชื่อคะแนนโดยไม่มีที่มา", "The system explains methodology rather than asking users to trust unexplained results."),
+        TrustPrinciple("assist_never_decide", "ช่วยวิเคราะห์ ไม่ตัดสินใจแทน", "Assist, Never Decide", "ระบบช่วยสนับสนุนการตัดสินใจลงทุน แต่ไม่ตัดสินใจแทนนักลงทุน", "The system supports investment decisions. It never makes them for the investor."),
+        TrustPrinciple("explain_every_score", "ทุกคะแนนต้องอธิบายได้", "Every Score Must Earn Its Explanation", "ทุกคะแนนต้องมีหลักฐาน องค์ประกอบ วิธีคำนวณ และเหตุผลที่ตรวจสอบได้", "Every score must be supported by inspectable evidence, components, calculations, and rationale."),
+        TrustPrinciple("visible_risk", "ความเสี่ยงต้องมองเห็นได้", "Every Risk Must Be Visible", "ระบบต้องแสดงความเสี่ยงควบคู่กับโอกาสเสมอ", "Every opportunity must display its material risks."),
+        TrustPrinciple("visible_uncertainty", "ไม่ซ่อนความไม่แน่นอน", "Uncertainty Must Never Be Hidden", "ข้อมูลที่ขาด ล่าช้า ไม่ครบ หรือผู้ให้บริการล้มเหลวต้องแสดงอย่างตรงไปตรงมา", "Uncertainty, missing data, stale evidence, and provider failures must remain visible."),
+    ]
+    neutrality = AlgorithmNeutralityDeclaration(
+        considers=["price", "volume", "history", "available fundamentals", "provider-reported catalysts", "risk flags", "market context"],
+        does_not_consider=["advertising", "sponsorship", "affiliate relationships", "broker relationships", "asset issuer payments", "user engagement", "page popularity", "watchlist popularity", "social engagement", "developer preference", "Founder preference", "provider promotional placement"],
+        ranking_influences=PENNY_ENGINE_DEFINITION.tie_breaker_policy,
+        ranking_exclusions=["advertising", "sponsorship", "affiliate relationships", "broker relationships", "asset issuer payments", "user click-through rate", "page popularity", "watchlist popularity", "social engagement", "developer preference", "Founder preference", "provider promotional placement"],
+        sponsored_or_commercial_factors_exist=False,
+        user_engagement_affects_scoring=False,
+        asset_popularity_affects_scoring=False,
+        editorial_opinion_affects_scoring=False,
+        methodology_assumptions=["Available provider fields are used consistently.", "Missing fields reduce confidence and completeness instead of being fabricated.", "Penny opportunity score is a ranking heuristic, not a return model."],
+        known_limitations=["Provider coverage varies by market and symbol.", "Catalyst evidence exists only when a configured provider returns verifiable items.", "The algorithm cannot determine personal suitability."],
+        version_identifiers={"methodology": METHODOLOGY_VERSION, "score": SCORE_VERSION, "policy": POLICY_VERSION, "config": CONFIGURATION_VERSION, "trust": TRUST_POLICY_VERSION},
+    )
+    return TrustDisclosure(
+        trust_policy_version=TRUST_POLICY_VERSION,
+        principles=principles,
+        neutrality=neutrality,
+        evidence_integrity=EvidenceIntegrityPolicy(
+            required_metadata=["evidence_id", "evidence_type", "provider", "source_timestamp", "retrieval_timestamp", "freshness_status", "availability_status", "verification_status", "supported_factor", "candidate_symbol", "transformation_summary", "data_limitations"],
+            allowed_availability_statuses=["available", "partial", "unavailable", "stale", "failed", "unsupported"],
+            allowed_verification_statuses=["verified", "provider_reported", "inferred", "unverified", "conflicting"],
+            inferred_evidence_rule="Inferred evidence must be labeled inferred and must not be described as verified fact.",
+            conflicting_evidence_rule="Conflicting evidence must remain visible and reduce confidence when material.",
+        ),
+        uncertainty=UncertaintyDisclosurePolicy(
+            disclosed_conditions=["missing evidence", "stale evidence", "conflicting evidence", "unsupported evidence", "provider failures", "incomplete financial periods", "insufficient historical coverage", "weak catalyst verification", "uncertain risk status", "fallback use"],
+            statement_th="ระบบพบข้อมูลไม่เพียงพอสำหรับข้อสรุปบางส่วน",
+            statement_en="The system has insufficient evidence for some parts of this assessment.",
+            false_precision_rule="Display whole-number scores and explain that small score gaps may not be meaningful.",
+        ),
+        conflict_of_interest=ConflictOfInterestPolicy(
+            current_commercial_relationships="No sponsored, affiliate, broker, issuer-payment, or paid-placement influence is implemented for this engine.",
+            sponsored_content_score_impact_allowed=False,
+            commercial_relationship_rank_impact_allowed=False,
+            paid_placement_in_rankings_allowed=False,
+            future_sponsored_content_rule="Sponsored educational content, if ever introduced, must be labeled and visually separated from algorithmic rankings.",
+            financial_interest_disclosure_rule="Material financial interests held by the company, Founder, or contributors must be disclosed where relevant.",
+            configuration_change_rule="Algorithm configuration changes must not be made to favor a specific asset.",
+            reproducibility_rule="Ranking output must be reproducible from declared methodology, active configuration, and scan evidence.",
+        ),
+        ranking_integrity=RankingIntegrityPolicy(
+            declared_ranking_inputs=PENNY_ENGINE_DEFINITION.tie_breaker_policy,
+            manual_override_supported=False,
+            manual_override_rules=["Manual ranking intervention is not implemented. If supported later it must be visible, timestamped, include an authorized actor and reason, and preserve the original algorithmic rank."],
+            prohibited_influences=["advertising", "sponsorship", "recently clicked symbols", "watchlist popularity", "social engagement", "team ownership", "manual reordering", "suppressed negative evidence", "hidden risk penalties"],
+            original_rank_preservation_required=True,
+        ),
+        decision_boundary=DecisionBoundaryPolicy(
+            statement_th="ระบบช่วยวิเคราะห์ แต่การตัดสินใจเป็นของคุณ",
+            statement_en="The system supports your analysis. The decision remains yours.",
+            prohibited_phrases=["guaranteed", "certain", "must buy", "must sell", "sure profit", "risk-free", "best investment", "high chance of profit"],
+            non_directive_actions=["research further", "monitor", "compare", "review risks", "wait for more evidence"],
+        ),
+        provider_limitations=[
+            ProviderLimitationDisclosure("yfinance", ["Quote, history, and fundamentals coverage may vary by asset.", "Provider fields may be delayed, partial, unavailable, or stale."], "latest available provider snapshot with stale status disclosed", "Provider failure is reported as unavailable, failed, or partial instead of being fabricated."),
+            ProviderLimitationDisclosure("configured_news", ["Catalyst coverage is optional and may be absent."], "provider-published timestamp when available", "Missing catalyst provider data is shown as missing evidence."),
+        ],
+        score_interpretation={
+            "represents": ["relative alignment with engine methodology", "available evidence at snapshot time", "declared version and configuration"],
+            "does_not_represent": ["guaranteed return", "probability of profit", "expected return", "personal suitability", "portfolio allocation recommendation", "certainty of price appreciation", "absence of risk", "intrinsic value", "future performance prediction"],
+            "rounding_policy": "whole-number display; internal weighted contributions remain reproducible",
+            "small_gap_policy": "Differences inside a small score margin may not be materially meaningful.",
+        },
+        confidence_interpretation={
+            "represents": ["evidence availability", "freshness", "consistency", "provider coverage", "verification quality"],
+            "does_not_represent": ["probability of profit", "recommendation strength", "market certainty", "price forecast confidence", "suitability for the user"],
+        },
+        completeness_interpretation={
+            "represents": ["expected evidence availability", "covered evidence groups", "missing expected inputs"],
+            "does_not_represent": ["business quality", "investment quality", "investment attractiveness", "probability of success", "recommendation confidence"],
+        },
+        compact_disclosure=AlgorithmTextBlock(
+            th="คะแนนนี้เกิดจากข้อมูลที่มีและอัลกอริทึมเวอร์ชันที่ระบุ ไม่ใช่คำแนะนำให้ซื้อหรือขาย และระบบไม่ตัดสินใจแทนคุณ",
+            en="This score is based on available evidence and the stated algorithm version. It is not a buy or sell recommendation, and the system does not decide for you.",
+        ),
+        founder_trust_statement=AlgorithmTextBlock(
+            th="เรายอมรับความไม่แน่นอน มากกว่าสร้างความมั่นใจที่ไม่มีหลักฐานรองรับ",
+            en="We would rather admit uncertainty than manufacture certainty.",
+        ),
+    )
+
+
 def build_penny_algorithm_definition() -> AlgorithmDefinition:
     identity = AlgorithmIdentity(
         engine_id=PENNY_ENGINE_DEFINITION.engine_id,
@@ -217,6 +309,7 @@ def build_penny_algorithm_definition() -> AlgorithmDefinition:
             AlgorithmTextBlock("อันดับสูงไม่รับประกันว่าราคาจะปรับขึ้น", "A higher rank does not guarantee price appreciation."),
         ],
         change_history=[AlgorithmChangeRecord("penny-opportunity-v1", "2026-07-23", "Initial transparent Penny Opportunity methodology.", "Introduces score-first ranking, risk penalties, confidence, completeness, and explainable Top 5 output.")],
+        trust=build_penny_trust_disclosure(),
     )
 
 
@@ -375,6 +468,7 @@ def build_penny_opportunities(
         "score_version": PENNY_ENGINE_DEFINITION.score_version,
         "policy_version": PENNY_ENGINE_DEFINITION.policy_version,
         "configuration_version": PENNY_ENGINE_DEFINITION.config_version,
+        "trust": _trust_api_metadata(),
         "generated_at": completed_iso,
         "scan": {
             "snapshot_id": scan_id,
@@ -559,6 +653,7 @@ def get_penny_algorithm_definition() -> Dict[str, Any]:
     return {
         "status": "ok" if validation["valid"] else "failed",
         "algorithm": definition,
+        "trust": _trust_api_metadata(),
         "validation": validation,
         "cache": {"cacheable": True, "recommended_ttl_seconds": 3600},
         "disclaimer": "This is not financial advice.",
@@ -579,12 +674,14 @@ def get_penny_candidate_explanation(symbol: str) -> Dict[str, Any]:
                 "symbol": item.get("symbol"),
                 "engine": snapshot.get("engine"),
                 "scan": snapshot.get("scan"),
+                "trust": _trust_api_metadata(),
                 "score_explanation": item.get("score_explanation"),
                 "score_breakdown": item.get("score_breakdown"),
                 "risk_explanation": item.get("risks", []),
                 "confidence_explanation": item.get("confidence_explanation"),
                 "completeness_explanation": item.get("completeness_explanation"),
                 "ranking_explanation": item.get("ranking_explanation"),
+                "trust": _trust_api_metadata(),
                 "disclaimer": "This is not financial advice.",
             }
     why_not = get_penny_why_not(symbol)
@@ -607,13 +704,36 @@ def get_penny_why_not(symbol: str) -> Dict[str, Any]:
     index = snapshot.get("why_not_index") or {}
     row = index.get(requested)
     if row:
-        return {**row, "scan": snapshot.get("scan")}
+        return {**row, "scan": snapshot.get("scan"), "trust": _trust_api_metadata()}
     return {
         "status": "not_in_universe",
         "symbol": symbol,
         "explanation_en": "This symbol is not present in the bounded Why Not index for the latest snapshot. The endpoint does not trigger a new scan.",
         "explanation_th": "ไม่พบสัญลักษณ์นี้ใน Why Not index ของ snapshot ล่าสุด endpoint นี้ไม่เริ่มการสแกนใหม่",
         "scan": snapshot.get("scan"),
+        "trust": _trust_api_metadata(),
+    }
+
+
+def _trust_api_metadata() -> Dict[str, Any]:
+    trust = PENNY_ALGORITHM_DEFINITION.trust
+    return {
+        "evidence_based": True,
+        "methodology_inspectable": True,
+        "score_is_not_probability": True,
+        "confidence_is_not_profit_probability": True,
+        "completeness_is_not_investment_quality": True,
+        "user_decision_required": True,
+        "commercial_influence_on_ranking": trust.neutrality.sponsored_or_commercial_factors_exist,
+        "engagement_influence_on_ranking": trust.neutrality.user_engagement_affects_scoring,
+        "popularity_influence_on_ranking": trust.neutrality.asset_popularity_affects_scoring,
+        "editorial_influence_on_ranking": trust.neutrality.editorial_opinion_affects_scoring,
+        "limitations_visible": True,
+        "uncertainty_visible": True,
+        "trust_policy_version": trust.trust_policy_version,
+        "decision_boundary": {"th": trust.decision_boundary.statement_th, "en": trust.decision_boundary.statement_en},
+        "compact_disclosure": {"th": trust.compact_disclosure.th, "en": trust.compact_disclosure.en},
+        "founder_trust_statement": {"th": trust.founder_trust_statement.th, "en": trust.founder_trust_statement.en},
     }
 
 
@@ -634,6 +754,7 @@ def _empty_snapshot(status: str, reason: str, failure: Dict[str, Any] | None = N
         "score_version": PENNY_ENGINE_DEFINITION.score_version,
         "policy_version": PENNY_ENGINE_DEFINITION.policy_version,
         "configuration_version": PENNY_ENGINE_DEFINITION.config_version,
+        "trust": _trust_api_metadata(),
         "generated_at": now.isoformat(),
         "scan": {
             "snapshot_id": None,
@@ -785,6 +906,9 @@ def evaluate_candidate(
         "score_breakdown": score_breakdown,
         "confidence_explanation": _confidence_explanation(confidence, completeness, liquidity, financial, growth, technical, catalyst, risk_flags),
         "completeness_explanation": _completeness_explanation(completeness, quote, history, catalyst),
+        "uncertainty_disclosure": _uncertainty_disclosure(missing_data, provider_status, [*hard_flags, *risk_flags]),
+        "evidence_integrity": _evidence_integrity_records(symbol, quote, history, catalyst, provider_status),
+        "trust": _trust_api_metadata(),
         "provider_attribution": _provider_attribution(quote, history, catalyst),
         "provider_status": provider_status,
         "hard_disqualified": hard_disqualified,
@@ -1079,8 +1203,12 @@ def _score_breakdown(factor_scores: Dict[str, Any], risk_penalty: int, risks: Li
         "risk_penalties": risk_penalties,
         "final_score_before_bound": round(final_before_bound, 2),
         "rounding_policy": "round weighted positive score minus risk penalty, then bound to 0-100",
+        "display_precision": "whole_number",
+        "small_gap_policy": "Score differences inside a small configured margin should not be treated as materially superior.",
+        "small_gap_margin_points": 3,
         "score_version": SCORE_VERSION,
         "config_version": CONFIGURATION_VERSION,
+        "trust_policy_version": TRUST_POLICY_VERSION,
         "missing_evidence": sorted(set(missing_data)),
     }
 
@@ -1144,6 +1272,51 @@ def _completeness_explanation(completeness: int, quote: Dict[str, Any], history:
         "missing": [key for key, ok in checks.items() if not ok],
         "statement_en": "Completeness shows which evidence groups were available, missing, stale, or failed.",
         "statement_th": "ความครบถ้วนแสดงว่ากลุ่มหลักฐานใดมีพร้อม ขาดหาย ล่าช้า หรือดึงข้อมูลไม่สำเร็จ",
+    }
+
+
+def _uncertainty_disclosure(missing_data: List[str], provider_status: List[Dict[str, Any]], risks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    provider_failures = [row for row in provider_status if row.get("status") == "error"]
+    uncertain_risks = [risk for risk in risks if risk.get("status") == "unknown"]
+    stale = [row for row in provider_status if row.get("freshness_status") == "stale"]
+    return {
+        "statement_th": PENNY_ALGORITHM_DEFINITION.trust.uncertainty.statement_th,
+        "statement_en": PENNY_ALGORITHM_DEFINITION.trust.uncertainty.statement_en,
+        "missing_evidence": sorted(set(missing_data)),
+        "provider_failures": provider_failures,
+        "stale_evidence": stale,
+        "uncertain_risks": uncertain_risks,
+        "false_precision_note": PENNY_ALGORITHM_DEFINITION.trust.uncertainty.false_precision_rule,
+    }
+
+
+def _evidence_integrity_records(symbol: str, quote: Dict[str, Any], history: Dict[str, Any], catalyst: Dict[str, Any], provider_status: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    now = datetime.now(timezone.utc).isoformat()
+    rows = [
+        _evidence_record(symbol, "quote", quote.get("source") or quote.get("provider") or "Unavailable", quote.get("timestamp"), now, "price/liquidity/fundamentals", "available" if quote.get("price") is not None else "unavailable", "provider_reported", "Raw quote fields are normalized into price, liquidity, financial, and growth factors.", quote.get("error")),
+        _evidence_record(symbol, "history", history.get("source") or history.get("provider") or "Unavailable", history.get("data_timestamp") or history.get("timestamp"), now, "technical", "available" if _history_closes(history) else "unavailable", "provider_reported", "Historical closes and volumes are transformed into technical and liquidity evidence.", history.get("error")),
+        _evidence_record(symbol, "catalyst", catalyst.get("source") or "configured_news", None, now, "catalyst", "available" if catalyst.get("status") == "PASS" else "unavailable", "verified" if catalyst.get("status") == "PASS" else "unverified", "Provider-returned news items are used only when available; no synthetic catalyst is created.", None),
+    ]
+    for status in provider_status:
+        if status.get("status") == "error":
+            rows.append(_evidence_record(symbol, status.get("stage") or "provider", status.get("provider") or "Unavailable", status.get("timestamp"), now, status.get("stage") or "unknown", "failed", "unverified", "Provider request failed and remains visible.", status.get("reason")))
+    return rows
+
+
+def _evidence_record(symbol: str, evidence_type: str, provider: str, source_timestamp: Any, retrieval_timestamp: str, supported_factor: str, availability_status: str, verification_status: str, transformation_summary: str, limitation: Any) -> Dict[str, Any]:
+    return {
+        "evidence_id": f"{symbol}:{evidence_type}:{retrieval_timestamp}",
+        "evidence_type": evidence_type,
+        "provider": provider,
+        "source_timestamp": source_timestamp,
+        "retrieval_timestamp": retrieval_timestamp,
+        "freshness_status": "stale" if availability_status == "stale" else "current_or_latest_available",
+        "availability_status": availability_status,
+        "verification_status": verification_status,
+        "supported_factor": supported_factor,
+        "candidate_symbol": symbol,
+        "transformation_summary": transformation_summary,
+        "data_limitations": [str(limitation)] if limitation else [],
     }
 
 

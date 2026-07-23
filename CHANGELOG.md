@@ -8,6 +8,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Added
 
+- Trust Foundation layer with backend trust policy contracts, evidence integrity metadata, uncertainty disclosure, algorithm neutrality validation, conflict-of-interest safeguards, ranking integrity validation, decision-boundary disclosure, and frontend trust disclosure for Penny Opportunities.
 - Transparent Intelligence framework with Penny Algorithm Definition, activation validation, score reconciliation, ranking explanation, and Why Not snapshot explanations.
 - Penny algorithm endpoints for methodology, candidate score explanation, and Why Not analysis.
 - Explainable Penny Opportunity Scanner for Thailand and United States low-priced equity discovery across the complete supported lightweight registry universe.
@@ -18,6 +19,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Documentation
 
+- Added trust governance documents for Trust Foundation, Algorithm Neutrality, Evidence Integrity, Uncertainty Disclosure, Ranking Integrity, Conflict of Interest, Decision Boundary, and Intellectual Honesty.
 - Added `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, then linked the framework and scanner across roadmap, product bible, AI architecture, scoring, and explainability docs.
 - Added Algorithm Transparency, Algorithm Lab, Why This, Why Not, Algorithm Governance, and Penny Algorithm documentation.
 

@@ -136,3 +136,9 @@ Opportunity discovery must be transparent by design: users should be able to ins
 The product should remain simple where possible, precise where necessary, and honest when uncertain.
 
 Trust is the product. Every feature should protect it.
+
+## Trust Foundation Update
+
+The long-term vision depends on user trust. Market Pulse AI must explain what it knows, what it does not know, what evidence was used, what risks remain, and where the user's decision begins.
+
+Thai summary: วิสัยทัศน์ของผลิตภัณฑ์ต้องยึดความไว้วางใจ ความโปร่งใส และการตัดสินใจของผู้ใช้เป็นศูนย์กลาง

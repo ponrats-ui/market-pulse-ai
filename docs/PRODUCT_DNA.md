@@ -121,3 +121,13 @@ If the answer is no, the feature should not exist.
 Market Pulse AI should become a global platform that discovers high-quality investment opportunities before they become widely recognized.
 
 The objective is not prediction. The objective is intelligent discovery through transparent evidence, cross-market context, disciplined risk analysis, and explainable AI.
+
+## Trust Foundation
+
+Market Pulse AI treats trust as a first-class product primitive. Every production scoring engine must define evidence integrity, neutrality, uncertainty disclosure, conflict-of-interest boundaries, ranking integrity, and a decision boundary before it can be activated.
+
+Reference documents:
+
+- [Trust Foundation](TRUST_FOUNDATION.md)
+- [Intellectual Honesty](INTELLECTUAL_HONESTY.md)
+- [Decision Boundary](DECISION_BOUNDARY.md)

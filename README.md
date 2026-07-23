@@ -23,6 +23,7 @@ Thai summary: Market Pulse AI สร้างโดย **Ponrat Saripan** แล
 - Explainable Penny Opportunity Scanner with hourly backend snapshots, score-first Top 5 ranking, risk, confidence, and missing-data disclosure
 - Shared Opportunity Engine Framework for reusable scheduling, snapshot publication, ranking, confidence, completeness, and future opportunity categories
 - Transparent Intelligence layer with Algorithm Card, score reconciliation, ranking explanation, and Why Not analysis for Penny Opportunities
+- Trust Foundation layer with evidence integrity, algorithm neutrality, uncertainty disclosure, conflict-of-interest rules, ranking integrity, and clear decision boundaries
 - Grouped financial statement cards with color indicators
 - Fear & Greed / market sentiment widget
 - News impact unavailable-state panel until a provider is configured
@@ -74,6 +75,15 @@ Transparent Intelligence endpoints:
 - `GET /api/opportunities/penny/algorithm`
 - `GET /api/opportunities/penny/explain/{symbol}`
 - `GET /api/opportunities/penny/why-not/{symbol}`
+
+Trust Foundation references:
+
+- [Trust Foundation](docs/TRUST_FOUNDATION.md)
+- [Algorithm Neutrality](docs/ALGORITHM_NEUTRALITY.md)
+- [Evidence Integrity Policy](docs/EVIDENCE_INTEGRITY_POLICY.md)
+- [Uncertainty Disclosure Policy](docs/UNCERTAINTY_DISCLOSURE_POLICY.md)
+- [Ranking Integrity Policy](docs/RANKING_INTEGRITY_POLICY.md)
+- [Decision Boundary](docs/DECISION_BOUNDARY.md)
 
 ### Frontend
 

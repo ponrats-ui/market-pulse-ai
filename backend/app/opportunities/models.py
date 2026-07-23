@@ -154,6 +154,109 @@ class AlgorithmChangeRecord:
 
 
 @dataclass(frozen=True)
+class TrustPrinciple:
+    principle_id: str
+    title_th: str
+    title_en: str
+    statement_th: str
+    statement_en: str
+
+
+@dataclass(frozen=True)
+class AlgorithmNeutralityDeclaration:
+    considers: List[str]
+    does_not_consider: List[str]
+    ranking_influences: List[str]
+    ranking_exclusions: List[str]
+    sponsored_or_commercial_factors_exist: bool
+    user_engagement_affects_scoring: bool
+    asset_popularity_affects_scoring: bool
+    editorial_opinion_affects_scoring: bool
+    methodology_assumptions: List[str]
+    known_limitations: List[str]
+    version_identifiers: Dict[str, str]
+
+
+@dataclass(frozen=True)
+class EvidenceIntegrityPolicy:
+    required_metadata: List[str]
+    allowed_availability_statuses: List[str]
+    allowed_verification_statuses: List[str]
+    inferred_evidence_rule: str
+    conflicting_evidence_rule: str
+
+
+@dataclass(frozen=True)
+class UncertaintyDisclosurePolicy:
+    disclosed_conditions: List[str]
+    statement_th: str
+    statement_en: str
+    false_precision_rule: str
+
+
+@dataclass(frozen=True)
+class ConflictOfInterestPolicy:
+    current_commercial_relationships: str
+    sponsored_content_score_impact_allowed: bool
+    commercial_relationship_rank_impact_allowed: bool
+    paid_placement_in_rankings_allowed: bool
+    future_sponsored_content_rule: str
+    financial_interest_disclosure_rule: str
+    configuration_change_rule: str
+    reproducibility_rule: str
+
+
+@dataclass(frozen=True)
+class RankingIntegrityPolicy:
+    declared_ranking_inputs: List[str]
+    manual_override_supported: bool
+    manual_override_rules: List[str]
+    prohibited_influences: List[str]
+    original_rank_preservation_required: bool
+
+
+@dataclass(frozen=True)
+class DecisionBoundaryPolicy:
+    statement_th: str
+    statement_en: str
+    prohibited_phrases: List[str]
+    non_directive_actions: List[str]
+
+
+@dataclass(frozen=True)
+class ProviderLimitationDisclosure:
+    provider: str
+    limitations: List[str]
+    freshness_policy: str
+    failure_disclosure: str
+
+
+@dataclass(frozen=True)
+class TrustDisclosure:
+    trust_policy_version: str
+    principles: List[TrustPrinciple]
+    neutrality: AlgorithmNeutralityDeclaration
+    evidence_integrity: EvidenceIntegrityPolicy
+    uncertainty: UncertaintyDisclosurePolicy
+    conflict_of_interest: ConflictOfInterestPolicy
+    ranking_integrity: RankingIntegrityPolicy
+    decision_boundary: DecisionBoundaryPolicy
+    provider_limitations: List[ProviderLimitationDisclosure]
+    score_interpretation: Dict[str, Any]
+    confidence_interpretation: Dict[str, Any]
+    completeness_interpretation: Dict[str, Any]
+    compact_disclosure: AlgorithmTextBlock
+    founder_trust_statement: AlgorithmTextBlock
+
+
+@dataclass(frozen=True)
+class TrustValidationResult:
+    valid: bool
+    errors: List[str]
+    warnings: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class AlgorithmDefinition:
     identity: AlgorithmIdentity
     objective: AlgorithmTextBlock
@@ -170,6 +273,7 @@ class AlgorithmDefinition:
     limitations: List[AlgorithmTextBlock]
     non_claims: List[AlgorithmTextBlock]
     change_history: List[AlgorithmChangeRecord]
+    trust: TrustDisclosure
 
 
 @dataclass(frozen=True)

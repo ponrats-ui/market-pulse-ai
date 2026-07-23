@@ -29,3 +29,7 @@ Candidate explanation endpoint:
 Why Not endpoint:
 
 `GET /api/opportunities/penny/why-not/{symbol}`
+
+## Trust Foundation Update
+
+Algorithm Lab panels should show methodology and trust context together. Users should understand that a score is a weighted heuristic based on available evidence, not a probability of profit, personal suitability score, or buy/sell instruction.

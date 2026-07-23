@@ -6,6 +6,7 @@
 - [Vision](#vision)
 - [Product Position](#product-position)
 - [Future Direction](#future-direction)
+- [Product DNA](#product-dna)
 - [Core Values](#core-values)
 - [Vision 2030](#vision-2030)
 - [Product Standard](#product-standard)
@@ -60,6 +61,18 @@ Future Market Pulse AI should include:
 Market Pulse AI does not search for cheap stocks. It searches for asymmetric opportunities.
 
 Price is only one signal. Every opportunity must be supported by evidence, risk context, catalyst analysis, and confidence disclosure.
+
+## Product DNA
+
+Every future feature must answer three questions:
+
+1. Does it improve investment intelligence?
+2. Can AI explain why?
+3. Does it increase user trust?
+
+If not, the feature should not exist.
+
+The permanent Product DNA is documented in [PRODUCT_DNA.md](PRODUCT_DNA.md) and [FOUNDER_MANIFESTO.md](FOUNDER_MANIFESTO.md).
 
 ## Core Values
 

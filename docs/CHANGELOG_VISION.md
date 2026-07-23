@@ -4,6 +4,7 @@
 
 - [Purpose](#purpose)
 - [v1.1](#v11)
+- [v1.2](#v12)
 - [v1.0](#v10)
 - [Future Versioning](#future-versioning)
 
@@ -12,6 +13,32 @@
 This changelog records changes to the Founder Vision Documentation Suite.
 
 Future versions should record important changes to product vision, architecture philosophy, roadmap direction, global expansion strategy, Explainable AI principles, scoring philosophy, or Zero Mock policy.
+
+## v1.2
+
+Established Product DNA, Founder Manifesto, and Founder's Research Library as permanent documentation pillars.
+
+Key additions:
+
+- Product DNA
+- Founder Manifesto
+- Research library index
+- Factor investing reference
+- Quality investing reference
+- Momentum investing reference
+- Value investing reference
+- Behavioral finance reference
+- Market microstructure reference
+- Explainable AI research reference
+- Risk management reference
+- Portfolio theory reference
+- Small-cap research reference
+- Penny-stock research reference
+- Multi-bagger research reference
+- Catalyst research reference
+- Alternative data reference
+
+This vision update clarifies that future features must improve investment intelligence, explain why, and increase user trust.
 
 ## v1.1
 

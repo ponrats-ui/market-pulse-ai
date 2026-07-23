@@ -7,29 +7,32 @@
 3. [Mission](#3-mission)
 4. [Product Philosophy](#4-product-philosophy)
 5. [Founder Principles](#5-founder-principles)
-6. [Explainable AI](#6-explainable-ai)
-7. [Zero Mock Policy](#7-zero-mock-policy)
-8. [AI Architecture](#8-ai-architecture)
-9. [AI Opportunity Discovery Engine](#9-ai-opportunity-discovery-engine)
-10. [Scoring Framework](#10-scoring-framework)
-11. [Global Markets Strategy](#11-global-markets-strategy)
-12. [Asset Universe](#12-asset-universe)
-13. [Cross-Market Intelligence](#13-cross-market-intelligence)
-14. [Product Positioning](#14-product-positioning)
-15. [Design Principles](#15-design-principles)
-16. [Data Governance](#16-data-governance)
-17. [AI Ethics](#17-ai-ethics)
-18. [Risk Management](#18-risk-management)
-19. [Security Principles](#19-security-principles)
-20. [Non-Functional Requirements](#20-non-functional-requirements)
-21. [Competitive Position](#21-competitive-position)
-22. [Roadmap](#22-roadmap)
-23. [Future Ideas](#23-future-ideas)
-24. [Decision Log](#24-decision-log)
-25. [Vision Changelog](#25-vision-changelog)
-26. [Glossary](#26-glossary)
-27. [Documentation Governance](#27-documentation-governance)
-28. [Definition of Done](#28-definition-of-done)
+6. [Product DNA](#6-product-dna)
+7. [Founder Manifesto](#7-founder-manifesto)
+8. [Explainable AI](#8-explainable-ai)
+9. [Zero Mock Policy](#9-zero-mock-policy)
+10. [AI Architecture](#10-ai-architecture)
+11. [AI Opportunity Discovery Engine](#11-ai-opportunity-discovery-engine)
+12. [Founder's Research Library](#12-founders-research-library)
+13. [Scoring Framework](#13-scoring-framework)
+14. [Global Markets Strategy](#14-global-markets-strategy)
+15. [Asset Universe](#15-asset-universe)
+16. [Cross-Market Intelligence](#16-cross-market-intelligence)
+17. [Product Positioning](#17-product-positioning)
+18. [Design Principles](#18-design-principles)
+19. [Data Governance](#19-data-governance)
+20. [AI Ethics](#20-ai-ethics)
+21. [Risk Management](#21-risk-management)
+22. [Security Principles](#22-security-principles)
+23. [Non-Functional Requirements](#23-non-functional-requirements)
+24. [Competitive Position](#24-competitive-position)
+25. [Roadmap](#25-roadmap)
+26. [Future Ideas](#26-future-ideas)
+27. [Decision Log](#27-decision-log)
+28. [Vision Changelog](#28-vision-changelog)
+29. [Glossary](#29-glossary)
+30. [Documentation Governance](#30-documentation-governance)
+31. [Definition of Done](#31-definition-of-done)
 
 ## 1. Executive Summary
 
@@ -82,7 +85,23 @@ The Founder Constitution defines the permanent operating principles of Market Pu
 
 Primary reference: [FOUNDER_PRINCIPLES.md](FOUNDER_PRINCIPLES.md)
 
-## 6. Explainable AI
+## 6. Product DNA
+
+Product DNA defines the permanent beliefs behind Market Pulse AI.
+
+The core DNA is simple: improve investment intelligence, explain why, and increase user trust. If a feature cannot satisfy those three questions, it should not exist.
+
+Primary reference: [PRODUCT_DNA.md](PRODUCT_DNA.md)
+
+## 7. Founder Manifesto
+
+The Founder Manifesto explains why Market Pulse AI exists and why the product must choose evidence over hype.
+
+It establishes the long-term responsibility to build explainable AI that helps users think more clearly without pretending to predict the future.
+
+Primary reference: [FOUNDER_MANIFESTO.md](FOUNDER_MANIFESTO.md)
+
+## 8. Explainable AI
 
 Explainable AI is the foundation of Market Pulse AI. Every major AI response should make the reasoning visible enough for a user to evaluate it.
 
@@ -96,7 +115,7 @@ AI should answer:
 
 Primary reference: [EXPLAINABLE_AI.md](EXPLAINABLE_AI.md)
 
-## 7. Zero Mock Policy
+## 9. Zero Mock Policy
 
 Production must never display fabricated market data, charts, scores, news, financial values, indicators, or recommendations as real.
 
@@ -104,7 +123,7 @@ If data is unavailable, the product must show an explicit unavailable state with
 
 Primary reference: [ZERO_MOCK_POLICY.md](ZERO_MOCK_POLICY.md)
 
-## 8. AI Architecture
+## 10. AI Architecture
 
 The logical AI architecture transforms market evidence into explainable investment intelligence:
 
@@ -114,7 +133,7 @@ Each stage has a distinct responsibility. The architecture should preserve evide
 
 Primary reference: [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)
 
-## 9. AI Opportunity Discovery Engine
+## 11. AI Opportunity Discovery Engine
 
 The AI Opportunity Discovery Engine is a core future pillar of Market Pulse AI.
 
@@ -187,7 +206,17 @@ Primary references:
 - [RISK_PENALTY_ENGINE.md](RISK_PENALTY_ENGINE.md)
 - [AI_CONFIDENCE_MODEL.md](AI_CONFIDENCE_MODEL.md)
 
-## 10. Scoring Framework
+## 12. Founder's Research Library
+
+The Founder's Research Library explains the investment and AI concepts that inspired Market Pulse AI.
+
+It covers quality, value, momentum, factor investing, behavioral finance, market microstructure, explainable AI, risk management, portfolio theory, small caps, penny stocks, multi-baggers, catalysts, and alternative data.
+
+These documents are educational references. They are not investment advice, external framework copies, or implementation formulas.
+
+Primary reference: [research/RESEARCH_PAPERS.md](research/RESEARCH_PAPERS.md)
+
+## 13. Scoring Framework
 
 Scores explain the market. They do not predict the future.
 
@@ -195,7 +224,7 @@ The scoring framework defines Opportunity Score, Penny Opportunity Score, Market
 
 Primary reference: [SCORING_FRAMEWORK.md](SCORING_FRAMEWORK.md)
 
-## 11. Global Markets Strategy
+## 14. Global Markets Strategy
 
 Market Pulse AI is global-first. Long-term coverage should include major markets across North America, Europe, Asia, the Middle East, South America, and Africa.
 
@@ -203,7 +232,7 @@ Expansion must be disciplined. New market coverage should be added only when dat
 
 Primary reference: [GLOBAL_MARKETS_STRATEGY.md](GLOBAL_MARKETS_STRATEGY.md)
 
-## 12. Asset Universe
+## 15. Asset Universe
 
 The long-term asset universe includes stocks, ETFs, REITs, mutual funds, indices, forex, crypto, government bonds, corporate bonds, precious metals, energy, agriculture, interest rates, economic indicators, and alternative assets.
 
@@ -211,7 +240,7 @@ Each asset class requires appropriate analysis. Stock-style financial statement 
 
 Primary reference: [ASSET_UNIVERSE.md](ASSET_UNIVERSE.md)
 
-## 13. Cross-Market Intelligence
+## 16. Cross-Market Intelligence
 
 Market Pulse AI should eventually understand relationships between markets instead of analyzing assets independently.
 
@@ -225,7 +254,7 @@ Examples include:
 
 Primary reference: [GLOBAL_MARKETS_STRATEGY.md](GLOBAL_MARKETS_STRATEGY.md)
 
-## 14. Product Positioning
+## 17. Product Positioning
 
 Market Pulse AI is positioned as an explainable intelligence layer between raw financial data and investor decisions, with a long-term focus on early opportunity discovery.
 
@@ -233,7 +262,7 @@ It is not a screener, dashboard, trading bot, guaranteed signal generator, or bl
 
 Primary reference: [PRODUCT_POSITIONING.md](PRODUCT_POSITIONING.md)
 
-## 15. Design Principles
+## 18. Design Principles
 
 The design philosophy is professional, readable, calm, and evidence-centered.
 
@@ -251,7 +280,7 @@ Core design standards include:
 
 Primary reference: [DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)
 
-## 16. Data Governance
+## 19. Data Governance
 
 Data governance protects trust. Data must be validated, normalized, attributed, monitored, and presented honestly.
 
@@ -259,7 +288,7 @@ The product must distinguish real provider data, unavailable data, stale data, p
 
 Primary reference: [DATA_GOVERNANCE.md](DATA_GOVERNANCE.md)
 
-## 17. AI Ethics
+## 20. AI Ethics
 
 AI ethics in Market Pulse AI requires transparency, fairness, bias reduction, explainability, no manipulation, no emotional persuasion, evidence-based output, responsible AI, user autonomy, and human decision authority.
 
@@ -267,7 +296,7 @@ AI should remain calm, disciplined, and educational.
 
 Primary reference: [AI_ETHICS.md](AI_ETHICS.md)
 
-## 18. Risk Management
+## 21. Risk Management
 
 Risk communication must be visible, understandable, and connected to evidence.
 
@@ -275,7 +304,7 @@ The product should explain market uncertainty, confidence levels, probability ve
 
 Primary reference: [RISK_MANAGEMENT.md](RISK_MANAGEMENT.md)
 
-## 19. Security Principles
+## 22. Security Principles
 
 Security principles define the long-term posture for authentication, authorization, least privilege, secret management, rate limiting, logging, audit trails, input validation, and future enterprise security.
 
@@ -283,13 +312,13 @@ Secrets must not be committed. Sensitive capabilities should be protected by app
 
 Primary reference: [SECURITY_PRINCIPLES.md](SECURITY_PRINCIPLES.md)
 
-## 20. Non-Functional Requirements
+## 23. Non-Functional Requirements
 
 Market Pulse AI should meet long-term quality expectations for performance, reliability, availability, scalability, maintainability, accessibility, internationalization, security, privacy, observability, logging, monitoring, testing, response times, and future enterprise readiness.
 
 Primary reference: [NON_FUNCTIONAL_REQUIREMENTS.md](NON_FUNCTIONAL_REQUIREMENTS.md)
 
-## 21. Competitive Position
+## 24. Competitive Position
 
 Market Pulse AI operates near established tools such as Bloomberg Terminal, TradingView, Yahoo Finance, Google Finance, Seeking Alpha, Simply Wall St, and Morningstar.
 
@@ -297,7 +326,7 @@ Its competitive position is not based on being the largest data terminal. It is 
 
 Primary reference: [COMPETITIVE_POSITION.md](COMPETITIVE_POSITION.md)
 
-## 22. Roadmap
+## 25. Roadmap
 
 The roadmap is organized into completed, current, next, future, and long-term phases.
 
@@ -305,13 +334,13 @@ Completed foundations include engineering foundation and UI Polish RC1. Current 
 
 Primary reference: [ROADMAP.md](ROADMAP.md)
 
-## 23. Future Ideas
+## 26. Future Ideas
 
 Future ideas are stored separately from roadmap commitments. Ideas are not approved scope until they are evaluated against user value, trust impact, data availability, explainability, product fit, maintenance cost, security, privacy, and production readiness.
 
 Primary reference: [FUTURE_IDEAS.md](FUTURE_IDEAS.md)
 
-## 24. Decision Log
+## 27. Decision Log
 
 The decision log records architecture and product-governance decisions. Initial decisions include Explainable AI, Zero Mock Policy, Market Adjusted Score, Chief Investment AI, AI Committee, Global Market Vision, and Cross-Market Intelligence.
 
@@ -319,19 +348,19 @@ Future architectural decisions should be recorded as ADR entries.
 
 Primary reference: [DECISION_LOG.md](DECISION_LOG.md)
 
-## 25. Vision Changelog
+## 28. Vision Changelog
 
 Vision changes must be versioned. Future updates should record changes to product vision, architecture philosophy, roadmap direction, global expansion, Explainable AI principles, scoring philosophy, and Zero Mock policy.
 
 Primary reference: [CHANGELOG_VISION.md](CHANGELOG_VISION.md)
 
-## 26. Glossary
+## 29. Glossary
 
 The glossary provides common terminology for users, contributors, and future maintainers. It should remain aligned with the product's financial, AI, data, and governance language.
 
 Primary reference: [07_GLOSSARY.md](07_GLOSSARY.md)
 
-## 27. Documentation Governance
+## 30. Documentation Governance
 
 Documentation is part of the product, not an afterthought.
 
@@ -344,11 +373,13 @@ The following governance policy is permanent:
 - Every global market expansion must update [GLOBAL_MARKETS_STRATEGY.md](GLOBAL_MARKETS_STRATEGY.md).
 - Every new supported asset class must update [ASSET_UNIVERSE.md](ASSET_UNIVERSE.md).
 - Every vision change must update [VISION.md](VISION.md) and [CHANGELOG_VISION.md](CHANGELOG_VISION.md).
+- Every Product DNA or founder-philosophy change must update [PRODUCT_DNA.md](PRODUCT_DNA.md) and [FOUNDER_MANIFESTO.md](FOUNDER_MANIFESTO.md).
+- Every research-library change must update [research/RESEARCH_PAPERS.md](research/RESEARCH_PAPERS.md) when the library map changes.
 - Documentation is part of the Definition of Done.
 
 Future changes should update existing documents rather than creating unnecessary new documentation.
 
-## 28. Definition of Done
+## 31. Definition of Done
 
 A change is not complete unless the relevant documentation remains accurate.
 

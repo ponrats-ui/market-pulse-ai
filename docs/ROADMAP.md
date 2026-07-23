@@ -7,6 +7,7 @@
 - [Current](#current)
 - [Next](#next)
 - [RC2 AI Opportunity Center](#rc2-ai-opportunity-center)
+- [Research Library](#research-library)
 - [Future](#future)
 - [Long-Term](#long-term)
 - [Roadmap Principles](#roadmap-principles)
@@ -98,6 +99,27 @@ Planned opportunity intelligence directions include:
 - AI Picks
 
 RC2 must preserve the Zero Mock Policy and explainability standard. No opportunity should appear without evidence, risk context, confidence disclosure, and a clear explanation of why it deserves attention.
+
+## Research Library
+
+The Founder's Research Library is now part of the permanent product knowledge base.
+
+It should guide future feature design in:
+
+- Quality investing
+- Value investing
+- Momentum investing
+- Factor investing
+- Behavioral finance
+- Market microstructure
+- Risk management
+- Portfolio theory
+- Small-cap and penny-stock research
+- Multi-bagger research
+- Catalyst research
+- Alternative data
+
+Future roadmap work should update research documentation when new product concepts rely on new investment or AI principles.
 
 ## Future
 

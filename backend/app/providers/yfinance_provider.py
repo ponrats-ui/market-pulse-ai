@@ -23,6 +23,33 @@ MACRO = {"DX-Y.NYB", "^TNX"}
 class YFinanceProvider(MarketDataProvider):
     name = "yfinance"
 
+    def get_scan_quotes(self, symbols: List[str], chunk_size: int = 120) -> Dict[str, Dict[str, Any]]:
+        results: Dict[str, Dict[str, Any]] = {}
+        unique_symbols = [symbol for symbol in dict.fromkeys(symbols) if symbol]
+        for start in range(0, len(unique_symbols), max(1, chunk_size)):
+            chunk = unique_symbols[start:start + chunk_size]
+            try:
+                history = yf.download(
+                    tickers=" ".join(chunk),
+                    period="5d",
+                    interval="1d",
+                    group_by="ticker",
+                    auto_adjust=False,
+                    progress=False,
+                    threads=True,
+                )
+            except Exception:
+                continue
+            if history is None or history.empty:
+                continue
+            requested_at = datetime.now(timezone.utc).isoformat()
+            for symbol in chunk:
+                frame = self._download_symbol_frame(history, symbol)
+                quote = self._scan_quote_from_frame(symbol, frame, requested_at)
+                if quote is not None:
+                    results[symbol] = quote
+        return results
+
     def get_quote(self, symbol: str) -> Dict[str, Any]:
         try:
             ticker = yf.Ticker(symbol)
@@ -361,6 +388,51 @@ class YFinanceProvider(MarketDataProvider):
         if len(history.index) > 1:
             return self._safe_float(history["Close"].iloc[-2])
         return self._safe_float(history["Close"].iloc[-1])
+
+    def _download_symbol_frame(self, history: Any, symbol: str) -> Any:
+        if history is None or history.empty:
+            return pd.DataFrame()
+        if isinstance(history.columns, pd.MultiIndex):
+            top_level = history.columns.get_level_values(0)
+            if symbol in top_level:
+                return history[symbol]
+            if len(set(top_level)) == 1:
+                return history.xs(top_level[0], axis=1, level=0)
+            return pd.DataFrame()
+        return history
+
+    def _scan_quote_from_frame(self, symbol: str, frame: Any, requested_at: str) -> Dict[str, Any] | None:
+        if frame is None or frame.empty or "Close" not in frame:
+            return None
+        closes = frame["Close"].dropna()
+        if closes.empty:
+            return None
+        price = self._safe_float(closes.iloc[-1])
+        previous_close = self._safe_float(closes.iloc[-2]) if len(closes) > 1 else price
+        change = self._safe_float(price - previous_close) if price is not None and previous_close not in (None, 0) else None
+        change_percent = self._safe_float((change / previous_close) * 100) if change is not None and previous_close else None
+        volume = None
+        average_volume = None
+        if "Volume" in frame:
+            volumes = frame["Volume"].dropna()
+            if not volumes.empty:
+                volume = self._safe_float(volumes.iloc[-1])
+                average_volume = self._safe_float(volumes.mean())
+        return {
+            "symbol": symbol,
+            "name": symbol,
+            "asset_type": infer_asset_type(symbol),
+            "currency": infer_currency(symbol),
+            "price": price,
+            "previous_close": previous_close,
+            "change": change,
+            "change_percent": change_percent,
+            "volume": volume,
+            "average_volume": average_volume,
+            "source": self.name,
+            "timestamp": requested_at,
+            "scan_quote": True,
+        }
 
     def _first_float(self, *values: Any) -> float | None:
         for value in values:

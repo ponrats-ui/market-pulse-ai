@@ -91,6 +91,8 @@ If the system cannot explain why an asset appears, the asset should not be prese
 
 For Penny Opportunities, every ranked item must also show market-aware classification, current price, data timestamp, provider attribution, data completeness, risk penalty, catalyst availability, and missing-data disclosure. The UI must state when fewer than five candidates qualify instead of filling the list with weaker assets.
 
+Opportunity engines must use the shared Opportunity Engine Framework so future categories inherit the same standards for version metadata, deterministic ranking, snapshot publication, confidence separation, completeness disclosure, and failure transparency.
+
 ## User Understanding
 
 Users should understand every score and recommendation well enough to challenge it.

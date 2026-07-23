@@ -2430,6 +2430,24 @@ option { background: #0a101c; color: #d9e7ff; }
   padding: 0.72rem 0.85rem;
   color: #ffe4b7;
 }
+.penny-scan-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-bottom: 0.7rem;
+}
+.penny-scan-strip span {
+  border: 1px solid rgba(46, 67, 98, 0.75);
+  border-radius: 999px;
+  background: rgba(8, 13, 23, 0.72);
+  padding: 0.22rem 0.56rem;
+  color: #9fb0cc;
+  font-size: 0.68rem;
+}
+.penny-scan-strip .penny-stale {
+  border-color: rgba(255, 180, 84, 0.42);
+  color: #ffd48a;
+}
 .penny-warning strong {
   display: block;
   margin-bottom: 0.3rem;

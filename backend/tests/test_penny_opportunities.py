@@ -257,34 +257,145 @@ def test_no_mock_values_appear_in_result(monkeypatch) -> None:
 def test_api_endpoint_uses_penny_scanner(monkeypatch) -> None:
     captured = {}
 
-    def fake_scanner(quote_fn, history_fn, news_fn=None, market=None, limit=5):
+    def fake_snapshot(market=None, limit=5):
         captured["market"] = market
         captured["limit"] = limit
-        captured["quote_callable"] = callable(quote_fn)
-        captured["history_callable"] = callable(history_fn)
-        captured["news_callable"] = callable(news_fn)
         return {
             "status": "ok",
             "category": "penny_opportunity",
             "methodology_version": po.METHODOLOGY_VERSION,
+            "score_version": po.SCORE_VERSION,
             "configuration_version": po.CONFIGURATION_VERSION,
+            "scan": {"frequency_minutes": 60, "is_stale": False, "scan_duration_ms": 10},
             "generated_at": "2026-01-01T00:00:00Z",
             "markets": ["TH"],
             "warning": {"th": po.PENNY_WARNING_TH, "en": po.PENNY_WARNING_EN},
-            "qualification": {"universe_size": 1, "eligible_count": 1, "ranked_count": 0, "excluded_count": 0, "unknown_count": 0},
+            "qualification": {"universe_size": 1, "classified_count": 1, "eligible_count": 1, "qualified_count": 1, "ranked_count": 0, "excluded_count": 0, "failed_candidate_count": 0, "unknown_count": 0},
             "items": [],
             "limitations": [],
             "provider_status": [],
             "disclaimer": "This is not financial advice.",
         }
 
-    monkeypatch.setattr(main, "build_penny_opportunities", fake_scanner)
+    monkeypatch.setattr(main, "get_penny_opportunities_snapshot", fake_snapshot)
     payload = main.penny_opportunities(market="TH", limit=5, language="en")
     assert payload["category"] == "penny_opportunity"
-    assert captured == {
-        "market": "TH",
-        "limit": 5,
-        "quote_callable": True,
-        "history_callable": True,
-        "news_callable": True,
+    assert payload["scan"]["frequency_minutes"] == 60
+    assert captured == {"market": "TH", "limit": 5}
+
+
+def candidate_payload(symbol: str, score: int, confidence: int = 50, completeness: int = 50, liquidity: int = 50, risk_penalty: int = 0, hard: bool = False):
+    return {
+        "rank": None,
+        "symbol": symbol,
+        "provider_symbol": symbol,
+        "name": symbol,
+        "market": "TH" if symbol.endswith(".BK") else "US",
+        "exchange": "SET" if symbol.endswith(".BK") else "NASDAQ",
+        "currency": "THB" if symbol.endswith(".BK") else "USD",
+        "classification": "penny_stock",
+        "classification_status": "PASS",
+        "price": 2,
+        "price_timestamp": "2026-07-23T00:00:00+00:00",
+        "penny_opportunity_score": score,
+        "data_confidence": confidence,
+        "data_completeness": completeness,
+        "scores": {"financial": 50, "growth": 50, "technical": 50, "liquidity": liquidity, "catalyst": None, "market_context": 50},
+        "risk_penalty": risk_penalty,
+        "risk_level": "medium",
+        "severe_risk_count": 0,
+        "strengths": [],
+        "risks": [],
+        "missing_data": [],
+        "catalysts": [],
+        "explanation": {"th": symbol, "en": symbol},
+        "provider_attribution": ["test_provider"],
+        "provider_status": [],
+        "hard_disqualified": hard,
+        "eligible_for_top5": not hard,
     }
+
+
+def test_top5_ordered_by_final_score_and_excludes_sixth(monkeypatch) -> None:
+    symbols = ["AAA.BK", "BBB.BK", "CCC.BK", "DDD.BK", "EEE.BK", "FFF.BK"]
+    scores = dict(zip(symbols, [91, 88, 87, 86, 85, 84]))
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: [asset(symbol) for symbol in symbols])
+    monkeypatch.setattr(po, "evaluate_candidate", lambda asset_obj, *_: candidate_payload(asset_obj.canonical_symbol, scores[asset_obj.canonical_symbol]))
+    payload = po.build_penny_opportunities(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH", limit=5)
+    assert [item["symbol"] for item in payload["items"]] == ["AAA.BK", "BBB.BK", "CCC.BK", "DDD.BK", "EEE.BK"]
+    assert payload["items"][-1]["penny_opportunity_score"] == 85
+
+
+def test_confidence_only_breaks_ties(monkeypatch) -> None:
+    rows = [asset("HIGH.BK"), asset("LOW.BK")]
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: rows)
+    payloads = {
+        "HIGH.BK": candidate_payload("HIGH.BK", 80, confidence=10),
+        "LOW.BK": candidate_payload("LOW.BK", 79, confidence=100),
+    }
+    monkeypatch.setattr(po, "evaluate_candidate", lambda asset_obj, *_: payloads[asset_obj.canonical_symbol])
+    payload = po.build_penny_opportunities(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+    assert [item["symbol"] for item in payload["items"][:2]] == ["HIGH.BK", "LOW.BK"]
+
+
+def test_tie_breakers_are_deterministic(monkeypatch) -> None:
+    symbols = ["BBB.BK", "AAA.BK", "CCC.BK"]
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: [asset(symbol) for symbol in symbols])
+    payloads = {
+        "BBB.BK": candidate_payload("BBB.BK", 80, confidence=80, completeness=70, liquidity=90, risk_penalty=5),
+        "AAA.BK": candidate_payload("AAA.BK", 80, confidence=80, completeness=70, liquidity=90, risk_penalty=5),
+        "CCC.BK": candidate_payload("CCC.BK", 80, confidence=80, completeness=75, liquidity=50, risk_penalty=5),
+    }
+    monkeypatch.setattr(po, "evaluate_candidate", lambda asset_obj, *_: payloads[asset_obj.canonical_symbol])
+    payload = po.build_penny_opportunities(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+    assert [item["symbol"] for item in payload["items"]] == ["CCC.BK", "AAA.BK", "BBB.BK"]
+
+
+def test_complete_supported_universe_is_considered(monkeypatch) -> None:
+    rows = [asset("AAA.BK"), asset("ZZZ.BK"), asset("AAPL", country="United States", exchange="NASDAQ", currency="USD")]
+    seen = []
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: rows)
+
+    def evaluator(asset_obj, *_):
+        seen.append(asset_obj.canonical_symbol)
+        return candidate_payload(asset_obj.canonical_symbol, 60)
+
+    monkeypatch.setattr(po, "evaluate_candidate", evaluator)
+    po.build_penny_opportunities(lambda symbol: quote(symbol), lambda *_: history(), no_news)
+    assert set(seen) == {"AAA.BK", "AAPL", "ZZZ.BK"}
+
+
+def test_hourly_scan_lock_prevents_overlap(monkeypatch) -> None:
+    po.reset_penny_opportunity_snapshots_for_tests()
+    acquired = po._scan_execution_lock.acquire(blocking=False)
+    assert acquired is True
+    try:
+        payload = po.run_penny_scan_once(lambda symbol: quote(symbol), lambda *_: history(), no_news)
+        assert payload["status"] in {"running", "unavailable"}
+    finally:
+        po._scan_execution_lock.release()
+
+
+def test_failed_scan_preserves_latest_successful_snapshot(monkeypatch) -> None:
+    po.reset_penny_opportunity_snapshots_for_tests()
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: [asset("AAA.BK")])
+    success = po.run_penny_scan_once(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+    assert success["items"]
+
+    def broken_quote(symbol):
+        raise RuntimeError("provider down")
+
+    failed = po.run_penny_scan_once(broken_quote, lambda *_: history(), no_news, market="TH")
+    assert failed["status"] == "partial"
+    assert failed["items"][0]["symbol"] == success["items"][0]["symbol"]
+    assert failed["scan"]["is_stale"] is True
+
+
+def test_frontend_receives_scan_metadata(monkeypatch) -> None:
+    po.reset_penny_opportunity_snapshots_for_tests()
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: [asset("AAA.BK")])
+    po.run_penny_scan_once(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+    payload = po.get_penny_opportunities_snapshot(limit=5)
+    assert payload["scan"]["frequency_minutes"] == 60
+    assert payload["scan"]["scan_completed_at"]
+    assert payload["qualification"]["universe_size"] == 1

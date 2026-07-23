@@ -8,21 +8,27 @@ Penny stock is treated as a category, not an investment thesis. Low price alone 
 
 ## Architecture
 
-The scanner follows the existing FastAPI service pattern and is exposed through:
+The scanner is the first registered engine on the shared Opportunity Engine Framework documented in `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md`.
+
+It remains exposed through:
 
 `GET /api/opportunities/penny?market=&limit=&language=`
+
+Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe.
+
+The Penny Opportunity universe is rescanned and reranked once every hour.
 
 The implementation is intentionally memory-conscious:
 
 - It starts from lightweight Master Asset Registry metadata.
-- It limits the enabled candidate pool before rich provider calls.
+- It scans the complete supported TH/US lightweight equity universe before final ranking.
 - It fetches quote data before history or news.
 - It skips expensive history calls for candidates that fail cheap hard filters.
 - It keeps only compact scoring and evidence payloads in the response.
 
 ## Classification Policy
 
-Policies are versioned through `penny-opportunity-policy-v1`.
+Policies are versioned through `penny-policy-v1` with configuration version `penny-config-v1`.
 
 Thailand:
 
@@ -34,7 +40,7 @@ United States:
 - Penny stock: price below 5 USD.
 - Low-priced small cap: price above or equal to 5 USD and less than or equal to 10 USD.
 
-Thresholds are centralized in the backend service policy map rather than scattered through the application.
+Thresholds and factor weights are centralized in the Penny engine definition rather than scattered through the application.
 
 ## Eligibility Rules
 
@@ -79,6 +85,26 @@ The Penny Opportunity Score is a bounded 0-100 heuristic. It combines:
 
 The score is not a probability of profit, expected return, or multi-bagger prediction.
 
+Final ranking sorts by `penny_opportunity_score DESC`. Tie-breakers are deterministic and applied only when final scores match:
+
+1. `data_confidence DESC`
+2. `data_completeness DESC`
+3. `liquidity_score DESC`
+4. lower `risk_penalty`
+5. `symbol ASC`
+
+Data Confidence and Data Completeness are not added to the Penny Opportunity Score.
+
+## Hourly Scan Snapshot
+
+The backend owns the hourly scan through the shared engine scheduler. The browser only polls for the latest published snapshot and does not trigger a full market scan.
+
+The current Render configuration runs a single `uvicorn app.main:app --host 0.0.0.0 --port $PORT` process. Under that topology the in-process scheduler has one active owner per service instance and uses an execution lock to prevent overlapping scans. If deployment later adds multiple workers or replicas, this scheduler should move to an external cron-protected refresh endpoint or a dedicated worker.
+
+Each completed scan publishes a compact immutable snapshot containing scan timing, engine metadata, methodology version, score version, policy version, config version, qualification funnel counts, Top 5 items, provider status, limitations, duration, and status.
+
+If a new scan fails, the API keeps serving the latest successful snapshot, marks it stale or partial, and includes the failed scan timestamp and failure stage. If no successful snapshot exists yet, the endpoint returns `unavailable`.
+
 ## Risk Penalty
 
 Risk flags are explicit and structured. Each risk includes:
@@ -110,8 +136,12 @@ The endpoint returns:
 - `status`
 - `category`
 - `methodology_version`
+- `score_version`
+- `engine`
+- `policy_version`
 - `configuration_version`
 - `generated_at`
+- `scan`
 - `markets`
 - `warning`
 - `qualification`
@@ -132,6 +162,8 @@ The frontend adds a Penny Opportunities section inside the existing Today's Oppo
 4. Show loading states instead of stale previous-asset data.
 
 The warning is visible without opening a tooltip.
+
+The UI displays backend scan metadata: Last scanned, Next scan, Scans every hour, Universe scanned, Qualified candidates, and Data may be stale.
 
 ## Provider Limitations
 

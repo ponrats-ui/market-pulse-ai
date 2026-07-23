@@ -1,16 +1,43 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from math import sqrt
+import os
+from threading import Lock
+from time import monotonic
 from typing import Any, Callable, Dict, Iterable, List, Literal
+from uuid import uuid4
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
+from app.opportunities.models import OpportunityEngineDefinition, OpportunityEngineRuntime
+from app.opportunities.ranking import rank_candidates
+from app.opportunities.registry import register_engine
+from app.opportunities.scheduler import OpportunityScheduler
+from app.opportunities.snapshots import OpportunitySnapshotStore
+from app.providers.registry import get_provider
 
 SignalState = Literal["PASS", "FAIL", "UNKNOWN"]
 
 METHODOLOGY_VERSION = "penny-opportunity-v1"
-CONFIGURATION_VERSION = "penny-opportunity-policy-v1"
+POLICY_VERSION = "penny-policy-v1"
+CONFIGURATION_VERSION = "penny-config-v1"
+SCORE_VERSION = "penny-score-v1"
+SCAN_FREQUENCY_MINUTES = 60
+SCAN_MAX_WORKERS = max(1, min(int(os.getenv("PENNY_SCAN_MAX_WORKERS", "6")), 12))
+_DEFAULT_SNAPSHOT_KEY = ("ALL", 5)
+PENNY_ENGINE_ID = "penny-opportunity"
+PENNY_CATEGORY = "penny_opportunity"
+PENNY_FACTOR_WEIGHTS = {
+    "liquidity": 0.24,
+    "financial": 0.18,
+    "growth": 0.18,
+    "technical": 0.25,
+    "catalyst": 0.10,
+    "market_context": 0.05,
+}
 
 PENNY_WARNING_EN = (
     "Warning: Penny stocks and very low-priced equities carry extreme risk, including poor liquidity, severe "
@@ -89,6 +116,40 @@ POLICIES: Dict[str, PennyMarketPolicy] = {
     ),
 }
 
+PENNY_ENGINE_DEFINITION = OpportunityEngineDefinition(
+    engine_id=PENNY_ENGINE_ID,
+    category=PENNY_CATEGORY,
+    display_name="Penny Opportunity",
+    methodology_version=METHODOLOGY_VERSION,
+    score_version=SCORE_VERSION,
+    policy_version=POLICY_VERSION,
+    config_version=CONFIGURATION_VERSION,
+    supported_markets=["TH", "US"],
+    schedule_frequency_minutes=SCAN_FREQUENCY_MINUTES,
+    maximum_results=5,
+    shortlist_limit=50,
+    minimum_score=min(policy.minimum_opportunity_score for policy in POLICIES.values()),
+    minimum_confidence=min(policy.minimum_data_confidence for policy in POLICIES.values()),
+    minimum_completeness=min(policy.minimum_data_completeness for policy in POLICIES.values()),
+    freshness_policy={
+        "stale_data_threshold_hours": max(policy.stale_data_threshold_hours for policy in POLICIES.values()),
+    },
+    factor_weights=PENNY_FACTOR_WEIGHTS,
+    risk_policy={
+        "deduplicate_by_family": True,
+        "confirmed_critical_disqualifies": True,
+        "unknown_risk_is_not_confirmed": True,
+    },
+    tie_breaker_policy=[
+        "penny_opportunity_score DESC",
+        "data_confidence DESC",
+        "data_completeness DESC",
+        "liquidity_score DESC",
+        "risk_penalty ASC",
+        "symbol ASC",
+    ],
+)
+
 THAI_CANDIDATE_SYMBOLS = [
     "TTB.BK",
     "TRUE.BK",
@@ -129,6 +190,10 @@ QuoteFn = Callable[[str], Dict[str, Any]]
 HistoryFn = Callable[[str, str, str], Dict[str, Any]]
 NewsFn = Callable[[str, int], Dict[str, Any]]
 
+_scan_execution_lock = Lock()
+_snapshot_store = OpportunitySnapshotStore()
+_scheduler = OpportunityScheduler()
+
 
 def build_penny_opportunities(
     quote_fn: QuoteFn,
@@ -138,73 +203,108 @@ def build_penny_opportunities(
     limit: int = 5,
 ) -> Dict[str, Any]:
     safe_limit = max(1, min(int(limit or 5), 20))
+    scan_id = f"penny-{uuid4().hex[:12]}"
+    scan_started_at = datetime.now(timezone.utc)
+    scan_started_iso = scan_started_at.isoformat()
+    timer_started = monotonic()
     selected_markets = _selected_markets(market)
-    generated_at = datetime.now(timezone.utc).isoformat()
+    generated_at = scan_started_iso
     registry = _candidate_registry(selected_markets)
     candidates = []
     excluded = 0
     unknown = 0
+    classified = 0
+    failed_candidate_count = 0
     provider_status: List[Dict[str, Any]] = []
+    scan_quotes = _scan_quote_map(registry, quote_fn)
 
-    for asset in registry:
-        try:
-            policy = _policy_for_asset(asset)
-            if policy is None:
-                excluded += 1
-                continue
-            candidate = evaluate_candidate(asset, policy, quote_fn, history_fn, news_fn)
-            provider_status.extend(candidate.get("provider_status", []))
-            if candidate["hard_disqualified"]:
-                excluded += 1
-                continue
-            if not candidate["eligible_for_top5"]:
-                if candidate["data_completeness"] < policy.minimum_data_completeness:
-                    unknown += 1
-                else:
-                    excluded += 1
-                continue
-            candidates.append(candidate)
-        except Exception as exc:  # pragma: no cover - defensive API isolation
+    workers = min(SCAN_MAX_WORKERS, max(1, len(registry)))
+    if workers == 1:
+        results = [_evaluate_registry_asset(asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes) for asset in registry]
+    else:
+        results = []
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="penny-scan") as executor:
+            futures = [
+                executor.submit(_evaluate_registry_asset, asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes)
+                for asset in registry
+            ]
+            for future in as_completed(futures):
+                results.append(future.result())
+
+    for result in results:
+        provider_status.extend(result.get("provider_status", []))
+        if result["status"] == "unsupported":
             excluded += 1
-            provider_status.append({
-                "symbol": getattr(asset, "canonical_symbol", "unknown"),
-                "provider": "penny_opportunity_engine",
-                "stage": "candidate_processing",
-                "status": "error",
-                "reason": exc.__class__.__name__,
-                "timestamp": generated_at,
-            })
+            continue
+        if result["status"] == "error":
+            excluded += 1
+            failed_candidate_count += 1
+            continue
 
-    ranked = sorted(
-        candidates,
-        key=lambda item: (
-            -item["penny_opportunity_score"],
-            -item["data_confidence"],
-            item["severe_risk_count"],
-            -item["scores"]["liquidity"],
-            item["symbol"],
-        ),
-    )
-    items = [{**item, "rank": index + 1} for index, item in enumerate(ranked[:safe_limit])]
+        candidate = result["candidate"]
+        policy = result["policy"]
+        if candidate.get("classification_status") == "PASS":
+            classified += 1
+        if candidate["hard_disqualified"]:
+            excluded += 1
+            continue
+        if not candidate["eligible_for_top5"]:
+            if candidate["data_completeness"] < policy.minimum_data_completeness:
+                unknown += 1
+            else:
+                excluded += 1
+            continue
+        candidates.append(candidate)
+
+    items = rank_candidates(candidates, score_field="penny_opportunity_score", limit=safe_limit)
+    completed_at = datetime.now(timezone.utc)
+    completed_iso = completed_at.isoformat()
+    scan_duration_ms = round((monotonic() - timer_started) * 1000)
     status = "ok" if items else ("partial" if provider_status else "unavailable")
     return {
         "status": status,
-        "category": "penny_opportunity",
-        "methodology_version": METHODOLOGY_VERSION,
-        "configuration_version": CONFIGURATION_VERSION,
-        "generated_at": generated_at,
+        "category": PENNY_ENGINE_DEFINITION.category,
+        "engine": {
+            "engine_id": PENNY_ENGINE_DEFINITION.engine_id,
+            "category": PENNY_ENGINE_DEFINITION.category,
+            "methodology_version": PENNY_ENGINE_DEFINITION.methodology_version,
+            "score_version": PENNY_ENGINE_DEFINITION.score_version,
+            "policy_version": PENNY_ENGINE_DEFINITION.policy_version,
+            "config_version": PENNY_ENGINE_DEFINITION.config_version,
+        },
+        "methodology_version": PENNY_ENGINE_DEFINITION.methodology_version,
+        "score_version": PENNY_ENGINE_DEFINITION.score_version,
+        "policy_version": PENNY_ENGINE_DEFINITION.policy_version,
+        "configuration_version": PENNY_ENGINE_DEFINITION.config_version,
+        "generated_at": completed_iso,
+        "scan": {
+            "snapshot_id": scan_id,
+            "scan_id": scan_id,
+            "scan_started_at": scan_started_iso,
+            "scan_completed_at": completed_iso,
+            "last_successful_scan_at": completed_iso if status in {"ok", "partial"} else None,
+            "next_scan_at": (completed_at + timedelta(minutes=SCAN_FREQUENCY_MINUTES)).isoformat(),
+            "frequency_minutes": SCAN_FREQUENCY_MINUTES,
+            "is_stale": False,
+            "scan_duration_ms": scan_duration_ms,
+        },
         "markets": selected_markets,
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
         "qualification": {
             "universe_size": len(registry),
+            "prefiltered_count": classified,
+            "classified_count": classified,
             "eligible_count": len(candidates),
+            "qualified_count": len(candidates),
+            "failed_candidate_count": failed_candidate_count,
             "ranked_count": len(items),
+            "result_count": len(items),
             "excluded_count": excluded,
             "unknown_count": unknown,
         },
         "items": [_public_item(item) for item in items],
         "limitations": [
-            "Initial methodology uses bounded candidate pools to preserve production memory.",
+            "The scanner evaluates the complete currently supported Thai and US equity universe before ranking qualified candidates.",
             "Catalyst evidence is shown only when a configured provider returns verifiable items.",
             "Missing fundamentals, liquidity, or catalyst data reduce confidence instead of being replaced.",
             "Scores are transparent research rankings, not scientifically validated predictions.",
@@ -212,6 +312,205 @@ def build_penny_opportunities(
         "provider_status": provider_status[:50],
         "disclaimer": "This is not financial advice.",
     }
+
+
+def run_penny_scan_once(
+    quote_fn: QuoteFn,
+    history_fn: HistoryFn,
+    news_fn: NewsFn | None = None,
+    market: str | None = None,
+    limit: int = 5,
+) -> Dict[str, Any]:
+    if not _scan_execution_lock.acquire(blocking=False):
+        current = _snapshot_store.latest(PENNY_ENGINE_ID)
+        if current:
+            current["status"] = "partial"
+            current.setdefault("limitations", []).append("Scheduled penny scan skipped because a previous scan is still running.")
+            current.setdefault("provider_status", []).append({
+                "provider": "penny_opportunity_scheduler",
+                "stage": "scan_lock",
+                "status": "skipped",
+                "reason": "active_scan_running",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            return current
+        return _empty_snapshot("running", "A scheduled penny scan is already running.")
+    try:
+        snapshot = build_penny_opportunities(quote_fn, history_fn, news_fn, market=market, limit=limit)
+        snapshot["snapshot_status"] = snapshot["status"]
+        qualification = snapshot.get("qualification", {})
+        failed_all_candidates = (
+            qualification.get("universe_size", 0) > 0
+            and qualification.get("failed_candidate_count", 0) >= qualification.get("universe_size", 0)
+            and not snapshot.get("items")
+        )
+        if failed_all_candidates:
+            failed_at = datetime.now(timezone.utc).isoformat()
+            failure = {
+                "failed_scan_timestamp": failed_at,
+                "failure_stage": "candidate_processing",
+                "reason": "all_candidates_failed",
+            }
+            _snapshot_store.record_failure(PENNY_ENGINE_ID, failure)
+            current = _snapshot_store.latest(PENNY_ENGINE_ID)
+            if current:
+                current["status"] = "partial"
+                current["snapshot_status"] = "partial"
+                current.setdefault("limitations", []).append("Latest hourly penny scan failed for every candidate; serving the last successful snapshot.")
+                current["scan"]["is_stale"] = True
+                current["scan"]["failed_scan_timestamp"] = failed_at
+                current["scan"]["failure_stage"] = failure["failure_stage"]
+                return current
+            return _empty_snapshot("unavailable", "No successful Penny Opportunity scan has been published yet.", failure)
+        return _snapshot_store.publish(PENNY_ENGINE_ID, snapshot)
+    except Exception as exc:  # pragma: no cover - defensive scheduler isolation
+        failed_at = datetime.now(timezone.utc).isoformat()
+        failure = {
+            "failed_scan_timestamp": failed_at,
+            "failure_stage": "penny_opportunity_scan",
+            "reason": exc.__class__.__name__,
+        }
+        _snapshot_store.record_failure(PENNY_ENGINE_ID, failure)
+        current = _snapshot_store.latest(PENNY_ENGINE_ID)
+        if current:
+            current["status"] = "partial"
+            current["snapshot_status"] = "partial"
+            current.setdefault("limitations", []).append("Latest hourly penny scan failed; serving the last successful snapshot.")
+            current["scan"]["is_stale"] = True
+            current["scan"]["failed_scan_timestamp"] = failed_at
+            current["scan"]["failure_stage"] = failure["failure_stage"]
+            return current
+        return _empty_snapshot("unavailable", "No successful Penny Opportunity scan has been published yet.", failure)
+    finally:
+        _scan_execution_lock.release()
+
+
+def get_penny_opportunities_snapshot(market: str | None = None, limit: int = 5) -> Dict[str, Any]:
+    safe_limit = max(1, min(int(limit or 5), 20))
+    snapshot = _snapshot_store.latest(PENNY_ENGINE_ID)
+    failed = _snapshot_store.failure(PENNY_ENGINE_ID)
+    if not snapshot:
+        if _scan_execution_lock.locked():
+            return _empty_snapshot("running", "Initial Penny Opportunity scan is running; no successful snapshot has been published yet.", failed)
+        return _empty_snapshot("unavailable", "No successful Penny Opportunity scan has been published yet.", failed)
+
+    items = snapshot.get("items", [])
+    if market:
+        selected = set(_selected_markets(market))
+        items = [item for item in items if item.get("market") in selected]
+    snapshot["items"] = items[:safe_limit]
+    snapshot["qualification"] = {**snapshot.get("qualification", {}), "ranked_count": len(snapshot["items"]), "result_count": len(snapshot["items"])}
+    scan = snapshot.setdefault("scan", {})
+    completed = _parse_dt(scan.get("scan_completed_at"))
+    if completed and datetime.now(timezone.utc) - completed > timedelta(minutes=SCAN_FREQUENCY_MINUTES + 15):
+        snapshot["status"] = "partial"
+        scan["is_stale"] = True
+        snapshot.setdefault("limitations", []).append("Data may be stale because the latest published scan is older than the expected hourly window.")
+    if failed:
+        scan["failed_scan_timestamp"] = failed.get("failed_scan_timestamp")
+        scan["failure_stage"] = failed.get("failure_stage")
+    return snapshot
+
+
+def start_penny_opportunity_scheduler(
+    quote_fn: QuoteFn,
+    history_fn: HistoryFn,
+    news_fn: NewsFn | None = None,
+    market: str | None = None,
+    limit: int = 5,
+    frequency_minutes: int = SCAN_FREQUENCY_MINUTES,
+) -> bool:
+    definition = PENNY_ENGINE_DEFINITION
+    if frequency_minutes != definition.schedule_frequency_minutes:
+        definition = OpportunityEngineDefinition(
+            **{**definition.__dict__, "schedule_frequency_minutes": max(1, frequency_minutes)}
+        )
+    return _scheduler.start(definition, lambda: run_penny_scan_once(quote_fn, history_fn, news_fn, market=market, limit=limit))
+
+
+def stop_penny_opportunity_scheduler() -> None:
+    _scheduler.stop(PENNY_ENGINE_ID)
+
+
+def reset_penny_opportunity_snapshots_for_tests() -> None:
+    stop_penny_opportunity_scheduler()
+    _snapshot_store.reset(PENNY_ENGINE_ID)
+    _scheduler.reset_for_tests()
+
+
+def register_penny_opportunity_engine() -> None:
+    register_engine(
+        OpportunityEngineRuntime(
+            definition=PENNY_ENGINE_DEFINITION,
+            scan_once=run_penny_scan_once,
+            get_snapshot=get_penny_opportunities_snapshot,
+            start_scheduler=start_penny_opportunity_scheduler,
+            stop_scheduler=stop_penny_opportunity_scheduler,
+        )
+    )
+
+
+def _empty_snapshot(status: str, reason: str, failure: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    now = datetime.now(timezone.utc)
+    payload = {
+        "status": status,
+        "category": PENNY_ENGINE_DEFINITION.category,
+        "engine": {
+            "engine_id": PENNY_ENGINE_DEFINITION.engine_id,
+            "category": PENNY_ENGINE_DEFINITION.category,
+            "methodology_version": PENNY_ENGINE_DEFINITION.methodology_version,
+            "score_version": PENNY_ENGINE_DEFINITION.score_version,
+            "policy_version": PENNY_ENGINE_DEFINITION.policy_version,
+            "config_version": PENNY_ENGINE_DEFINITION.config_version,
+        },
+        "methodology_version": PENNY_ENGINE_DEFINITION.methodology_version,
+        "score_version": PENNY_ENGINE_DEFINITION.score_version,
+        "policy_version": PENNY_ENGINE_DEFINITION.policy_version,
+        "configuration_version": PENNY_ENGINE_DEFINITION.config_version,
+        "generated_at": now.isoformat(),
+        "scan": {
+            "snapshot_id": None,
+            "scan_id": None,
+            "scan_started_at": None,
+            "scan_completed_at": None,
+            "last_successful_scan_at": None,
+            "next_scan_at": (now + timedelta(minutes=SCAN_FREQUENCY_MINUTES)).isoformat(),
+            "frequency_minutes": SCAN_FREQUENCY_MINUTES,
+            "is_stale": True,
+            "scan_duration_ms": 0,
+        },
+        "markets": [],
+        "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
+        "qualification": {
+            "universe_size": 0,
+            "prefiltered_count": 0,
+            "classified_count": 0,
+            "eligible_count": 0,
+            "qualified_count": 0,
+            "excluded_count": 0,
+            "failed_candidate_count": 0,
+            "ranked_count": 0,
+            "result_count": 0,
+            "unknown_count": 0,
+        },
+        "items": [],
+        "limitations": [reason],
+        "provider_status": [],
+        "disclaimer": "This is not financial advice.",
+    }
+    if failure:
+        payload["scan"]["failed_scan_timestamp"] = failure.get("failed_scan_timestamp")
+        payload["scan"]["failure_stage"] = failure.get("failure_stage")
+    return payload
+
+
+def _parse_dt(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def evaluate_candidate(
@@ -263,12 +562,12 @@ def evaluate_candidate(
     confidence = _data_confidence(completeness, liquidity, financial, growth, technical, catalyst, risk_flags)
     risk_penalty = _risk_penalty([*hard_flags, *risk_flags], liquidity, technical)
     base_score = (
-        liquidity["score"] * 0.24
-        + financial["score"] * 0.18
-        + growth["score"] * 0.18
-        + technical["score"] * 0.25
-        + (catalyst["score"] if catalyst["score"] is not None else 35) * 0.10
-        + _market_context_score(asset, quote) * 0.05
+        liquidity["score"] * PENNY_FACTOR_WEIGHTS["liquidity"]
+        + financial["score"] * PENNY_FACTOR_WEIGHTS["financial"]
+        + growth["score"] * PENNY_FACTOR_WEIGHTS["growth"]
+        + technical["score"] * PENNY_FACTOR_WEIGHTS["technical"]
+        + (catalyst["score"] if catalyst["score"] is not None else 35) * PENNY_FACTOR_WEIGHTS["catalyst"]
+        + _market_context_score(asset, quote) * PENNY_FACTOR_WEIGHTS["market_context"]
     )
     score = _clamp(round(base_score - risk_penalty), 0, 100)
     risk_level = _risk_level(risk_penalty, [*hard_flags, *risk_flags])
@@ -337,13 +636,72 @@ def classify_price(price: float | None, policy: PennyMarketPolicy) -> Dict[str, 
 
 
 def _candidate_registry(markets: Iterable[str]) -> List[MasterAsset]:
-    wanted = set()
-    if "TH" in markets:
-        wanted.update(THAI_CANDIDATE_SYMBOLS)
-    if "US" in markets:
-        wanted.update(US_CANDIDATE_SYMBOLS)
-    assets = {asset.canonical_symbol: asset for asset in list_registry_assets(enabled_only=True, searchable_only=True)}
-    return [assets[symbol] for symbol in sorted(wanted) if symbol in assets]
+    selected = set(markets)
+    assets = list_registry_assets(enabled_only=True, searchable_only=True)
+    return sorted(
+        [asset for asset in assets if _asset_market(asset) in selected and _asset_is_supported_equity(asset)],
+        key=lambda item: item.canonical_symbol,
+    )
+
+
+def _evaluate_registry_asset(
+    asset: MasterAsset,
+    quote_fn: QuoteFn,
+    history_fn: HistoryFn,
+    news_fn: NewsFn | None,
+    generated_at: str,
+    scan_quotes: Dict[str, Dict[str, Any]],
+) -> Dict[str, Any]:
+    try:
+        policy = _policy_for_asset(asset)
+        if policy is None:
+            return {"status": "unsupported", "provider_status": []}
+        provider_symbol = asset.provider_symbols.get("yfinance") or asset.canonical_symbol
+        scan_quote = scan_quotes.get(provider_symbol) or scan_quotes.get(asset.canonical_symbol)
+
+        def selected_quote_fn(symbol: str) -> Dict[str, Any]:
+            if scan_quote and _can_use_scan_quote_only(scan_quote, policy):
+                return scan_quote
+            return quote_fn(symbol)
+
+        candidate = evaluate_candidate(asset, policy, selected_quote_fn, history_fn, news_fn)
+        return {
+            "status": "candidate",
+            "candidate": candidate,
+            "policy": policy,
+            "provider_status": candidate.get("provider_status", []),
+        }
+    except Exception as exc:  # pragma: no cover - defensive API isolation
+        return {
+            "status": "error",
+            "provider_status": [{
+                "symbol": getattr(asset, "canonical_symbol", "unknown"),
+                "provider": "penny_opportunity_engine",
+                "stage": "candidate_processing",
+                "status": "error",
+                "reason": exc.__class__.__name__,
+                "timestamp": generated_at,
+            }],
+        }
+
+
+def _scan_quote_map(registry: List[MasterAsset], quote_fn: QuoteFn) -> Dict[str, Dict[str, Any]]:
+    if not registry or getattr(quote_fn, "__name__", "") != "get_cached_quote":
+        return {}
+    try:
+        provider = get_provider("yfinance")
+        get_scan_quotes = getattr(provider, "get_scan_quotes", None)
+        if not callable(get_scan_quotes):
+            return {}
+        symbols = [asset.provider_symbols.get("yfinance") or asset.canonical_symbol for asset in registry]
+        return get_scan_quotes(symbols)
+    except Exception:
+        return {}
+
+
+def _can_use_scan_quote_only(quote: Dict[str, Any], policy: PennyMarketPolicy) -> bool:
+    price = _number(quote.get("price"))
+    return classify_price(price, policy)["status"] != "PASS"
 
 
 def _selected_markets(market: str | None) -> List[str]:
@@ -356,11 +714,24 @@ def _selected_markets(market: str | None) -> List[str]:
 
 
 def _policy_for_asset(asset: MasterAsset) -> PennyMarketPolicy | None:
-    if asset.country == "Thailand" or asset.canonical_symbol.endswith(".BK"):
+    market = _asset_market(asset)
+    if market == "TH":
         return POLICIES["TH"]
-    if asset.country in {"US", "United States"} or asset.exchange in {"NASDAQ", "NYSE", "NYSE Arca", "AMEX"}:
+    if market == "US":
         return POLICIES["US"]
     return None
+
+
+def _asset_market(asset: MasterAsset) -> str | None:
+    if asset.country == "Thailand" or asset.canonical_symbol.endswith(".BK"):
+        return "TH"
+    if asset.country in {"US", "United States"} or asset.exchange in {"NASDAQ", "NYSE", "NYSE Arca", "AMEX"}:
+        return "US"
+    return None
+
+
+def _asset_is_supported_equity(asset: MasterAsset) -> bool:
+    return asset.asset_class == "equity" and asset.asset_type in {"stock", "foreign_stock", "preferred_stock", "adr"}
 
 
 def _liquidity_score(price: float | None, quote: Dict[str, Any], volumes: List[float], policy: PennyMarketPolicy) -> Dict[str, Any]:

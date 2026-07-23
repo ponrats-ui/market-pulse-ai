@@ -65,7 +65,9 @@ Penny stock is a category, not an investment thesis. Cheapness alone should neve
 
 ### Implementation Reference
 
-The first production implementation is documented in `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md` and uses methodology version `penny-opportunity-v1`.
+The first production implementation is documented in `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, runs on the shared Opportunity Engine Framework, and uses methodology version `penny-opportunity-v1`.
+
+Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe. The final ranking score is the positive weighted factor score minus risk penalty, bounded between 0 and 100. Data Confidence and Data Completeness are qualification, explanation, and tie-breaking signals only; they are not added to the Opportunity Score.
 
 ## Catalyst Score
 

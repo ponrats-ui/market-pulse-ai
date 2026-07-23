@@ -183,7 +183,7 @@ Opportunity Score must not equal Confidence. Confidence measures AI certainty an
 
 Opportunity Ranking should prioritize assets for research using opportunity strength, catalyst quality, risk penalty, evidence quality, and confidence. It should not imply that the top-ranked asset must be bought.
 
-The RC2 Penny Opportunity Scanner implements this principle for low-priced Thailand and United States equities where the current provider stack exposes sufficient real data. It uses a bounded candidate pool, explicit hard-disqualification rules, risk penalties, data confidence, and visible warnings. See `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`.
+The RC2 Penny Opportunity Scanner implements this principle for low-priced Thailand and United States equities where the current provider stack exposes sufficient real data. It is the first registered engine on the shared Opportunity Engine Framework, which standardizes scheduling, snapshot publication, deterministic ranking, confidence separation, completeness disclosure, and failure fallback. See `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`.
 
 ### Multi-Bagger Similarity
 

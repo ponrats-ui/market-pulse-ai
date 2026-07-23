@@ -8,13 +8,14 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Added
 
-- Explainable Penny Opportunity Scanner for bounded Thailand and United States low-priced equity discovery.
-- `GET /api/opportunities/penny` endpoint with market-aware classification, risk penalties, data confidence, missing-data disclosure, and provider attribution.
+- Explainable Penny Opportunity Scanner for Thailand and United States low-priced equity discovery across the complete supported lightweight registry universe.
+- `GET /api/opportunities/penny` endpoint with hourly backend scan snapshots, market-aware classification, risk penalties, data confidence, missing-data disclosure, and provider attribution.
 - Penny Opportunities UI section inside Today's Opportunities with a visible Thai/English risk warning and full-card selected-asset navigation.
+- Shared Opportunity Engine Framework with reusable engine contracts, registry, deterministic ranking, scheduler shell, and atomic snapshot store for future opportunity categories.
 
 ### Documentation
 
-- Added `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md` and linked the scanner across roadmap, product bible, AI architecture, scoring, and explainability docs.
+- Added `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, then linked the framework and scanner across roadmap, product bible, AI architecture, scoring, and explainability docs.
 
 ## [1.0.0-rc1] - 2026-07-18
 

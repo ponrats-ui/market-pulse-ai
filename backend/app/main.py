@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 import json
 from datetime import datetime, timezone
 import os
@@ -25,7 +26,7 @@ from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
 from app.services.macro import company_events, intelligence_status, macro_indicators
 from app.services.news import news_for_symbol, news_impact_for_symbol
-from app.services.penny_opportunities import build_penny_opportunities
+from app.services.penny_opportunities import get_penny_opportunities_snapshot, register_penny_opportunity_engine, start_penny_opportunity_scheduler, stop_penny_opportunity_scheduler
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
@@ -81,7 +82,17 @@ class DigestRequest(BaseModel):
     context: dict[str, Any] = {}
 
 
-app = FastAPI(title="Market Pulse AI API", version="1.0.0-rc1")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    register_penny_opportunity_engine()
+    start_penny_opportunity_scheduler(get_cached_quote, get_cached_history, news_for_symbol)
+    try:
+        yield
+    finally:
+        stop_penny_opportunity_scheduler()
+
+
+app = FastAPI(title="Market Pulse AI API", version="1.0.0-rc1", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(_cors_allowed_origins()),
@@ -223,13 +234,7 @@ def penny_opportunities(
     limit: int = Query(5, ge=1, le=20),
     language: str = Query("th"),
 ) -> Dict[str, Any]:
-    return build_penny_opportunities(
-        get_cached_quote,
-        get_cached_history,
-        news_for_symbol,
-        market=market,
-        limit=limit,
-    )
+    return get_penny_opportunities_snapshot(market=market, limit=limit)
 
 
 @app.post("/api/assistant/ask")

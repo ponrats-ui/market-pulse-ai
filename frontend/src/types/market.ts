@@ -53,14 +53,37 @@ export interface PennyOpportunityItem {
   provider_attribution: string[];
 }
 export interface PennyOpportunitiesResponse {
-  status: 'ok' | 'partial' | 'unavailable' | string;
+  status: 'running' | 'ok' | 'partial' | 'unavailable' | string;
   category: 'penny_opportunity' | string;
+  engine?: {
+    engine_id: string;
+    category: string;
+    methodology_version: string;
+    score_version: string;
+    policy_version: string;
+    config_version: string;
+  };
   methodology_version: string;
+  score_version?: string;
+  policy_version?: string;
   configuration_version: string;
   generated_at: string;
+  scan?: {
+    snapshot_id?: string | null;
+    scan_id?: string | null;
+    scan_started_at?: string | null;
+    scan_completed_at?: string | null;
+    last_successful_scan_at?: string | null;
+    next_scan_at?: string | null;
+    failed_scan_timestamp?: string | null;
+    failure_stage?: string | null;
+    frequency_minutes: number;
+    is_stale: boolean;
+    scan_duration_ms: number;
+  };
   markets: string[];
   warning: { th: string; en: string };
-  qualification: { universe_size: number; eligible_count: number; ranked_count: number; excluded_count: number; unknown_count: number };
+  qualification: { universe_size: number; prefiltered_count?: number; classified_count?: number; eligible_count: number; qualified_count?: number; excluded_count: number; failed_candidate_count?: number; ranked_count: number; result_count?: number; unknown_count: number };
   items: PennyOpportunityItem[];
   limitations: string[];
   provider_status: string[];

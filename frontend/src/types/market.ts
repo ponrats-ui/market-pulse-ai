@@ -26,6 +26,46 @@ export interface CalendarResponse { events: CalendarEvent[]; source: string; pro
 export interface NewsImpactItem { headline: string; source: string; url?: string | null; published_at?: string | null; asset_impact: string; impact_level: string; sentiment: string; ai_explanation: string; risk_warning: string; }
 export interface NewsImpactResponse { symbol: string; source: string; provider_roadmap: string[]; items: NewsImpactItem[]; disclaimer: string; provider_configured?: boolean; message?: string; message_th?: string; error?: string; }
 export interface SentimentResponse { symbol: string; score: number | null; label: string; source: string; note: string; note_th?: string; provider_configured?: boolean; }
+export interface PennyRiskFlag { code: string; severity: string; status: string; penalty: number; evidence: string; timestamp: string; explanation: { th: string; en: string }; }
+export interface PennyCatalyst { type: string; title: string; source: string; url?: string | null; timestamp?: string | null; confidence: string; }
+export interface PennyOpportunityItem {
+  rank: number;
+  symbol: string;
+  provider_symbol: string;
+  name: string;
+  market: string;
+  exchange: string;
+  currency: string;
+  classification: string;
+  price: number | null;
+  price_timestamp: string;
+  penny_opportunity_score: number;
+  data_confidence: number;
+  data_completeness: number;
+  scores: Record<string, number | null>;
+  risk_penalty: number;
+  risk_level: string;
+  strengths: string[];
+  risks: PennyRiskFlag[];
+  missing_data: string[];
+  catalysts: PennyCatalyst[];
+  explanation: { th: string; en: string };
+  provider_attribution: string[];
+}
+export interface PennyOpportunitiesResponse {
+  status: 'ok' | 'partial' | 'unavailable' | string;
+  category: 'penny_opportunity' | string;
+  methodology_version: string;
+  configuration_version: string;
+  generated_at: string;
+  markets: string[];
+  warning: { th: string; en: string };
+  qualification: { universe_size: number; eligible_count: number; ranked_count: number; excluded_count: number; unknown_count: number };
+  items: PennyOpportunityItem[];
+  limitations: string[];
+  provider_status: string[];
+  disclaimer: string;
+}
 export interface MarketConditionMetric { key: string; label: string; symbol: string; value: number | null; change: number | null; change_percent: number | null; timestamp?: string; provider?: string; available: boolean; error?: string; }
 export interface MarketConditionResponse { state_th: string; state_en: string; average_change_percent: number | null; sentiment: SentimentResponse; metrics: MarketConditionMetric[]; evidence: string[]; unavailable: string[]; provider: string; disclaimer: string; }
 export interface PortfolioTransaction { symbol: string; side: 'buy' | 'sell'; quantity: number; price: number; date: string; }

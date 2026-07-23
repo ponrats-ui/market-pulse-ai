@@ -1,0 +1,192 @@
+# Penny Opportunity Scanner Implementation
+
+## Purpose
+
+The Penny Opportunity Scanner adds an evidence-first discovery path for low-priced equities. It is designed to identify candidates that may deserve further research, not to recommend buying or selling.
+
+Penny stock is treated as a category, not an investment thesis. Low price alone cannot create a high ranking.
+
+## Architecture
+
+The scanner follows the existing FastAPI service pattern and is exposed through:
+
+`GET /api/opportunities/penny?market=&limit=&language=`
+
+The implementation is intentionally memory-conscious:
+
+- It starts from lightweight Master Asset Registry metadata.
+- It limits the enabled candidate pool before rich provider calls.
+- It fetches quote data before history or news.
+- It skips expensive history calls for candidates that fail cheap hard filters.
+- It keeps only compact scoring and evidence payloads in the response.
+
+## Classification Policy
+
+Policies are versioned through `penny-opportunity-policy-v1`.
+
+Thailand:
+
+- Penny stock: price less than or equal to 5 THB.
+- High-risk low-price subcategory: price below 1 THB.
+
+United States:
+
+- Penny stock: price below 5 USD.
+- Low-priced small cap: price above or equal to 5 USD and less than or equal to 10 USD.
+
+Thresholds are centralized in the backend service policy map rather than scattered through the application.
+
+## Eligibility Rules
+
+Every candidate is evaluated with real provider-returned data where available. The scanner verifies:
+
+- Equity asset class.
+- Supported market.
+- Provider symbol.
+- Valid current price.
+- Market-aware price classification.
+- Trading history availability.
+- Liquidity.
+- Data freshness.
+- Provider attribution.
+
+Unsupported or unavailable conditions are surfaced as `UNKNOWN` where data is absent.
+
+## Hard Disqualification Rules
+
+A candidate cannot enter the Top 5 when confirmed evidence shows:
+
+- Invalid or missing price.
+- Price outside the market policy.
+- Non-equity instrument.
+- Insufficient trading history.
+- Insufficient liquidity.
+- Data completeness below the configured minimum.
+- Confirmed critical risk flag.
+
+The scanner does not infer severe risk from missing data alone.
+
+## Scoring Factors
+
+The Penny Opportunity Score is a bounded 0-100 heuristic. It combines:
+
+- Liquidity score.
+- Financial health score.
+- Growth score.
+- Technical and momentum score.
+- Catalyst evidence score when a live provider supplies verified evidence.
+- Risk penalty.
+
+The score is not a probability of profit, expected return, or multi-bagger prediction.
+
+## Risk Penalty
+
+Risk flags are explicit and structured. Each risk includes:
+
+- Code.
+- Severity.
+- Status.
+- Penalty.
+- Evidence.
+- Timestamp.
+- Thai and English explanation.
+
+Critical confirmed risks disqualify candidates. Lower-severity risks reduce the final score.
+
+## Data Confidence
+
+Data Confidence is separate from Penny Opportunity Score. It measures how much reliable evidence was available to support the ranking.
+
+Missing fundamentals, missing verified catalysts, short history, stale timestamps, and unknown risk checks reduce confidence.
+
+## Missing Data Behavior
+
+Missing data is never replaced with synthetic, average, simulated, placeholder, or fabricated values. The frontend displays missing data and unavailable catalyst evidence directly on each card.
+
+## API Contract
+
+The endpoint returns:
+
+- `status`
+- `category`
+- `methodology_version`
+- `configuration_version`
+- `generated_at`
+- `markets`
+- `warning`
+- `qualification`
+- `items`
+- `limitations`
+- `provider_status`
+- `disclaimer`
+
+Each item contains rank, symbol, market, exchange, currency, classification, price, scores, risk flags, missing data, catalyst evidence, explanation, timestamp, and provider attribution.
+
+## UI Behavior
+
+The frontend adds a Penny Opportunities section inside the existing Today's Opportunities area. Cards are fully clickable and use the existing selected-asset state path:
+
+1. Select asset.
+2. Scroll to Selected Asset.
+3. Refresh quote, chart, AI, risk, financials, sentiment, and news panels.
+4. Show loading states instead of stale previous-asset data.
+
+The warning is visible without opening a tooltip.
+
+## Provider Limitations
+
+The first implementation uses the current provider stack. Verified catalysts are only shown when a configured provider returns real news or event evidence. If no live catalyst provider is available, the UI says so.
+
+## Testing
+
+Backend coverage includes classification, scoring boundaries, missing data, risk penalties, deterministic ranking, provider failure isolation, endpoint wiring, and memory-sensitive shortlist behavior.
+
+Frontend validation is performed through TypeScript production build and browser review.
+
+## Known Limitations
+
+- The methodology is an initial transparent ranking heuristic, not a statistically validated investment model.
+- Candidate pools are intentionally bounded to protect production memory.
+- Catalyst scoring remains limited until stronger live event providers are configured.
+- Fewer than five results may appear when fewer candidates pass quality and risk filters.
+
+## Future Validation
+
+Future work should validate the methodology against historical outcomes, add stronger provider-backed filings and events, and document any scoring changes in `docs/SCORING_FRAMEWORK.md`.
+
+## Founder Verification Checklist
+
+Founder Acceptance remains pending. Only the Founder may mark these items as PASS.
+
+Desktop:
+
+- [ ] Penny Opportunities category is visible.
+- [ ] Important warning is visible.
+- [ ] Results use real data.
+- [ ] No fabricated catalyst is shown.
+- [ ] Scores have explanations.
+- [ ] Risks are displayed beside opportunities.
+- [ ] Missing data is explicit.
+- [ ] Full card is clickable.
+- [ ] Selected asset updates correctly.
+- [ ] Dependent panels do not show stale data.
+- [ ] Fewer than five qualifying results is handled honestly.
+
+Mobile:
+
+- [ ] Same candidate universe as desktop.
+- [ ] No clipping or hidden cards.
+- [ ] Warning remains readable.
+- [ ] Touch interaction works.
+- [ ] Asset selection updates all panels.
+- [ ] Loading states prevent stale information.
+- [ ] Thai and English layouts remain usable.
+
+Production:
+
+- [ ] Endpoint responds successfully.
+- [ ] Memory remains below service limit.
+- [ ] No restart during founder test.
+- [ ] Provider failures degrade gracefully.
+- [ ] Logs contain no secrets.
+- [ ] Results expose timestamps and attribution.

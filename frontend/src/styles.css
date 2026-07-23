@@ -2417,3 +2417,141 @@ option { background: #0a101c; color: #d9e7ff; }
 .market-assessment-more ul {
   margin-top: 0.38rem;
 }
+
+.penny-opportunity-group {
+  margin-top: 1rem;
+}
+.penny-warning {
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(255, 180, 84, 0.38);
+  border-left: 3px solid #ffb454;
+  border-radius: 0.55rem;
+  background: rgba(35, 22, 8, 0.92);
+  padding: 0.72rem 0.85rem;
+  color: #ffe4b7;
+}
+.penny-warning strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #ffd48a;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.penny-warning p {
+  white-space: pre-line;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.penny-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+.penny-card {
+  gap: 0.62rem;
+}
+.penny-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+.penny-meta {
+  margin-top: 0.16rem;
+  color: #7e8da8;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+.penny-score-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+.penny-mini {
+  border: 1px solid rgba(46, 67, 98, 0.72);
+  border-radius: 0.45rem;
+  background: rgba(8, 13, 23, 0.78);
+  padding: 0.45rem;
+}
+.penny-mini span {
+  display: block;
+  color: #7e8da8;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.penny-mini b {
+  display: block;
+  margin-top: 0.15rem;
+  color: #f7c948;
+  font-size: 0.95rem;
+}
+.penny-status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  align-items: center;
+}
+.penny-explanation {
+  color: #d9e7ff;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.penny-evidence {
+  display: grid;
+  gap: 0.45rem;
+}
+.penny-evidence div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+.penny-evidence b {
+  width: 100%;
+  color: #9fb0cc;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.penny-evidence span {
+  border: 1px solid rgba(53, 208, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(13, 21, 34, 0.8);
+  padding: 0.18rem 0.48rem;
+  color: #b8c7df;
+  font-size: 0.68rem;
+}
+.penny-empty {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 6.5rem;
+  place-items: center;
+  border: 1px dashed rgba(46, 67, 98, 0.82);
+  border-radius: 0.6rem;
+  background: rgba(8, 13, 23, 0.68);
+  padding: 1rem;
+  text-align: center;
+}
+.penny-empty b {
+  color: #d9e7ff;
+}
+.penny-empty p,
+.penny-summary {
+  color: #7e8da8;
+  font-size: 0.76rem;
+}
+.penny-summary {
+  margin-top: 0.5rem;
+}
+@media (max-width: 760px) {
+  .penny-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .penny-score-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -183,6 +183,8 @@ Opportunity Score must not equal Confidence. Confidence measures AI certainty an
 
 Opportunity Ranking should prioritize assets for research using opportunity strength, catalyst quality, risk penalty, evidence quality, and confidence. It should not imply that the top-ranked asset must be bought.
 
+The RC2 Penny Opportunity Scanner implements this principle for low-priced Thailand and United States equities where the current provider stack exposes sufficient real data. It uses a bounded candidate pool, explicit hard-disqualification rules, risk penalties, data confidence, and visible warnings. See `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`.
+
 ### Multi-Bagger Similarity
 
 Multi-Bagger Similarity compares current companies against historical high-growth companies such as NVIDIA, AMD, Netflix, Monster Beverage, Tesla, and Shopify.
@@ -220,7 +222,7 @@ Primary reference: [research/RESEARCH_PAPERS.md](research/RESEARCH_PAPERS.md)
 
 Scores explain the market. They do not predict the future.
 
-The scoring framework defines Opportunity Score, Penny Opportunity Score, Market Score, Market Adjusted Score, Risk Score, Risk Penalty, Catalyst Score, Similarity Score, and Confidence Score. Each score must have a purpose, meaning, interpretation standard, and evidence model.
+The scoring framework defines Opportunity Score, Penny Opportunity Score, Market Score, Market Adjusted Score, Risk Score, Risk Penalty, Catalyst Score, Similarity Score, and Confidence Score. Each score must have a purpose, meaning, interpretation standard, and evidence model. Penny Opportunity Score is a ranking heuristic for research prioritization, not a prediction of profit or multi-bagger outcome.
 
 Primary reference: [SCORING_FRAMEWORK.md](SCORING_FRAMEWORK.md)
 

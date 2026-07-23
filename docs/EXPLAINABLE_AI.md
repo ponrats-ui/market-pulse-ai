@@ -89,6 +89,8 @@ Opportunity discovery explanations should include:
 
 If the system cannot explain why an asset appears, the asset should not be presented as a high-quality opportunity.
 
+For Penny Opportunities, every ranked item must also show market-aware classification, current price, data timestamp, provider attribution, data completeness, risk penalty, catalyst availability, and missing-data disclosure. The UI must state when fewer than five candidates qualify instead of filling the list with weaker assets.
+
 ## User Understanding
 
 Users should understand every score and recommendation well enough to challenge it.

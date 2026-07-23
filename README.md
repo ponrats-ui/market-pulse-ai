@@ -20,6 +20,7 @@ Thai summary: Market Pulse AI สร้างโดย **Ponrat Saripan** แล
 - Language preference stored in localStorage
 - Chief Investment AI summary card
 - Five-specialist AI Investment Committee
+- Explainable Penny Opportunity Scanner with risk, confidence, and missing-data disclosure
 - Grouped financial statement cards with color indicators
 - Fear & Greed / market sentiment widget
 - News impact unavailable-state panel until a provider is configured
@@ -60,6 +61,7 @@ Run tests:
 - `GET /api/analysis/{symbol}`
 - `GET /api/risk/{symbol}`
 - `GET /api/financials/{symbol}`
+- `GET /api/opportunities/penny?market=&limit=&language=`
 
 ### Frontend
 

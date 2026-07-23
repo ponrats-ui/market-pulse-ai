@@ -50,6 +50,8 @@ The discovery engine must preserve the separation between:
 
 Opportunity discovery must never become a black-box signal.
 
+The RC2 Penny Opportunity Scanner is the first implemented discovery path. It runs a bounded market-aware pipeline from lightweight universe metadata through eligibility, liquidity, financial, growth, technical, catalyst, risk, score, confidence, and explainable ranking stages. Provider failures are isolated per candidate and missing evidence remains visible.
+
 ## Stage Responsibilities
 
 ### Market Data

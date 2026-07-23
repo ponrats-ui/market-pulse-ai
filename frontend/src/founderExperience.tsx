@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart3, Info, Search, WalletCards } from 'lucide-react';
 import { api } from './lib/api';
-import type { Asset, AssetCategory, AssetQuote, AssetSearchItem, AssetSparkline, CompareResponse, PortfolioEvaluationResponse, PortfolioHolding, PortfolioTransaction, SectorItem } from './types/market';
+import type { Asset, AssetCategory, AssetQuote, AssetSearchItem, AssetSparkline, CompareResponse, PennyOpportunitiesResponse, PennyOpportunityItem, PortfolioEvaluationResponse, PortfolioHolding, PortfolioTransaction, SectorItem } from './types/market';
 import type { Language } from './i18n';
 
 export type OpportunityRegion = 'crypto' | 'us' | 'thai';
@@ -190,21 +190,77 @@ export function contextPrompts(symbol: string, quote: AssetQuote | null): string
   return [`${symbol}: What are the key positive and negative factors?`, `${symbol}: What risks need a plan first?`, `${symbol}: Should I wait or keep monitoring?`];
 }
 
-export function TodayOpportunities({ language, scores, loading, scanTime, sparklines, onOpen }: { language: Language; scores: OpportunityScore[]; loading: boolean; scanTime?: string; sparklines: SparklineMap; onOpen: (symbol: string) => void }) {
+export function TodayOpportunities({ language, scores, loading, scanTime, sparklines, penny, pennyLoading = false, onOpen }: { language: Language; scores: OpportunityScore[]; loading: boolean; scanTime?: string; sparklines: SparklineMap; penny?: PennyOpportunitiesResponse | null; pennyLoading?: boolean; onOpen: (symbol: string) => void }) {
   const crypto = scores.filter((item) => isCryptoOpportunityAsset(item)).slice(0, 5);
   const us = scores.filter((item) => isUsOpportunityAsset({ symbol: item.symbol, label: item.label, asset_type: 'stock', market: 'United States' })).slice(0, 5);
   const thai = scores.filter((item) => item.symbol.endsWith('.BK')).slice(0, 5);
   const [activeScoreInfo, setActiveScoreInfo] = React.useState<string | null>(null);
   const scoreHelpTitle = 'Opportunity Score';
   const scoreHelpText = language === 'th' ? 'Opportunity Score สรุปสัญญาณตลาดจริงหลายด้านเป็นคะแนน heuristic แบบถ่วงน้ำหนัก 0-100 เพื่อช่วยจัดลำดับสินทรัพย์สำหรับการศึกษาต่อ ไม่ใช่คำทำนายหรือคำแนะนำการลงทุน' : 'Opportunity Score summarizes multiple real market signals into a weighted heuristic score from 0-100. It is intended to prioritize assets for further research and should not be interpreted as a prediction or investment recommendation.';
+  const p = pennyLabels(language);
+  const pennyItems = (penny?.items ?? []).slice(0, 5);
   const renderGroup = (title: string, region: OpportunityRegion, items: OpportunityScore[]) => <div className="opportunity-group"><div className="opportunity-group-header"><h3>{title}</h3><span>{latestScanLabel(region)}</span></div><div className="grid gap-2">{items.length ? items.map((item) => { const changePositive = (item.changePercent ?? 0) >= 0; const recommendation = recommendationForScore(item.score); return <article className="opportunity-card opportunity-card-pro" key={item.symbol} role="button" tabIndex={0} aria-label={`Open ${item.symbol}`} onClick={() => onOpen(item.symbol)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(item.symbol); } }}><div className="opportunity-row-top"><div className="opportunity-left-info"><AssetLogo symbol={item.symbol} name={item.label} logoUrl={item.logoUrl} /><div className="opportunity-identity"><p className="opportunity-ticker">{item.symbol}</p><p className="opportunity-company">{item.label}</p></div></div><div className="opportunity-price-stack"><span className="opportunity-price">{formatNumber(item.price)} {item.currency}</span><span className={changePositive ? 'opportunity-up' : 'opportunity-down'}>{formatPercent(item.changePercent)}</span></div><div className="opportunity-score"><span className={scoreToneClass(item.score)}>{item.score}</span><small>/100</small><button className="score-help" type="button" aria-expanded={activeScoreInfo === item.symbol} aria-label={scoreHelpTitle + ': ' + scoreHelpText} onClick={(event) => { event.stopPropagation(); onOpen(item.symbol); setActiveScoreInfo(activeScoreInfo === item.symbol ? null : item.symbol); }}><Info size={12} /><span>Why?</span></button></div><AssetSparkline symbol={item.symbol} sparkline={sparklines[item.symbol]} /></div>{activeScoreInfo === item.symbol && <ScoreExplainPopover score={item.score} onClose={() => setActiveScoreInfo(null)} />}<div className="opportunity-metrics"><span className={`recommendation-badge ${recommendation.className}`}>{recommendation.label}</span></div><div className="opportunity-reasons">{reasonChips(item).map((chip) => <span key={`${item.symbol}-${chip}`}>{chip}</span>)}</div><p className="opportunity-source">Source: {item.source} | {formatTime(item.timestamp)}</p><p className="opportunity-unavailable">Unavailable: {item.unavailableFactors.join(', ')}</p><button className="watch-button mt-3 w-full" onClick={(event) => { event.stopPropagation(); onOpen(item.symbol); }}>Open Asset</button></article>; }) : <div className="flex min-h-28 items-center justify-center rounded-md border border-dashed border-terminal-border bg-terminal-panel2 p-4 text-center text-sm text-terminal-muted">{loading ? 'Scanning real market data' : 'Not enough real data to rank opportunities'}</div>}</div></div>;
-  return <section className="panel-card professional-panel opportunity-section"><div className="professional-header opportunity-title"><Search size={18} /><h2>TODAY'S OPPORTUNITIES</h2></div><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-terminal-muted">PIA screens only provider-returned quote data. No simulated values are used.</p><span className="text-xs text-terminal-muted">{scanTime ? `Latest Scan ${formatTime(scanTime)}` : 'Awaiting data'}</span></div><div className="grid gap-3 xl:grid-cols-3">{renderGroup('CRYPTO TOP 5', 'crypto', crypto)}{renderGroup('US MARKET TOP 5', 'us', us)}{renderGroup('THAI MARKET TOP 5', 'thai', thai)}</div></section>;
+  const renderPennyCard = (item: PennyOpportunityItem) => <article className="opportunity-card opportunity-card-pro penny-card" key={item.symbol} role="button" tabIndex={0} aria-label={`${p.openAsset} ${item.symbol}`} onClick={() => onOpen(item.symbol)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(item.symbol); } }}><div className="penny-card-header"><div className="opportunity-left-info"><AssetLogo symbol={item.symbol} name={item.name} /><div className="opportunity-identity"><p className="opportunity-ticker">#{item.rank} {item.symbol}</p><p className="opportunity-company">{item.name}</p><p className="penny-meta">{item.market} | {item.exchange} | {item.classification.replace(/_/g, ' ')}</p></div></div><div className="opportunity-price-stack"><span className="opportunity-price">{formatNumber(item.price)} {item.currency}</span><span>{p.lastUpdated}: {formatTime(item.price_timestamp)}</span></div></div><div className="penny-score-grid"><Metric label={p.pennyScore} value={`${item.penny_opportunity_score}/100`} /><Metric label={p.dataConfidence} value={`${item.data_confidence}/100`} /><Metric label={p.dataCompleteness} value={`${item.data_completeness}/100`} /><Metric label={p.riskPenalty} value={`-${item.risk_penalty}`} /></div><div className="penny-status-line"><span className={`recommendation-badge ${item.risk_level === 'high' ? 'badge-avoid' : item.risk_level === 'medium' ? 'badge-neutral' : 'badge-watch'}`}>{p.riskLevel}: {item.risk_level}</span><span className="pill">{item.catalysts.length ? p.verifiedCatalyst : p.noCatalyst}</span></div><p className="penny-explanation">{localizedText(item.explanation, language)}</p><div className="penny-evidence"><div><b>{p.strengths}</b>{visibleList(item.strengths).map((value) => <span key={`${item.symbol}-strength-${value}`}>{value}</span>)}</div><div><b>{p.risks}</b>{visibleList(item.risks.map((risk) => risk.explanation?.[language] ?? risk.explanation?.en ?? risk.code)).map((value) => <span key={`${item.symbol}-risk-${value}`}>{value}</span>)}</div><div><b>{p.missingData}</b>{visibleList(item.missing_data).map((value) => <span key={`${item.symbol}-missing-${value}`}>{value}</span>)}</div></div><AssetSparkline symbol={item.symbol} sparkline={sparklines[item.symbol]} compact /><p className="opportunity-source">{p.source}: {item.provider_attribution.join(', ') || 'Unavailable'} | {p.methodology}: {penny?.methodology_version ?? 'penny-opportunity-v1'}</p><button className="watch-button mt-3 w-full" onClick={(event) => { event.stopPropagation(); onOpen(item.symbol); }}>{p.openAsset}</button></article>;
+  return <section className="panel-card professional-panel opportunity-section"><div className="professional-header opportunity-title"><Search size={18} /><h2>TODAY'S OPPORTUNITIES</h2></div><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-terminal-muted">PIA screens only provider-returned quote data. No simulated values are used.</p><span className="text-xs text-terminal-muted">{scanTime ? `Latest Scan ${formatTime(scanTime)}` : 'Awaiting data'}</span></div><div className="grid gap-3 xl:grid-cols-3">{renderGroup('CRYPTO TOP 5', 'crypto', crypto)}{renderGroup('US MARKET TOP 5', 'us', us)}{renderGroup('THAI MARKET TOP 5', 'thai', thai)}</div><div className="opportunity-group penny-opportunity-group"><div className="opportunity-group-header"><h3>{p.pennyOpportunities}</h3><span>{penny?.generated_at ? formatTime(penny.generated_at) : p.awaitingData}</span></div><div className="penny-warning"><strong>{p.importantWarning}</strong><p>{penny?.warning?.[language] ?? penny?.warning?.en ?? p.warningFallback}</p></div>{pennyItems.length ? <div className="penny-grid">{pennyItems.map(renderPennyCard)}</div> : <div className="penny-empty"><b>{pennyLoading ? p.scanning : p.noQualifying}</b><p>{penny?.limitations?.join(' | ') || p.fewerThanFive}</p><p>{penny?.provider_status?.join(' | ')}</p></div>}<p className="penny-summary">{p.fewerThanFive}: {penny?.qualification?.ranked_count ?? 0} / {Math.min(5, penny?.qualification?.eligible_count ?? 5)}</p></div></section>;
 }
 
 
 function ScoreExplainPopover({ score, onClose }: { score: number; onClose: () => void }) {
   const rows = illustrativeScoreBreakdown(score);
   return <div className="score-popover" role="dialog" onClick={(event) => event.stopPropagation()} aria-label="Opportunity Score explanation"><div className="score-popover-header"><div><p>Opportunity Score</p><strong>{score} /100</strong></div><button type="button" onClick={onClose} aria-label="Close score explanation">x</button></div><p>This score summarizes multiple real market signals using a weighted heuristic model.</p><div className="score-breakdown" aria-label="Example breakdown">{rows.map((row) => <div className="score-breakdown-row" key={row.label}><span>{row.label}</span><div aria-hidden="true"><i style={{ width: row.value + '%' }} /></div></div>)}</div><p><b>Overall</b> {score} /100</p><p className="score-popover-note">This visualization is illustrative and explains which categories contribute to the score. It does not expose proprietary weighting or implementation details.</p></div>;
+}
+function Metric({ label, value }: { label: string; value: string }) { return <div className="penny-mini"><span>{label}</span><b>{value}</b></div>; }
+function localizedText(value: { th?: string; en?: string } | undefined, language: Language): string { return (language === 'th' ? value?.th : value?.en) ?? value?.en ?? value?.th ?? 'Unavailable'; }
+function visibleList(items: string[], fallback = 'Unavailable'): string[] { return items.length ? items.slice(0, 3) : [fallback]; }
+function pennyLabels(language: Language) {
+  if (language === 'th') {
+    return {
+      pennyOpportunities: 'หุ้นเพนนีโอกาสสูง',
+      pennyScore: 'Penny Opportunity Score',
+      dataConfidence: 'Data Confidence',
+      dataCompleteness: 'Data Completeness',
+      riskPenalty: 'Risk Penalty',
+      verifiedCatalyst: 'มี Catalyst ที่ยืนยันได้',
+      noCatalyst: 'ยังไม่มีข้อมูล Catalyst ที่ยืนยันได้',
+      riskLevel: 'ระดับความเสี่ยง',
+      missingData: 'ข้อมูลที่ยังขาด',
+      lastUpdated: 'อัปเดตล่าสุด',
+      methodology: 'Methodology',
+      importantWarning: 'คำเตือนสำคัญ',
+      fewerThanFive: 'พบหุ้นที่ผ่านเกณฑ์น้อยกว่า 5 รายการ ระบบจะไม่เติมรายการที่คุณภาพต่ำกว่าเกณฑ์',
+      warningFallback: 'คำเตือน: หุ้นเพนนีหรือหุ้นราคาต่ำมีความเสี่ยงสูงมาก คะแนนนี้เป็นข้อมูลเพื่อการศึกษา ไม่ใช่คำแนะนำให้ซื้อหรือขาย',
+      source: 'แหล่งข้อมูล',
+      strengths: 'หลักฐานเชิงบวก',
+      risks: 'ความเสี่ยง',
+      openAsset: 'เปิดสินทรัพย์',
+      awaitingData: 'รอข้อมูล',
+      scanning: 'กำลังตรวจสอบข้อมูลจริงจากผู้ให้บริการ',
+      noQualifying: 'ยังไม่พบหุ้นเพนนีที่ผ่านเกณฑ์คุณภาพและความเสี่ยงจากข้อมูลที่เข้าถึงได้',
+    };
+  }
+  return {
+    pennyOpportunities: 'Penny Opportunities',
+    pennyScore: 'Penny Opportunity Score',
+    dataConfidence: 'Data Confidence',
+    dataCompleteness: 'Data Completeness',
+    riskPenalty: 'Risk Penalty',
+    verifiedCatalyst: 'Verified Catalyst',
+    noCatalyst: 'No verified catalyst data',
+    riskLevel: 'Risk Level',
+    missingData: 'Missing Data',
+    lastUpdated: 'Last Updated',
+    methodology: 'Methodology',
+    importantWarning: 'Important Warning',
+    fewerThanFive: 'Fewer than five candidates qualified. The system will not fill remaining slots with lower-quality results.',
+    warningFallback: 'Warning: Penny stocks and very low-priced equities carry extreme risk. This ranking is educational and is not a buy or sell recommendation.',
+    source: 'Source',
+    strengths: 'Strengths',
+    risks: 'Risks',
+    openAsset: 'Open Asset',
+    awaitingData: 'Awaiting data',
+    scanning: 'Scanning real provider data',
+    noQualifying: 'No qualifying penny candidates are available from current provider data.',
+  };
 }
 function illustrativeScoreBreakdown(score: number): Array<{ label: string; value: number }> { return [{ label: 'Trend', value: clamp(score + 7, 10, 96) }, { label: 'Momentum', value: clamp(score, 10, 94) }, { label: 'Relative Strength', value: clamp(score - 8, 10, 90) }, { label: 'Volatility', value: clamp(100 - Math.abs(score - 72), 20, 92) }, { label: 'Risk', value: clamp(score - 18, 10, 84) }]; }
 

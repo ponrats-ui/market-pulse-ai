@@ -55,6 +55,10 @@ Current work focuses on making the product clearer, more compact, more responsiv
 
 Current work improves the explanation of scores, AI views, market context, and dashboard signals.
 
+### AI Opportunity Discovery
+
+RC2 introduces the Penny Opportunity Scanner as the first evidence-first discovery engine for low-priced equities. It ranks only candidates supported by real provider data, exposes risk beside opportunity, keeps confidence separate from score, and refuses to fill Top 5 slots with weak candidates.
+
 ### Feedback Collection
 
 Founder feedback is being used to refine details that affect daily usability, trust, and production quality.

@@ -49,11 +49,11 @@ The Opportunity Score is a prioritization tool, not a prediction.
 
 ### Purpose
 
-The Penny Opportunity Score is a future score for low-priced or early-stage assets that may deserve deeper research.
+The Penny Opportunity Score is the RC2 ranking score for low-priced equities that may deserve deeper research.
 
 ### Meaning
 
-It should summarize whether a low-priced asset has evidence of asymmetric opportunity after considering liquidity, market cap, fundamentals, technical strength, catalysts, narrative, risk, and confidence.
+It summarizes whether a low-priced asset has evidence of asymmetric opportunity after considering liquidity, fundamentals, growth, technical strength, verified catalyst availability, risk, and data confidence.
 
 ### Interpretation
 
@@ -62,6 +62,10 @@ A higher score does not mean the asset is safe or should be bought. It means the
 ### Philosophy
 
 Penny stock is a category, not an investment thesis. Cheapness alone should never create a high score.
+
+### Implementation Reference
+
+The first production implementation is documented in `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md` and uses methodology version `penny-opportunity-v1`.
 
 ## Catalyst Score
 

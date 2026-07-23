@@ -6,7 +6,15 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ## [Unreleased]
 
-No unreleased changes after the v1.0.0-rc1 readiness audit.
+### Added
+
+- Explainable Penny Opportunity Scanner for bounded Thailand and United States low-priced equity discovery.
+- `GET /api/opportunities/penny` endpoint with market-aware classification, risk penalties, data confidence, missing-data disclosure, and provider attribution.
+- Penny Opportunities UI section inside Today's Opportunities with a visible Thai/English risk warning and full-card selected-asset navigation.
+
+### Documentation
+
+- Added `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md` and linked the scanner across roadmap, product bible, AI architecture, scoring, and explainability docs.
 
 ## [1.0.0-rc1] - 2026-07-18
 

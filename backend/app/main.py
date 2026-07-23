@@ -25,6 +25,7 @@ from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
 from app.services.macro import company_events, intelligence_status, macro_indicators
 from app.services.news import news_for_symbol, news_impact_for_symbol
+from app.services.penny_opportunities import build_penny_opportunities
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
@@ -214,6 +215,21 @@ def dashboard() -> Dict[str, Any]:
 def compare(symbols: str = Query("BTC-USD,ETH-USD")) -> Dict[str, Any]:
     selected = [symbol.strip() for symbol in symbols.split(",") if symbol.strip()]
     return build_comparison(selected, get_cached_quote, get_cached_history)
+
+
+@app.get("/api/opportunities/penny")
+def penny_opportunities(
+    market: str | None = Query(None),
+    limit: int = Query(5, ge=1, le=20),
+    language: str = Query("th"),
+) -> Dict[str, Any]:
+    return build_penny_opportunities(
+        get_cached_quote,
+        get_cached_history,
+        news_for_symbol,
+        market=market,
+        limit=limit,
+    )
 
 
 @app.post("/api/assistant/ask")

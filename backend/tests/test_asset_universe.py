@@ -210,6 +210,21 @@ def test_sector_browser_uses_full_thai_registry_counts() -> None:
     assert thai_count >= 1827
 
 
+def test_sector_browser_returns_compact_assets_without_heavy_search_fields() -> None:
+    payload = sector_browser()
+    all_assets = [asset for sector in payload["sectors"] for asset in sector["assets"]]
+    assert all_assets
+    nvda = next(asset for asset in all_assets if asset["symbol"] == "NVDA")
+    assert nvda["label"]
+    assert nvda["asset_type"]
+    assert nvda["exchange"]
+    assert nvda["country"]
+    assert "aliases" not in nvda
+    assert "keywords" not in nvda
+    assert "provider_symbols" not in nvda
+    assert "live_data_capability" not in nvda
+
+
 def test_search_assets_does_not_return_unsupported_gibberish() -> None:
     payload = search_assets("ZZZNOTAREALMARKETPULSE")
     assert payload["assets"] == []

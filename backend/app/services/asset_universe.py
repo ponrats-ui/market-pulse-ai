@@ -136,6 +136,24 @@ ASSET_METADATA = {
 }
 
 
+SECTOR_ASSET_FIELDS = (
+    "symbol",
+    "canonical_symbol",
+    "display_symbol",
+    "label",
+    "company_name",
+    "thai_name",
+    "asset_class",
+    "asset_type",
+    "market",
+    "exchange",
+    "sector",
+    "industry",
+    "country",
+    "currency",
+)
+
+
 def search_assets(
     query: str,
     limit: int = 25,
@@ -162,7 +180,7 @@ def sector_browser() -> Dict[str, Any]:
     sectors_by_name: Dict[str, List[Dict[str, Any]]] = {}
     for asset in universe:
         sector = asset.get("sector") or asset.get("asset_type") or "Unclassified"
-        sectors_by_name.setdefault(str(sector), []).append(_enrich_asset(asset))
+        sectors_by_name.setdefault(str(sector), []).append(_compact_sector_asset(asset))
     sectors = []
     for name, assets in sorted(sectors_by_name.items()):
         sectors.append({"name": name, "count": len(assets), "assets": assets})
@@ -179,7 +197,7 @@ def assets_for_sector(sector: str, limit: int = 25) -> Dict[str, Any]:
     target = sector.strip().lower()
     safe_limit = limit if isinstance(limit, int) else 25
     universe = _data_hub_assets() or ASSET_UNIVERSE
-    assets = [_enrich_asset(asset) for asset in universe if str(asset.get("sector") or asset.get("asset_type") or "").lower() == target][:safe_limit]
+    assets = [_compact_sector_asset(asset) for asset in universe if str(asset.get("sector") or asset.get("asset_type") or "").lower() == target][:safe_limit]
     return {"sector": sector, "count": len(assets), "assets": assets, "source": master_asset_registry_metadata().get("source", "master_asset_registry")}
 
 
@@ -210,6 +228,11 @@ def _score_asset(term: str, asset: Dict[str, Any]) -> int:
     return 0
 
 
+def _compact_sector_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
+    enriched = _enrich_asset(asset)
+    return {field: enriched.get(field) for field in SECTOR_ASSET_FIELDS if enriched.get(field) not in (None, "")}
+
+
 def _enrich_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
     metadata = ASSET_METADATA.get(asset["symbol"], {})
     thai_alias = THAI_NAME_ALIASES.get(asset["symbol"])
@@ -222,4 +245,23 @@ def _enrich_asset(asset: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _data_hub_assets() -> List[Dict[str, Any]]:
-    return [asset.to_search_asset() for asset in list_registry_assets(enabled_only=True, searchable_only=True)]
+    return [_compact_registry_asset(asset) for asset in list_registry_assets(enabled_only=True, searchable_only=True)]
+
+
+def _compact_registry_asset(asset: Any) -> Dict[str, Any]:
+    return {
+        "symbol": asset.canonical_symbol,
+        "canonical_symbol": asset.canonical_symbol,
+        "display_symbol": asset.display_symbol,
+        "label": asset.company_name,
+        "company_name": asset.company_name,
+        "thai_name": asset.thai_name,
+        "asset_class": asset.asset_class,
+        "asset_type": asset.asset_type,
+        "market": asset.market,
+        "exchange": asset.exchange,
+        "sector": asset.sector,
+        "industry": asset.industry,
+        "country": asset.country,
+        "currency": asset.currency,
+    }

@@ -415,3 +415,13 @@ Primary references:
 - [Ranking Integrity Policy](RANKING_INTEGRITY_POLICY.md)
 - [Conflict of Interest Policy](CONFLICT_OF_INTEREST_POLICY.md)
 - [Decision Boundary](DECISION_BOUNDARY.md)
+## RC4 Financial Intelligence Addendum
+
+Market Pulse AI now treats Financial Intelligence as the primary evidence layer for corporate assets. The system evaluates financial statements, cash-flow quality, balance-sheet strength, profitability, growth quality, and valuation context before allowing market excitement to dominate opportunity interpretation.
+
+Related canonical documents:
+
+- `docs/ASSET_INTELLIGENCE_ARCHITECTURE.md`
+- `docs/PRIMARY_EVIDENCE_POLICY.md`
+- `docs/FINANCIAL_INTELLIGENCE_ENGINE.md`
+- `docs/FINANCIAL_SCORING_FRAMEWORK.md`

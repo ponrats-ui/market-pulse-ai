@@ -50,3 +50,6 @@ Not every provider returns source timestamps. When a provider timestamp is unava
 ## Future Governance Requirement
 
 New providers must document freshness, verification limits, and failure behavior before being used in production scoring.
+## Financial Evidence Integrity
+
+Financial evidence must include provider, source timestamp when available, retrieval timestamp, availability status, supported factor, and transformation summary. Missing statement fields remain unavailable and must not be represented as zero.

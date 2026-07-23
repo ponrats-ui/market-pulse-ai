@@ -218,3 +218,6 @@ Scores should support investor judgment, not replace it.
 Scores must be interpreted as model outputs from declared evidence and declared weights. They must not be described as probability of profit, guaranteed return, investment quality, or personal suitability.
 
 Confidence measures evidence reliability. Completeness measures evidence availability. Neither should be merged into the score meaning.
+## Primary Corporate Evidence
+
+For corporate assets, Financial Intelligence must be the largest single positive evidence domain. The default target is 55%, with a governed range of 45%-65%. Confidence and completeness remain separate from score construction.

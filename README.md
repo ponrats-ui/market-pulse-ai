@@ -24,6 +24,7 @@ Thai summary: Market Pulse AI สร้างโดย **Ponrat Saripan** แล
 - Shared Opportunity Engine Framework for reusable scheduling, snapshot publication, ranking, confidence, completeness, and future opportunity categories
 - Transparent Intelligence layer with Algorithm Card, score reconciliation, ranking explanation, and Why Not analysis for Penny Opportunities
 - Trust Foundation layer with evidence integrity, algorithm neutrality, uncertainty disclosure, conflict-of-interest rules, ranking integrity, and clear decision boundaries
+- Asset Intelligence layer with explicit classification, Financial Intelligence as the primary evidence layer for corporate assets, and profile boundaries for funds, crypto, macro, and commodities
 - Grouped financial statement cards with color indicators
 - Fear & Greed / market sentiment widget
 - News impact unavailable-state panel until a provider is configured
@@ -64,6 +65,9 @@ Run tests:
 - `GET /api/analysis/{symbol}`
 - `GET /api/risk/{symbol}`
 - `GET /api/financials/{symbol}`
+- `GET /api/intelligence/assets/{symbol}/classification`
+- `GET /api/intelligence/financial/methodology`
+- `GET /api/intelligence/financial/{symbol}`
 - `GET /api/opportunities/penny?market=&limit=&language=`
 
 Top 5 Penny Opportunities means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe. The backend rescans and reranks the Penny Opportunity universe once every hour; the frontend only reads the latest published snapshot.

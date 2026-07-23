@@ -184,3 +184,8 @@ Long-term work should expand only when quality, reliability, explainability, and
 ## Trust Foundation Milestone
 
 The Trust Foundation establishes a permanent release gate for evidence integrity, neutrality, uncertainty disclosure, conflict-of-interest safeguards, ranking integrity, and decision boundaries. Future roadmap items must update trust documents when they change scoring, ranking, provider behavior, or AI explanations.
+## RC4 Asset Intelligence Foundation
+
+RC4 establishes Financial Intelligence as the primary evidence layer for corporate assets and creates explicit boundaries for funds, crypto, macro, and commodity instruments.
+
+Future roadmap items should build on the shared Asset Intelligence contracts instead of creating separate scoring systems.

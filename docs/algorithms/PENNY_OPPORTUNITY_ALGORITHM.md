@@ -54,3 +54,17 @@ The Penny Opportunity Algorithm now publishes `trust-policy-v1` with:
 - Decision-boundary disclosure.
 
 The Penny Opportunity Score is a ranking heuristic over available evidence. It is not a probability of profit, not a personal suitability score, and not a buy or sell recommendation.
+## RC4 Financial Intelligence Migration
+
+Penny Opportunity v2 uses Financial Intelligence as its largest positive evidence domain.
+
+Active weights:
+
+- Financial Intelligence: 55%
+- Liquidity: 14%
+- Growth: 10%
+- Technical participation: 12%
+- Verified catalyst: 6%
+- Market context: 3%
+
+This migration makes survivability, cash quality, profitability, and balance-sheet evidence primary for low-priced equities.

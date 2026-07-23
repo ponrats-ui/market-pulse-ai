@@ -41,3 +41,6 @@ Trust metadata currently applies first to the Penny Opportunity Scanner. Future 
 ## Future Governance Requirement
 
 Every scoring, ranking, provider, or AI-output change must update the relevant trust document and tests before release.
+## Financial Evidence Trust Rule
+
+Financial weakness must remain visible even when market price, technical momentum, news, or catalysts appear strong. Missing financial evidence is disclosed as missing evidence, not converted into synthetic values.

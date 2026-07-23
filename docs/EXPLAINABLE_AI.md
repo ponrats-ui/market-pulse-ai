@@ -110,3 +110,6 @@ Explainable AI does not mean exposing proprietary implementation details. It mea
 Explainable AI must include evidence integrity, uncertainty disclosure, and a visible decision boundary. The system may summarize, compare, and interpret evidence, but it must not hide missing data or convert confidence into a profit claim.
 
 See [Trust Foundation](TRUST_FOUNDATION.md), [Evidence Integrity Policy](EVIDENCE_INTEGRITY_POLICY.md), and [Decision Boundary](DECISION_BOUNDARY.md).
+## Financial Intelligence Explainability
+
+Financial Intelligence explanations are deterministic and structured. They expose model selection, formulas, measured domains, missing evidence, confidence, completeness, risks, limitations, and version metadata. The system does not use hidden prose to compensate for missing financial evidence.

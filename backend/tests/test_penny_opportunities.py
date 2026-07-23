@@ -151,7 +151,8 @@ def test_final_score_remains_within_zero_to_one_hundred() -> None:
 
 def test_confidence_is_separate_from_score() -> None:
     result = po.evaluate_candidate(asset(), po.POLICIES["TH"], lambda symbol: quote(symbol), lambda *_: history(), no_news)
-    assert result["data_confidence"] != result["penny_opportunity_score"]
+    assert result["confidence_explanation"]["score"] == result["data_confidence"]
+    assert result["score_breakdown"]["raw_positive_score"] != result["data_confidence"]
 
 
 def test_low_completeness_blocks_top5_eligibility() -> None:

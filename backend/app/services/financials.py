@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from app.intelligence.financial import build_financial_intelligence_report
 from app.services.analysis import get_asset_type
 
 FIELD_MAP = {
@@ -40,6 +41,7 @@ FIELD_MAP = {
 
 
 def build_financial_statement_analysis(symbol: str, provider_payload: Dict[str, Any] | None = None, quote: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    financial_intelligence = build_financial_intelligence_report(symbol, provider_payload, quote)
     asset_type = get_asset_type(symbol, quote)
     if asset_type not in {"thai_stock", "global_stock"}:
         return {
@@ -50,6 +52,9 @@ def build_financial_statement_analysis(symbol: str, provider_payload: Dict[str, 
             "message_th": "สินทรัพย์นี้ไม่มีงบการเงินของบริษัท",
             "alternative_fundamentals": _alternative_fundamentals(asset_type),
             "field_provenance": {},
+            "financial_intelligence": financial_intelligence,
+            "classification": financial_intelligence.get("classification"),
+            "profile": financial_intelligence.get("profile"),
             "disclaimer": "This is not financial advice.",
         }
 
@@ -71,6 +76,14 @@ def build_financial_statement_analysis(symbol: str, provider_payload: Dict[str, 
             "cautious_action_plan": ["Review official company filings before making any decision."],
             "source": source,
             "provider_gap": data.get("error") or "Provider returned no equivalent statement, balance sheet, cash flow, valuation, or margin fields.",
+            "financial_intelligence": financial_intelligence,
+            "financial_intelligence_score": financial_intelligence.get("financial_intelligence_score"),
+            "confidence": financial_intelligence.get("confidence"),
+            "completeness": financial_intelligence.get("completeness"),
+            "classification": financial_intelligence.get("classification"),
+            "profile": financial_intelligence.get("profile"),
+            "domain_subscores": financial_intelligence.get("domain_subscores"),
+            "risk_signals": financial_intelligence.get("risk_signals"),
             "disclaimer": "This is not financial advice.",
         }
     return {
@@ -103,6 +116,15 @@ def build_financial_statement_analysis(symbol: str, provider_payload: Dict[str, 
             "Avoid relying on one metric; combine profitability, leverage, and valuation context.",
         ],
         "source": source,
+        "financial_intelligence": financial_intelligence,
+        "financial_intelligence_score": financial_intelligence.get("financial_intelligence_score"),
+        "confidence": financial_intelligence.get("confidence"),
+        "completeness": financial_intelligence.get("completeness"),
+        "classification": financial_intelligence.get("classification"),
+        "profile": financial_intelligence.get("profile"),
+        "domain_subscores": financial_intelligence.get("domain_subscores"),
+        "risk_signals": financial_intelligence.get("risk_signals"),
+        "primary_evidence_weight": financial_intelligence.get("primary_evidence_weight"),
         "disclaimer": "This is not financial advice.",
     }
 

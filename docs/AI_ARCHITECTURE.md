@@ -143,3 +143,6 @@ Committee output should reveal agreement, disagreement, and uncertainty.
 - Human decides.
 - Discover opportunities through evidence, not hype.
 - Keep Opportunity Score separate from Confidence.
+## Asset Intelligence Layer
+
+The AI architecture now includes an Asset Intelligence layer before opportunity scoring. Corporate assets route to Financial Intelligence. ETFs, crypto, macro, and commodities route to explicit boundary profiles until full specialized engines are implemented.

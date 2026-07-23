@@ -50,3 +50,6 @@ No LLM call is used during hourly scans to explain deterministic calculations.
 Every algorithm definition must now include a trust disclosure. Transparency is incomplete unless it states what the algorithm considers, what it excludes, how uncertainty is handled, and what cannot influence rank.
 
 Validation must block activation when the trust disclosure is missing or materially inconsistent with active configuration.
+## Financial Methodology Transparency
+
+Algorithms that use corporate fundamentals must disclose Financial Intelligence weight, formula version, scoring version, profile version, missing evidence, and risk separation.

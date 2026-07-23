@@ -117,3 +117,22 @@ Market Pulse AI commits to:
 - Documentation as part of Definition of Done
 - Production verification before approval
 - Long-term maintainability
+## ความจริงของกิจการต้องมาก่อนกระแส
+
+เมื่อเราวิเคราะห์สินทรัพย์ที่เป็นบริษัท เราจะเริ่มจากสิ่งที่กิจการทำได้จริง
+
+บริษัทสร้างรายได้อย่างไร ทำกำไรได้หรือไม่ กำไรเปลี่ยนเป็นเงินสดหรือไม่ มีเงินเพียงพอสำหรับดำเนินธุรกิจหรือไม่ มีหนี้และภาระมากเพียงใด และการเติบโตต้องแลกกับการขาดทุน การกู้ยืม หรือการเพิ่มทุนมากเกินไปหรือไม่
+
+งบการเงินไม่สามารถบอกอนาคตได้ทั้งหมด แต่ราคาที่พุ่งขึ้น ข่าวที่น่าตื่นเต้น หรือกระแสของตลาด ก็ไม่สามารถลบความอ่อนแอทางการเงินได้
+
+สำหรับสินทรัพย์ที่เป็นบริษัท Financial Intelligence จึงเป็นหลักฐานแกนกลางของระบบ
+
+## Business Reality Before Market Excitement
+
+When analyzing an asset that represents an operating company, we begin with what the business is actually able to produce.
+
+How does it generate revenue? Can it produce sustainable profit? Do reported earnings convert into cash? Does it have sufficient financial capacity to continue operating? How significant are its debt and funding obligations? Does growth depend excessively on losses, borrowing, or dilution?
+
+Financial statements cannot reveal the entire future. But rising prices, exciting headlines, and market popularity cannot erase financial weakness.
+
+For company-based assets, Financial Intelligence is therefore the platform's primary evidence layer.

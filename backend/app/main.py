@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 import json
 from datetime import datetime, timezone
 import os
@@ -16,6 +17,7 @@ from app.data_hub.capabilities import capabilities_for_symbol
 from app.data_hub.exchange_master import exchange_master_metadata, validate_exchange_master
 from app.data_hub.master_asset_registry import master_asset_registry_metadata, validate_master_asset_registry
 from app.data_hub.symbol_resolver import resolve_symbol
+from app.intelligence.financial import build_financial_intelligence_report, classify_asset_for_intelligence, financial_intelligence_methodology
 from app.premium.alerts import build_digest, evaluate_alert_rules
 from app.premium.entitlements import entitlement_matrix, evaluate_entitlement
 from app.services.analysis import build_ai_analysis, build_risk
@@ -162,6 +164,24 @@ def data_hub_resolve(q: str = Query("")) -> Dict[str, Any]:
 @app.get("/api/data-hub/universe/metadata")
 def data_hub_universe_metadata() -> Dict[str, Any]:
     return exchange_master_metadata()
+
+
+@app.get("/api/intelligence/assets/{symbol}/classification")
+def asset_intelligence_classification(symbol: str) -> Dict[str, Any]:
+    quote = get_cached_quote(symbol)
+    return asdict(classify_asset_for_intelligence(symbol, quote))
+
+
+@app.get("/api/intelligence/financial/methodology")
+def financial_intelligence_methodology_endpoint() -> Dict[str, Any]:
+    return financial_intelligence_methodology()
+
+
+@app.get("/api/intelligence/financial/{symbol}")
+def financial_intelligence(symbol: str) -> Dict[str, Any]:
+    provider_payload = get_cached_fundamentals(symbol)
+    quote = get_cached_quote(symbol)
+    return build_financial_intelligence_report(symbol, provider_payload, quote)
 
 
 @app.get("/api/sectors")

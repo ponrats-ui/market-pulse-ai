@@ -131,3 +131,16 @@ Reference documents:
 - [Trust Foundation](TRUST_FOUNDATION.md)
 - [Intellectual Honesty](INTELLECTUAL_HONESTY.md)
 - [Decision Boundary](DECISION_BOUNDARY.md)
+## Financial Reality Before Market Excitement
+
+สำหรับสินทรัพย์ที่เป็นบริษัท ความจริงทางการเงินต้องมาก่อนความตื่นเต้นของตลาด
+
+ระบบให้น้ำหนักสูงสุดกับหลักฐานจากงบการเงิน คุณภาพของกระแสเงินสด ความแข็งแรงของงบดุล ความสามารถในการทำกำไร และความยั่งยืนของการเติบโต
+
+ราคา เทคนิค ข่าว และปัจจัยเร่งช่วยอธิบายบริบทของตลาด แต่ไม่สามารถทดแทนพื้นฐานทางการเงินได้
+
+For company-based assets, financial reality comes before market excitement.
+
+The system gives its greatest analytical weight to financial statements, cash-flow quality, balance-sheet strength, profitability, and sustainable growth.
+
+Price, technical signals, news, and catalysts provide market context. They do not replace financial fundamentals.

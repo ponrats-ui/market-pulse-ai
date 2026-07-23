@@ -142,3 +142,6 @@ Trust is the product. Every feature should protect it.
 The long-term vision depends on user trust. Market Pulse AI must explain what it knows, what it does not know, what evidence was used, what risks remain, and where the user's decision begins.
 
 Thai summary: วิสัยทัศน์ของผลิตภัณฑ์ต้องยึดความไว้วางใจ ความโปร่งใส และการตัดสินใจของผู้ใช้เป็นศูนย์กลาง
+## Financial Evidence Principle
+
+For operating companies, Market Pulse AI evaluates business reality before market excitement. Financial Intelligence is the primary evidence layer, while price action, technicals, news, and catalysts remain supporting context.

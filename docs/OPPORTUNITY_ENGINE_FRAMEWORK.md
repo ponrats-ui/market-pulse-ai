@@ -261,3 +261,6 @@ Reference documents:
 ## Trust Foundation Update
 
 New opportunity engines must implement trust disclosure before production activation. The framework expects engines to publish evidence integrity, neutrality, uncertainty, conflict-of-interest, ranking integrity, and decision-boundary metadata with their methodology.
+## Financial Intelligence Reuse
+
+Corporate opportunity engines should consume the reusable Financial Intelligence report rather than duplicating full financial analysis. This keeps formulas, risk signals, confidence, completeness, and limitations consistent across opportunity categories.

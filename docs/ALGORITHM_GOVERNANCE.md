@@ -33,3 +33,6 @@ Algorithm governance now requires trust review before production activation. Any
 - Conflict-of-interest boundaries.
 - Ranking integrity.
 - Decision-boundary language.
+## Financial Intelligence Governance
+
+Any scoring change that changes the role or weight of Financial Intelligence must update `docs/PRIMARY_EVIDENCE_POLICY.md`, `docs/FINANCIAL_SCORING_FRAMEWORK.md`, and the affected algorithm documentation.

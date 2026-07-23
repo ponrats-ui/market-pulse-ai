@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Literal
 from uuid import uuid4
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
+from app.intelligence.financial import build_financial_intelligence_report, validate_primary_evidence_policy
 from app.opportunities.models import AlgorithmChangeRecord, AlgorithmDefinition, AlgorithmFactorDefinition, AlgorithmIdentity, AlgorithmNeutralityDeclaration, AlgorithmRiskDefinition, AlgorithmTextBlock, ConflictOfInterestPolicy, DecisionBoundaryPolicy, EvidenceIntegrityPolicy, OpportunityEngineDefinition, OpportunityEngineRuntime, ProviderLimitationDisclosure, RankingIntegrityPolicy, TrustDisclosure, TrustPrinciple, UncertaintyDisclosurePolicy
 from app.opportunities.ranking import rank_candidates
 from app.opportunities.registry import register_engine
@@ -22,10 +23,10 @@ from app.providers.registry import get_provider
 
 SignalState = Literal["PASS", "FAIL", "UNKNOWN"]
 
-METHODOLOGY_VERSION = "penny-opportunity-v1"
-POLICY_VERSION = "penny-policy-v1"
-CONFIGURATION_VERSION = "penny-config-v1"
-SCORE_VERSION = "penny-score-v1"
+METHODOLOGY_VERSION = "penny-opportunity-v2"
+POLICY_VERSION = "penny-policy-v2"
+CONFIGURATION_VERSION = "penny-config-v2"
+SCORE_VERSION = "penny-score-v2"
 TRUST_POLICY_VERSION = "trust-policy-v1"
 SCAN_FREQUENCY_MINUTES = 60
 SCAN_MAX_WORKERS = max(1, min(int(os.getenv("PENNY_SCAN_MAX_WORKERS", "6")), 12))
@@ -33,12 +34,12 @@ _DEFAULT_SNAPSHOT_KEY = ("ALL", 5)
 PENNY_ENGINE_ID = "penny-opportunity"
 PENNY_CATEGORY = "penny_opportunity"
 PENNY_FACTOR_WEIGHTS = {
-    "liquidity": 0.24,
-    "financial": 0.18,
-    "growth": 0.18,
-    "technical": 0.25,
-    "catalyst": 0.10,
-    "market_context": 0.05,
+    "financial": 0.55,
+    "liquidity": 0.14,
+    "growth": 0.10,
+    "technical": 0.12,
+    "catalyst": 0.06,
+    "market_context": 0.03,
 }
 
 PENNY_WARNING_EN = (
@@ -294,7 +295,7 @@ def build_penny_algorithm_definition() -> AlgorithmDefinition:
         eligibility={"minimum_score": PENNY_ENGINE_DEFINITION.minimum_score, "minimum_confidence": PENNY_ENGINE_DEFINITION.minimum_confidence, "minimum_completeness": PENNY_ENGINE_DEFINITION.minimum_completeness, "hard_disqualifiers": ["invalid_price", "insufficient_trading_history", "insufficient_liquidity", "critical_confirmed_risk"]},
         factors=factors,
         risks=risks,
-        score_formula={"en": "Sum of weighted positive factor contributions minus evidence-supported risk penalties, bounded 0-100.", "th": "คะแนนโอกาสเกิดจากผลรวมของคะแนนปัจจัยเชิงบวกตามน้ำหนักที่กำหนด แล้วหักด้วยค่าปรับความเสี่ยงที่มีหลักฐานรองรับ", "bounds": [0, 100], "weights": PENNY_FACTOR_WEIGHTS},
+        score_formula={"en": "Sum of weighted positive factor contributions minus evidence-supported risk penalties, bounded 0-100. Financial Intelligence is the primary evidence layer for corporate assets.", "th": "คะแนนโอกาสเกิดจากผลรวมของคะแนนปัจจัยเชิงบวกตามน้ำหนักที่กำหนด แล้วหักด้วยค่าปรับความเสี่ยงที่มีหลักฐานรองรับ โดย Financial Intelligence เป็นหลักฐานหลักสำหรับสินทรัพย์ที่เป็นบริษัท", "bounds": [0, 100], "weights": PENNY_FACTOR_WEIGHTS, "primary_evidence_policy": validate_primary_evidence_policy(PENNY_FACTOR_WEIGHTS)},
         confidence={"en": "Data Confidence measures evidence quality and availability. It is not probability of profit.", "th": "ความเชื่อมั่นของข้อมูลวัดคุณภาพและความพร้อมของหลักฐาน ไม่ใช่โอกาสทำกำไร"},
         completeness={"en": "Completeness measures which required evidence groups were available, missing, stale, or failed.", "th": "ความครบถ้วนวัดว่ากลุ่มข้อมูลสำคัญใดมีพร้อม ขาดหาย ล่าช้า หรือดึงข้อมูลไม่สำเร็จ"},
         ranking={"policy": PENNY_ENGINE_DEFINITION.tie_breaker_policy, "en": "Candidates rank by final score first; confidence and completeness break ties only.", "th": "จัดอันดับจากคะแนนสุดท้ายก่อน ความเชื่อมั่นและความครบถ้วนใช้เฉพาะกรณีคะแนนเท่ากัน"},
@@ -842,7 +843,8 @@ def evaluate_candidate(
     elif liquidity["status"] == "UNKNOWN":
         risk_flags.append(_risk_flag("liquidity_unknown", "MEDIUM", "unknown", 12, "Liquidity metrics are unavailable from provider."))
 
-    financial = _financial_score(quote, missing_data)
+    financial_report = build_financial_intelligence_report(symbol, quote, quote, asset)
+    financial = _financial_score_from_report(financial_report, quote, missing_data)
     growth = _growth_score(quote, missing_data)
     technical = _technical_score(closes, volumes, quote, missing_data, risk_flags)
     catalyst = _catalyst_score(symbol, news_fn, missing_data, provider_status)
@@ -908,6 +910,7 @@ def evaluate_candidate(
         "completeness_explanation": _completeness_explanation(completeness, quote, history, catalyst),
         "uncertainty_disclosure": _uncertainty_disclosure(missing_data, provider_status, [*hard_flags, *risk_flags]),
         "evidence_integrity": _evidence_integrity_records(symbol, quote, history, catalyst, provider_status),
+        "financial_intelligence": financial_report,
         "trust": _trust_api_metadata(),
         "provider_attribution": _provider_attribution(quote, history, catalyst),
         "provider_status": provider_status,
@@ -1043,6 +1046,27 @@ def _liquidity_score(price: float | None, quote: Dict[str, Any], volumes: List[f
     score = round(volume_score * 0.45 + value_score * 0.35 + consistency * 0.20)
     status = "PASS" if effective_volume >= policy.minimum_average_daily_volume and (traded_value is None or traded_value >= policy.minimum_average_daily_value) else "FAIL"
     return {"score": _clamp(score, 0, 100), "status": status, "evidence": [f"Average volume: {round(effective_volume, 2)}", f"Average traded value: {round(traded_value, 2) if traded_value is not None else 'UNKNOWN'}"]}
+
+
+def _financial_score_from_report(report: Dict[str, Any], quote: Dict[str, Any], missing: List[str]) -> Dict[str, Any]:
+    score = _number(report.get("financial_intelligence_score"))
+    status = report.get("status")
+    if score is not None:
+        missing.extend(report.get("missing_evidence") or [])
+        return {
+            "score": _clamp(round(score), 0, 100),
+            "status": "PASS" if status in {"measured", "partial"} else "UNKNOWN",
+            "source": "financial_intelligence",
+            "confidence": report.get("confidence"),
+            "completeness": report.get("completeness"),
+            "profile": (report.get("profile") or {}).get("profile_type"),
+        }
+    missing.extend(report.get("missing_evidence") or [])
+    if report.get("applicable") is False:
+        missing.append("corporate_financial_intelligence_not_applicable")
+        return {"score": None, "status": "UNKNOWN", "source": "financial_intelligence", "profile": (report.get("profile") or {}).get("profile_type")}
+    fallback = _financial_score(quote, missing)
+    return {**fallback, "source": "legacy_quote_fallback", "profile": (report.get("profile") or {}).get("profile_type")}
 
 
 def _financial_score(quote: Dict[str, Any], missing: List[str]) -> Dict[str, Any]:
@@ -1209,6 +1233,7 @@ def _score_breakdown(factor_scores: Dict[str, Any], risk_penalty: int, risks: Li
         "score_version": SCORE_VERSION,
         "config_version": CONFIGURATION_VERSION,
         "trust_policy_version": TRUST_POLICY_VERSION,
+        "primary_evidence_policy": validate_primary_evidence_policy(PENNY_FACTOR_WEIGHTS),
         "missing_evidence": sorted(set(missing_data)),
     }
 

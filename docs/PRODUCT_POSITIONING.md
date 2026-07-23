@@ -5,6 +5,7 @@
 - [Purpose](#purpose)
 - [What Market Pulse AI Is](#what-market-pulse-ai-is)
 - [What Market Pulse AI Is Not](#what-market-pulse-ai-is-not)
+- [Opportunity Intelligence Positioning](#opportunity-intelligence-positioning)
 - [Target Users](#target-users)
 - [Core Value Proposition](#core-value-proposition)
 - [Product Differentiation](#product-differentiation)
@@ -18,9 +19,9 @@ This document defines how Market Pulse AI should be positioned for users, contri
 
 ## What Market Pulse AI Is
 
-Market Pulse AI is an Explainable AI Investment Intelligence Platform.
+Market Pulse AI is a Global AI Investment Intelligence Platform built on Explainable AI.
 
-It helps investors understand markets through real data, transparent scoring, cautious AI-assisted analysis, cross-market context, and clear unavailable states when evidence is missing.
+It helps investors understand markets through real data, transparent scoring, cautious AI-assisted analysis, cross-market context, opportunity discovery, and clear unavailable states when evidence is missing.
 
 The product exists to improve decision quality, not to replace investor judgment.
 
@@ -28,12 +29,24 @@ The product exists to improve decision quality, not to replace investor judgment
 
 Market Pulse AI is not:
 
+- A basic screener
+- A passive dashboard
 - A trading bot
 - A guaranteed signal generator
 - A black-box recommendation engine
 - A promise of profit
 - A broker or execution platform
 - A replacement for professional financial advice
+
+## Opportunity Intelligence Positioning
+
+Market Pulse AI is focused on early opportunity discovery using explainable AI.
+
+The platform should not merely rank assets or display market data. It should help users discover assets that deserve deeper research because evidence suggests potential asymmetric opportunity.
+
+Market Pulse AI does not search for cheap stocks. It searches for asymmetric opportunities.
+
+Price is only one signal. The product must evaluate evidence, catalysts, risk, confidence, cross-market context, and what could invalidate the thesis.
 
 ## Target Users
 

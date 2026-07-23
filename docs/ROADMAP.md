@@ -6,6 +6,7 @@
 - [Completed](#completed)
 - [Current](#current)
 - [Next](#next)
+- [RC2 AI Opportunity Center](#rc2-ai-opportunity-center)
 - [Future](#future)
 - [Long-Term](#long-term)
 - [Roadmap Principles](#roadmap-principles)
@@ -79,6 +80,25 @@ Open the product to broader feedback while preserving safety, transparency, and 
 
 Release a stable public version with documented scope, known limitations, and founder approval.
 
+## RC2 AI Opportunity Center
+
+RC2 should expand Market Pulse AI from an investment dashboard into an opportunity discovery workspace.
+
+Planned opportunity intelligence directions include:
+
+- AI Opportunity Center
+- Top Opportunities
+- Penny Opportunities
+- Hidden Gems
+- Momentum Opportunities
+- Dividend Opportunities
+- ETF Opportunities
+- Crypto Opportunities
+- Global Opportunities
+- AI Picks
+
+RC2 must preserve the Zero Mock Policy and explainability standard. No opportunity should appear without evidence, risk context, confidence disclosure, and a clear explanation of why it deserves attention.
+
 ## Future
 
 ### Portfolio Intelligence
@@ -96,6 +116,18 @@ Create intelligent alerts, briefs, summaries, and monitoring rules that save use
 ### Strategy Lab
 
 Support educational scenario analysis and transparent strategy exploration based on evidence and clear assumptions.
+
+### AI Opportunity Discovery
+
+Build a future discovery engine that identifies asymmetric opportunities through financial, technical, catalyst, narrative, risk, similarity, and confidence evidence.
+
+### Global Opportunity Intelligence
+
+Expand opportunity discovery across countries, exchanges, sectors, asset classes, and macro regimes.
+
+### Hidden Gem and Multi-Bagger Research
+
+Develop explainable frameworks for identifying under-recognized companies and assets that share measurable characteristics with historical high-growth winners, without implying prediction.
 
 ### Personal AI
 

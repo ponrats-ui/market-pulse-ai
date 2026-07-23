@@ -5,6 +5,10 @@
 - [Purpose](#purpose)
 - [Scoring Philosophy](#scoring-philosophy)
 - [Opportunity Score](#opportunity-score)
+- [Penny Opportunity Score](#penny-opportunity-score)
+- [Catalyst Score](#catalyst-score)
+- [Similarity Score](#similarity-score)
+- [Risk Penalty](#risk-penalty)
 - [Market Score](#market-score)
 - [Market Adjusted Score](#market-adjusted-score)
 - [Risk Score](#risk-score)
@@ -40,6 +44,78 @@ The score should be read with trend, momentum, volatility, risk, and available t
 ### Philosophy
 
 The Opportunity Score is a prioritization tool, not a prediction.
+
+## Penny Opportunity Score
+
+### Purpose
+
+The Penny Opportunity Score is a future score for low-priced or early-stage assets that may deserve deeper research.
+
+### Meaning
+
+It should summarize whether a low-priced asset has evidence of asymmetric opportunity after considering liquidity, market cap, fundamentals, technical strength, catalysts, narrative, risk, and confidence.
+
+### Interpretation
+
+A higher score does not mean the asset is safe or should be bought. It means the asset may deserve review under the penny opportunity framework.
+
+### Philosophy
+
+Penny stock is a category, not an investment thesis. Cheapness alone should never create a high score.
+
+## Catalyst Score
+
+### Purpose
+
+The Catalyst Score summarizes the quality and relevance of potential future catalysts.
+
+### Meaning
+
+It helps users understand whether identifiable events, policy shifts, products, contracts, approvals, industry cycles, or technology changes could affect the opportunity view.
+
+### Interpretation
+
+The score should be read with evidence quality and timing uncertainty. A possible catalyst with weak evidence should not create strong confidence.
+
+### Philosophy
+
+Catalysts must be evidence-supported. Hype is not a catalyst.
+
+## Similarity Score
+
+### Purpose
+
+The Similarity Score is a future concept for comparing current companies with historical high-growth companies.
+
+### Meaning
+
+It may indicate whether a company shares measurable characteristics with historical multi-bagger companies, such as revenue acceleration, margin expansion, industry tailwind, innovation, execution, and competitive moat.
+
+### Interpretation
+
+Similarity does not predict the future. It helps users identify research questions.
+
+### Philosophy
+
+Historical patterns are useful only when limitations and differences are disclosed.
+
+## Risk Penalty
+
+### Purpose
+
+Risk Penalty reduces opportunity quality when severe risks weaken the case.
+
+### Meaning
+
+It may reflect dilution, reverse splits, going concern warnings, excessive debt, negative cash flow, accounting issues, delisting risk, pump-and-dump characteristics, extremely low liquidity, or high spreads.
+
+### Interpretation
+
+An asset can have strong opportunity signals and still receive a lower final ranking because the risk penalty is severe.
+
+### Philosophy
+
+Risk is part of opportunity quality, not a separate footnote.
 
 ## Market Score
 
@@ -113,6 +189,8 @@ Low confidence should reduce the strength of any recommendation.
 
 Confidence should describe evidence quality, not emotional certainty.
 
+Confidence is not expected return. Opportunity Score, Penny Opportunity Score, Catalyst Score, and Similarity Score must remain separate from Confidence.
+
 ## Interpretation Standard
 
 Every score should explain:
@@ -123,5 +201,6 @@ Every score should explain:
 - What the score does not mean
 - Missing data
 - Risk considerations
+- Confidence versus opportunity distinction
 
 Scores should support investor judgment, not replace it.

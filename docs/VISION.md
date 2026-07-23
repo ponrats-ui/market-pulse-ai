@@ -5,6 +5,7 @@
 - [Mission](#mission)
 - [Vision](#vision)
 - [Product Position](#product-position)
+- [Future Direction](#future-direction)
 - [Core Values](#core-values)
 - [Vision 2030](#vision-2030)
 - [Product Standard](#product-standard)
@@ -25,7 +26,7 @@ The long-term vision is to create a professional market workspace where investor
 
 ## Product Position
 
-Market Pulse AI is an Explainable AI Investment Intelligence Platform.
+Market Pulse AI is a Global AI Investment Intelligence Platform built on Explainable AI.
 
 It is not:
 
@@ -36,6 +37,29 @@ It is not:
 - A replacement for investor responsibility
 
 The product should help users ask better questions, understand evidence, compare alternatives, and prepare for risk.
+
+## Future Direction
+
+The future of Market Pulse AI is AI Opportunity Discovery.
+
+The platform should not simply analyze markets after the fact. It should help users discover high-quality investment opportunities before they become obvious to the broader market.
+
+This does not mean prediction. The objective is intelligent discovery: finding assets that deserve deeper research because evidence suggests a potential asymmetric opportunity.
+
+Future Market Pulse AI should include:
+
+- AI Opportunity Discovery
+- Global Opportunity Intelligence
+- Hidden Gem Detection
+- Penny Opportunity Engine
+- Multi-Bagger Discovery
+- Explainable Discovery AI
+- Cross-Market Intelligence
+- Early Opportunity Detection
+
+Market Pulse AI does not search for cheap stocks. It searches for asymmetric opportunities.
+
+Price is only one signal. Every opportunity must be supported by evidence, risk context, catalyst analysis, and confidence disclosure.
 
 ## Core Values
 
@@ -65,6 +89,18 @@ Analysis that adapts to asset type. Stocks should not be analyzed like commoditi
 ### Cross-Market Intelligence
 
 The platform should understand that assets are connected. Oil can affect energy companies and airlines. Currency can affect exporters and tourism. Bond yields can affect valuation. Liquidity can affect risk assets.
+
+### Global Opportunity Intelligence
+
+The platform should eventually discover opportunities across markets, sectors, asset classes, and macro regimes.
+
+It should understand that the best opportunity may not be the strongest recent performer. It may be an asset where financial improvement, technical confirmation, catalyst evidence, narrative shift, risk control, and market context are aligning before broad recognition.
+
+### Hidden Gem and Multi-Bagger Discovery
+
+Market Pulse AI should eventually identify early-stage or under-recognized opportunities that share measurable characteristics with historical high-growth companies.
+
+The product must never imply that similarity predicts future winners. It should explain which characteristics are present, which are missing, and what risks could invalidate the opportunity thesis.
 
 ### Enterprise-Grade Platform
 

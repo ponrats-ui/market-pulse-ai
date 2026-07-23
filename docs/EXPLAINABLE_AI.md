@@ -6,6 +6,7 @@
 - [Explainable AI Standard](#explainable-ai-standard)
 - [Core Questions](#core-questions)
 - [Recommendation Standard](#recommendation-standard)
+- [Opportunity Discovery Explainability](#opportunity-discovery-explainability)
 - [User Understanding](#user-understanding)
 - [Trust Boundaries](#trust-boundaries)
 
@@ -66,6 +67,27 @@ A responsible recommendation should include:
 - Missing data
 - Conditions that could change the view
 - Educational disclaimer
+
+## Opportunity Discovery Explainability
+
+Every discovered opportunity must explain why the asset appears.
+
+The AI must never recommend or highlight an asset based only on price, momentum, or hype.
+
+Opportunity discovery explanations should include:
+
+- Why the asset entered the opportunity set
+- Which financial signals contributed
+- Which technical signals contributed
+- Which catalyst signals contributed
+- Which narrative signals contributed
+- Which risks reduced the opportunity quality
+- Whether similarity to historical high-growth companies is present
+- Confidence level and why it differs from opportunity strength
+- Missing data
+- Conditions that would invalidate the view
+
+If the system cannot explain why an asset appears, the asset should not be presented as a high-quality opportunity.
 
 ## User Understanding
 

@@ -10,29 +10,30 @@
 6. [Explainable AI](#6-explainable-ai)
 7. [Zero Mock Policy](#7-zero-mock-policy)
 8. [AI Architecture](#8-ai-architecture)
-9. [Scoring Framework](#9-scoring-framework)
-10. [Global Markets Strategy](#10-global-markets-strategy)
-11. [Asset Universe](#11-asset-universe)
-12. [Cross-Market Intelligence](#12-cross-market-intelligence)
-13. [Product Positioning](#13-product-positioning)
-14. [Design Principles](#14-design-principles)
-15. [Data Governance](#15-data-governance)
-16. [AI Ethics](#16-ai-ethics)
-17. [Risk Management](#17-risk-management)
-18. [Security Principles](#18-security-principles)
-19. [Non-Functional Requirements](#19-non-functional-requirements)
-20. [Competitive Position](#20-competitive-position)
-21. [Roadmap](#21-roadmap)
-22. [Future Ideas](#22-future-ideas)
-23. [Decision Log](#23-decision-log)
-24. [Vision Changelog](#24-vision-changelog)
-25. [Glossary](#25-glossary)
-26. [Documentation Governance](#26-documentation-governance)
-27. [Definition of Done](#27-definition-of-done)
+9. [AI Opportunity Discovery Engine](#9-ai-opportunity-discovery-engine)
+10. [Scoring Framework](#10-scoring-framework)
+11. [Global Markets Strategy](#11-global-markets-strategy)
+12. [Asset Universe](#12-asset-universe)
+13. [Cross-Market Intelligence](#13-cross-market-intelligence)
+14. [Product Positioning](#14-product-positioning)
+15. [Design Principles](#15-design-principles)
+16. [Data Governance](#16-data-governance)
+17. [AI Ethics](#17-ai-ethics)
+18. [Risk Management](#18-risk-management)
+19. [Security Principles](#19-security-principles)
+20. [Non-Functional Requirements](#20-non-functional-requirements)
+21. [Competitive Position](#21-competitive-position)
+22. [Roadmap](#22-roadmap)
+23. [Future Ideas](#23-future-ideas)
+24. [Decision Log](#24-decision-log)
+25. [Vision Changelog](#25-vision-changelog)
+26. [Glossary](#26-glossary)
+27. [Documentation Governance](#27-documentation-governance)
+28. [Definition of Done](#28-definition-of-done)
 
 ## 1. Executive Summary
 
-Market Pulse AI is an Explainable AI Investment Intelligence Platform. It exists to help investors make better informed decisions through transparent analysis, real market data where available, clear unavailable states where data is missing, and cautious AI-assisted interpretation.
+Market Pulse AI is a Global AI Investment Intelligence Platform built on Explainable AI. It exists to help investors make better informed decisions through transparent analysis, real market data where available, clear unavailable states where data is missing, cautious AI-assisted interpretation, and long-term opportunity discovery.
 
 The Product Bible is the master reference for the project. It consolidates the product vision, founder principles, AI philosophy, governance model, documentation standards, roadmap, and long-term strategy into one executive-quality guide.
 
@@ -40,9 +41,9 @@ This document is suitable for developers, architects, founders, investors, enter
 
 ## 2. Vision
 
-Market Pulse AI aims to build the world's most trusted Explainable AI platform for global investment intelligence.
+Market Pulse AI aims to build the world's most trusted Explainable AI platform for global investment intelligence and early opportunity discovery.
 
-The product should become a professional, multi-asset, global research workspace that helps users understand markets, assets, risk, portfolio context, and cross-market relationships without relying on black-box outputs.
+The product should become a professional, multi-asset, global research workspace that helps users understand markets, assets, risk, portfolio context, cross-market relationships, and high-quality opportunity candidates without relying on black-box outputs.
 
 Primary reference: [VISION.md](VISION.md)
 
@@ -113,15 +114,88 @@ Each stage has a distinct responsibility. The architecture should preserve evide
 
 Primary reference: [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md)
 
-## 9. Scoring Framework
+## 9. AI Opportunity Discovery Engine
+
+The AI Opportunity Discovery Engine is a core future pillar of Market Pulse AI.
+
+Its purpose is to discover high-quality investment opportunities before they become obvious to the broader market. The engine should not merely sort assets by recent performance, low price, or hype. It should identify assets where evidence suggests an asymmetric opportunity may be forming.
+
+### Purpose
+
+The engine exists to help users decide what deserves deeper research. It is not a prediction engine and does not guarantee future returns.
+
+### Philosophy
+
+Market Pulse AI does not search for cheap stocks. It searches for asymmetric opportunities.
+
+Price is only one signal. Every opportunity must be supported by evidence, context, risk analysis, catalyst review, and confidence disclosure.
+
+### Architecture
+
+The long-term discovery flow is:
+
+Asset Universe -> Eligibility Filter -> Financial Engine -> Technical Engine -> Catalyst Engine -> Narrative AI -> Risk Penalty Engine -> Multi-Bagger Similarity -> Confidence Model -> Opportunity Ranking -> Explainable AI -> Dashboard
+
+### Financial Signals
+
+Financial signals may include revenue trend, margin direction, profitability, free cash flow, debt, capital efficiency, valuation context, dilution, and balance sheet strength.
+
+### Technical Signals
+
+Technical signals may include trend, momentum, relative strength, volatility, market structure, volume behavior, support and resistance, and performance versus peers or benchmarks.
+
+### Catalyst Signals
+
+Catalyst signals may include products, policy, contracts, mergers and acquisitions, approvals, expansion, technology shifts, industry cycles, supply chain changes, AI, semiconductors, defense, energy, and infrastructure themes.
+
+### Narrative AI
+
+Narrative AI evaluates whether a company or asset is connected to a credible emerging theme. Narrative is not enough by itself. It must be supported by measurable evidence.
+
+### Risk Penalty
+
+Risk Penalty reduces opportunity quality when evidence shows dilution, reverse splits, going concern warnings, excessive debt, negative cash flow, accounting warnings, delisting risk, pump-and-dump characteristics, extremely low liquidity, or high spreads.
+
+### Confidence Model
+
+Opportunity Score must not equal Confidence. Confidence measures AI certainty and evidence reliability, not expected return.
+
+### Opportunity Ranking
+
+Opportunity Ranking should prioritize assets for research using opportunity strength, catalyst quality, risk penalty, evidence quality, and confidence. It should not imply that the top-ranked asset must be bought.
+
+### Multi-Bagger Similarity
+
+Multi-Bagger Similarity compares current companies against historical high-growth companies such as NVIDIA, AMD, Netflix, Monster Beverage, Tesla, and Shopify.
+
+The engine does not predict future winners. It identifies companies sharing measurable characteristics with historical multi-bagger companies, such as revenue acceleration, margin expansion, industry tailwind, market creation, capital efficiency, founder ownership, institutional accumulation, innovation, execution, and competitive moat.
+
+### Explainable AI
+
+Every discovered opportunity must explain why it appeared, which evidence supported it, what risks reduced it, what data is unavailable, what could invalidate it, and why confidence is high, medium, or low.
+
+### Future Expansion
+
+Future expansion may include Top Opportunities, Penny Opportunities, Hidden Gems, Momentum, Dividend, ETF, Crypto, Global Opportunities, AI Picks, and portfolio-aware discovery.
+
+Primary references:
+
+- [AI_OPPORTUNITY_DISCOVERY_ENGINE.md](AI_OPPORTUNITY_DISCOVERY_ENGINE.md)
+- [PENNY_OPPORTUNITY_ENGINE.md](PENNY_OPPORTUNITY_ENGINE.md)
+- [MULTI_BAGGER_SIMILARITY.md](MULTI_BAGGER_SIMILARITY.md)
+- [CATALYST_ENGINE.md](CATALYST_ENGINE.md)
+- [RISK_PENALTY_ENGINE.md](RISK_PENALTY_ENGINE.md)
+- [AI_CONFIDENCE_MODEL.md](AI_CONFIDENCE_MODEL.md)
+
+## 10. Scoring Framework
 
 Scores explain the market. They do not predict the future.
 
-The scoring framework defines Opportunity Score, Market Score, Market Adjusted Score, Risk Score, and Confidence Score. Each score must have a purpose, meaning, interpretation standard, and evidence model.
+The scoring framework defines Opportunity Score, Penny Opportunity Score, Market Score, Market Adjusted Score, Risk Score, Risk Penalty, Catalyst Score, Similarity Score, and Confidence Score. Each score must have a purpose, meaning, interpretation standard, and evidence model.
 
 Primary reference: [SCORING_FRAMEWORK.md](SCORING_FRAMEWORK.md)
 
-## 10. Global Markets Strategy
+## 11. Global Markets Strategy
 
 Market Pulse AI is global-first. Long-term coverage should include major markets across North America, Europe, Asia, the Middle East, South America, and Africa.
 
@@ -129,7 +203,7 @@ Expansion must be disciplined. New market coverage should be added only when dat
 
 Primary reference: [GLOBAL_MARKETS_STRATEGY.md](GLOBAL_MARKETS_STRATEGY.md)
 
-## 11. Asset Universe
+## 12. Asset Universe
 
 The long-term asset universe includes stocks, ETFs, REITs, mutual funds, indices, forex, crypto, government bonds, corporate bonds, precious metals, energy, agriculture, interest rates, economic indicators, and alternative assets.
 
@@ -137,7 +211,7 @@ Each asset class requires appropriate analysis. Stock-style financial statement 
 
 Primary reference: [ASSET_UNIVERSE.md](ASSET_UNIVERSE.md)
 
-## 12. Cross-Market Intelligence
+## 13. Cross-Market Intelligence
 
 Market Pulse AI should eventually understand relationships between markets instead of analyzing assets independently.
 
@@ -151,15 +225,15 @@ Examples include:
 
 Primary reference: [GLOBAL_MARKETS_STRATEGY.md](GLOBAL_MARKETS_STRATEGY.md)
 
-## 13. Product Positioning
+## 14. Product Positioning
 
-Market Pulse AI is positioned as an explainable intelligence layer between raw financial data and investor decisions.
+Market Pulse AI is positioned as an explainable intelligence layer between raw financial data and investor decisions, with a long-term focus on early opportunity discovery.
 
-It is not a trading bot, guaranteed signal generator, or black-box recommendation system. Its advantage is trust through explainability.
+It is not a screener, dashboard, trading bot, guaranteed signal generator, or black-box recommendation system. Its advantage is trust through explainability and disciplined opportunity intelligence.
 
 Primary reference: [PRODUCT_POSITIONING.md](PRODUCT_POSITIONING.md)
 
-## 14. Design Principles
+## 15. Design Principles
 
 The design philosophy is professional, readable, calm, and evidence-centered.
 
@@ -177,7 +251,7 @@ Core design standards include:
 
 Primary reference: [DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)
 
-## 15. Data Governance
+## 16. Data Governance
 
 Data governance protects trust. Data must be validated, normalized, attributed, monitored, and presented honestly.
 
@@ -185,7 +259,7 @@ The product must distinguish real provider data, unavailable data, stale data, p
 
 Primary reference: [DATA_GOVERNANCE.md](DATA_GOVERNANCE.md)
 
-## 16. AI Ethics
+## 17. AI Ethics
 
 AI ethics in Market Pulse AI requires transparency, fairness, bias reduction, explainability, no manipulation, no emotional persuasion, evidence-based output, responsible AI, user autonomy, and human decision authority.
 
@@ -193,7 +267,7 @@ AI should remain calm, disciplined, and educational.
 
 Primary reference: [AI_ETHICS.md](AI_ETHICS.md)
 
-## 17. Risk Management
+## 18. Risk Management
 
 Risk communication must be visible, understandable, and connected to evidence.
 
@@ -201,7 +275,7 @@ The product should explain market uncertainty, confidence levels, probability ve
 
 Primary reference: [RISK_MANAGEMENT.md](RISK_MANAGEMENT.md)
 
-## 18. Security Principles
+## 19. Security Principles
 
 Security principles define the long-term posture for authentication, authorization, least privilege, secret management, rate limiting, logging, audit trails, input validation, and future enterprise security.
 
@@ -209,13 +283,13 @@ Secrets must not be committed. Sensitive capabilities should be protected by app
 
 Primary reference: [SECURITY_PRINCIPLES.md](SECURITY_PRINCIPLES.md)
 
-## 19. Non-Functional Requirements
+## 20. Non-Functional Requirements
 
 Market Pulse AI should meet long-term quality expectations for performance, reliability, availability, scalability, maintainability, accessibility, internationalization, security, privacy, observability, logging, monitoring, testing, response times, and future enterprise readiness.
 
 Primary reference: [NON_FUNCTIONAL_REQUIREMENTS.md](NON_FUNCTIONAL_REQUIREMENTS.md)
 
-## 20. Competitive Position
+## 21. Competitive Position
 
 Market Pulse AI operates near established tools such as Bloomberg Terminal, TradingView, Yahoo Finance, Google Finance, Seeking Alpha, Simply Wall St, and Morningstar.
 
@@ -223,21 +297,21 @@ Its competitive position is not based on being the largest data terminal. It is 
 
 Primary reference: [COMPETITIVE_POSITION.md](COMPETITIVE_POSITION.md)
 
-## 21. Roadmap
+## 22. Roadmap
 
 The roadmap is organized into completed, current, next, future, and long-term phases.
 
-Completed foundations include engineering foundation and UI Polish RC1. Current work focuses on UX, explainability, and feedback collection. Next work includes production hardening, founder acceptance testing, release candidate preparation, public beta, and Version 1.0. Future work includes portfolio intelligence, macro intelligence, alert engine, strategy lab, personal AI, and enterprise features.
+Completed foundations include engineering foundation and UI Polish RC1. Current work focuses on UX, explainability, and feedback collection. Next work includes production hardening, founder acceptance testing, release candidate preparation, public beta, and Version 1.0. Future work includes AI Opportunity Center, Top Opportunities, Penny Opportunities, Hidden Gems, Momentum, Dividend, ETF, Crypto, Global Opportunities, AI Picks, portfolio intelligence, macro intelligence, alert engine, strategy lab, personal AI, and enterprise features.
 
 Primary reference: [ROADMAP.md](ROADMAP.md)
 
-## 22. Future Ideas
+## 23. Future Ideas
 
 Future ideas are stored separately from roadmap commitments. Ideas are not approved scope until they are evaluated against user value, trust impact, data availability, explainability, product fit, maintenance cost, security, privacy, and production readiness.
 
 Primary reference: [FUTURE_IDEAS.md](FUTURE_IDEAS.md)
 
-## 23. Decision Log
+## 24. Decision Log
 
 The decision log records architecture and product-governance decisions. Initial decisions include Explainable AI, Zero Mock Policy, Market Adjusted Score, Chief Investment AI, AI Committee, Global Market Vision, and Cross-Market Intelligence.
 
@@ -245,19 +319,19 @@ Future architectural decisions should be recorded as ADR entries.
 
 Primary reference: [DECISION_LOG.md](DECISION_LOG.md)
 
-## 24. Vision Changelog
+## 25. Vision Changelog
 
 Vision changes must be versioned. Future updates should record changes to product vision, architecture philosophy, roadmap direction, global expansion, Explainable AI principles, scoring philosophy, and Zero Mock policy.
 
 Primary reference: [CHANGELOG_VISION.md](CHANGELOG_VISION.md)
 
-## 25. Glossary
+## 26. Glossary
 
 The glossary provides common terminology for users, contributors, and future maintainers. It should remain aligned with the product's financial, AI, data, and governance language.
 
 Primary reference: [07_GLOSSARY.md](07_GLOSSARY.md)
 
-## 26. Documentation Governance
+## 27. Documentation Governance
 
 Documentation is part of the product, not an afterthought.
 
@@ -274,7 +348,7 @@ The following governance policy is permanent:
 
 Future changes should update existing documents rather than creating unnecessary new documentation.
 
-## 27. Definition of Done
+## 28. Definition of Done
 
 A change is not complete unless the relevant documentation remains accurate.
 

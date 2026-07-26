@@ -67,9 +67,15 @@ Penny stock is a category, not an investment thesis. Cheapness alone should neve
 
 The first production implementation is documented in `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, runs on the shared Opportunity Engine Framework, and uses methodology version `penny-opportunity-v1`.
 
+RC5A evolves the Thailand-specific implementation into Thai Emerging Opportunities (Penny Stock) with methodology version `thai-emerging-opportunity-v1`. The default Thai universe uses `price <= 10.00 THB`, while supported configurable thresholds are `5.00`, `7.50`, `10.00`, `15.00`, or a custom value inside `5.00-15.00 THB`.
+
+Price defines the universe. Evidence determines the opportunity. Price tier is disclosed for context but does not add positive score.
+
 Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe. The final ranking score is the positive weighted factor score minus risk penalty, bounded between 0 and 100. Data Confidence and Data Completeness are qualification, explanation, and tie-breaking signals only; they are not added to the Opportunity Score.
 
 Transparent Intelligence requires each displayed Penny score to reconcile from weighted factor contributions minus risk penalties. The score is accompanied by version metadata, missing evidence, confidence explanation, completeness explanation, and ranking rationale.
+
+RC5A factor weights are Financial Intelligence `55%`, Business Intelligence `20%`, Liquidity `10%`, Technical Participation `5%`, Verified Catalyst Evidence `5%`, and Market Context `5%`. Risk penalties, confidence, and completeness remain separate.
 
 ## Catalyst Score
 

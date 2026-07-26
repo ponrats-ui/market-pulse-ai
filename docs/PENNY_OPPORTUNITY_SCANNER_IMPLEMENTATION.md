@@ -28,12 +28,13 @@ The implementation is intentionally memory-conscious:
 
 ## Classification Policy
 
-Policies are versioned through `penny-policy-v1` with configuration version `penny-config-v1`.
+Policies are versioned through `thai-emerging-policy-v1` with configuration version `thai-emerging-config-v1`.
 
 Thailand:
 
-- Penny stock: price less than or equal to 5 THB.
-- High-risk low-price subcategory: price below 1 THB.
+- Thai Emerging Opportunities default universe: price less than or equal to `10.00 THB`.
+- Configurable threshold: `5.00`, `7.50`, `10.00`, `15.00`, or a custom value from `5.00` to `15.00 THB`.
+- Price tiers: Micro Penny, Classic Penny, Thai Emerging, and Extended Emerging.
 
 United States:
 
@@ -41,6 +42,8 @@ United States:
 - Low-priced small cap: price above or equal to 5 USD and less than or equal to 10 USD.
 
 Thresholds and factor weights are centralized in the Penny engine definition rather than scattered through the application.
+
+Price defines the universe. Evidence determines the opportunity.
 
 ## Eligibility Rules
 
@@ -76,14 +79,17 @@ The scanner does not infer severe risk from missing data alone.
 
 The Penny Opportunity Score is a bounded 0-100 heuristic. It combines:
 
+- Financial Intelligence score.
+- Business Intelligence score.
 - Liquidity score.
-- Financial health score.
-- Growth score.
 - Technical and momentum score.
 - Catalyst evidence score when a live provider supplies verified evidence.
+- Market context score.
 - Risk penalty.
 
 The score is not a probability of profit, expected return, or multi-bagger prediction.
+
+RC5A uses the target evidence mix documented in the Product Bible: Financial Intelligence `55%`, Business Intelligence `20%`, liquidity `10%`, technical participation `5%`, catalyst evidence `5%`, and market context `5%`. Risk penalties remain separate.
 
 Final ranking sorts by `penny_opportunity_score DESC`. Tie-breakers are deterministic and applied only when final scores match:
 
@@ -143,6 +149,7 @@ The endpoint returns:
 - `generated_at`
 - `scan`
 - `markets`
+- `universe`
 - `warning`
 - `qualification`
 - `items`

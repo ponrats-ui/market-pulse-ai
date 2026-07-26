@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from math import sqrt
@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Literal
 from uuid import uuid4
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
+from app.intelligence.business import build_business_intelligence_report
 from app.intelligence.financial import build_financial_intelligence_report, validate_primary_evidence_policy
 from app.opportunities.models import AlgorithmChangeRecord, AlgorithmDefinition, AlgorithmFactorDefinition, AlgorithmIdentity, AlgorithmNeutralityDeclaration, AlgorithmRiskDefinition, AlgorithmTextBlock, ConflictOfInterestPolicy, DecisionBoundaryPolicy, EvidenceIntegrityPolicy, OpportunityEngineDefinition, OpportunityEngineRuntime, ProviderLimitationDisclosure, RankingIntegrityPolicy, TrustDisclosure, TrustPrinciple, UncertaintyDisclosurePolicy
 from app.opportunities.ranking import rank_candidates
@@ -23,10 +24,10 @@ from app.providers.registry import get_provider
 
 SignalState = Literal["PASS", "FAIL", "UNKNOWN"]
 
-METHODOLOGY_VERSION = "penny-opportunity-v2"
-POLICY_VERSION = "penny-policy-v2"
-CONFIGURATION_VERSION = "penny-config-v2"
-SCORE_VERSION = "penny-score-v2"
+METHODOLOGY_VERSION = "thai-emerging-opportunity-v1"
+POLICY_VERSION = "thai-emerging-policy-v1"
+CONFIGURATION_VERSION = "thai-emerging-config-v1"
+SCORE_VERSION = "thai-emerging-score-v1"
 TRUST_POLICY_VERSION = "trust-policy-v1"
 SCAN_FREQUENCY_MINUTES = 60
 SCAN_MAX_WORKERS = max(1, min(int(os.getenv("PENNY_SCAN_MAX_WORKERS", "6")), 12))
@@ -35,12 +36,15 @@ PENNY_ENGINE_ID = "penny-opportunity"
 PENNY_CATEGORY = "penny_opportunity"
 PENNY_FACTOR_WEIGHTS = {
     "financial": 0.55,
-    "liquidity": 0.14,
-    "growth": 0.10,
-    "technical": 0.12,
-    "catalyst": 0.06,
-    "market_context": 0.03,
+    "business": 0.20,
+    "liquidity": 0.10,
+    "technical": 0.05,
+    "catalyst": 0.05,
+    "market_context": 0.05,
 }
+THAI_PENNY_DEFAULT_MAX_SHARE_PRICE = 10.0
+THAI_PENNY_SUPPORTED_THRESHOLDS = (5.0, 7.5, 10.0, 15.0)
+THAI_PENNY_CUSTOM_RANGE = (5.0, 15.0)
 
 PENNY_WARNING_EN = (
     "Warning: Penny stocks and very low-priced equities carry extreme risk, including poor liquidity, severe "
@@ -70,6 +74,10 @@ class PennyMarketPolicy:
     currency: str
     penny_price_maximum: float
     extended_price_maximum: float | None
+    default_price_maximum: float
+    supported_price_options: tuple[float, ...]
+    custom_price_range: tuple[float, float] | None
+    methodology: str
     minimum_market_cap: float | None
     maximum_market_cap: float | None
     minimum_average_daily_volume: float
@@ -87,8 +95,12 @@ POLICIES: Dict[str, PennyMarketPolicy] = {
         market="TH",
         country="Thailand",
         currency="THB",
-        penny_price_maximum=5.0,
-        extended_price_maximum=None,
+        penny_price_maximum=THAI_PENNY_DEFAULT_MAX_SHARE_PRICE,
+        extended_price_maximum=15.0,
+        default_price_maximum=THAI_PENNY_DEFAULT_MAX_SHARE_PRICE,
+        supported_price_options=THAI_PENNY_SUPPORTED_THRESHOLDS,
+        custom_price_range=THAI_PENNY_CUSTOM_RANGE,
+        methodology="Thai Emerging Opportunity",
         minimum_market_cap=None,
         maximum_market_cap=None,
         minimum_average_daily_volume=100_000,
@@ -106,6 +118,10 @@ POLICIES: Dict[str, PennyMarketPolicy] = {
         currency="USD",
         penny_price_maximum=5.0,
         extended_price_maximum=10.0,
+        default_price_maximum=5.0,
+        supported_price_options=(5.0, 10.0),
+        custom_price_range=None,
+        methodology="US Penny Opportunity",
         minimum_market_cap=None,
         maximum_market_cap=None,
         minimum_average_daily_volume=100_000,
@@ -269,7 +285,7 @@ def build_penny_algorithm_definition() -> AlgorithmDefinition:
     factors = [
         _factor_definition("liquidity", "สภาพคล่อง", "Liquidity", "วัดว่าหุ้นมีปริมาณและมูลค่าการซื้อขายเพียงพอหรือไม่", "Measures whether trading volume and traded value are sufficient.", "หุ้นราคาต่ำที่ซื้อขายเบาบางอาจเข้าออกยากและมีความเสี่ยงสูง", "Low-priced stocks with weak liquidity may be difficult to trade and carry higher execution risk.", ["volume", "average_volume", "price"], ["quote", "history"]),
         _factor_definition("financial", "สุขภาพการเงิน", "Financial Health", "ตรวจสอบความอยู่รอดทางการเงินจากตัวชี้วัดพื้นฐานที่มีข้อมูล", "Checks financial survivability using available fundamental indicators.", "หุ้นราคาต่ำที่ฐานะการเงินอ่อนแออาจเป็นภาวะวิกฤต ไม่ใช่โอกาส", "A low-priced company with weak finances may represent distress rather than opportunity.", ["debt_to_equity", "return_on_equity", "return_on_assets", "trailing_pe", "price_to_book"], ["quote"]),
-        _factor_definition("growth", "การเติบโต", "Growth", "ดูหลักฐานการเติบโตหรือการฟื้นตัวของรายได้และกำไร", "Looks for evidence of revenue or earnings growth and recovery.", "การเติบโตช่วยแยกหุ้นราคาต่ำที่มีพัฒนาการออกจากหุ้นที่ราคาถูกเพราะธุรกิจถดถอย", "Growth helps distinguish improving low-priced businesses from structurally declining ones.", ["revenue_growth", "earnings_growth"], ["quote"]),
+        _factor_definition("business", "คุณภาพกิจการ", "Business Quality", "ดูหลักฐานคุณภาพกิจการ การฟื้นตัว และความเสี่ยงของธุรกิจจาก Business Intelligence", "Uses Business Intelligence evidence for quality, turnaround, value-trap, and emerging-quality context.", "ราคาต่ำเป็นเพียงขอบเขตการสแกน หลักฐานคุณภาพกิจการเป็นสิ่งที่ตัดสินว่าเป็นโอกาสหรือไม่", "Price defines the universe. Business evidence helps determine whether the candidate deserves research.", ["business_intelligence_score", "business_risk", "missing_business_evidence"], ["business_intelligence"]),
         _factor_definition("technical", "แรงส่งทางเทคนิค", "Technical Strength", "วัดแนวโน้มราคา โมเมนตัม และการมีส่วนร่วมของตลาดจากประวัติราคา", "Measures price trend, momentum, and market participation from historical prices.", "แรงส่งที่ยืนยันด้วยข้อมูลราคาช่วยบอกว่าตลาดเริ่มให้ความสนใจหรือไม่", "Price and volume participation can indicate whether the market is beginning to recognize the candidate.", ["history.close", "history.volume"], ["history"]),
         _factor_definition("catalyst", "ปัจจัยเร่ง", "Catalyst Evidence", "นับเฉพาะข่าวหรือเหตุการณ์ที่ผู้ให้บริการส่งกลับมาอย่างตรวจสอบได้", "Uses only provider-returned verifiable news or event evidence.", "ปัจจัยเร่งช่วยอธิบายว่าทำไมตลาดอาจกลับมาสนใจ แต่ถ้าไม่มีข้อมูลจะไม่สร้างคะแนนปลอม", "Catalysts may explain renewed interest, but missing catalyst evidence must not create synthetic score support.", ["news.items"], ["news"]),
         _factor_definition("market_context", "บริบทตลาด", "Market Context", "สะท้อนแรงส่งระยะสั้นจากการเปลี่ยนแปลงราคาปัจจุบัน", "Reflects short-term market context from current price change.", "บริบทตลาดช่วยลดการดูหุ้นแยกจากสภาวะการซื้อขายล่าสุด", "Market context prevents viewing the stock in isolation from recent trading conditions.", ["change_percent"], ["quote"]),
@@ -291,11 +307,26 @@ def build_penny_algorithm_definition() -> AlgorithmDefinition:
             th="หุ้นราคาต่ำอาจควรศึกษาต่อเมื่อหลักฐานหลายกลุ่มสอดคล้องกัน ไม่ใช่เพราะราคาถูก ข่าวเดียว หรือความนิยมระยะสั้น",
             en="A low-priced security may deserve further research only when multiple independent evidence groups agree, not because of price alone, a single headline, or popularity.",
         ),
-        universe={"markets": PENNY_ENGINE_DEFINITION.supported_markets, "asset_class": "equity", "source": "Master Asset Registry", "scan_frequency_minutes": SCAN_FREQUENCY_MINUTES},
+        universe={
+            "markets": PENNY_ENGINE_DEFINITION.supported_markets,
+            "asset_class": "equity",
+            "source": "Master Asset Registry",
+            "scan_frequency_minutes": SCAN_FREQUENCY_MINUTES,
+            "thai_penny_universe": {
+                "name": "Thai Emerging Opportunities (Penny Stock)",
+                "maximum_share_price": THAI_PENNY_DEFAULT_MAX_SHARE_PRICE,
+                "currency": "THB",
+                "supported_options": list(THAI_PENNY_SUPPORTED_THRESHOLDS),
+                "custom_range": list(THAI_PENNY_CUSTOM_RANGE),
+                "methodology": "Thai Emerging Opportunity",
+                "version": METHODOLOGY_VERSION,
+            },
+            "principle": "Price defines the universe. Evidence determines the opportunity.",
+        },
         eligibility={"minimum_score": PENNY_ENGINE_DEFINITION.minimum_score, "minimum_confidence": PENNY_ENGINE_DEFINITION.minimum_confidence, "minimum_completeness": PENNY_ENGINE_DEFINITION.minimum_completeness, "hard_disqualifiers": ["invalid_price", "insufficient_trading_history", "insufficient_liquidity", "critical_confirmed_risk"]},
         factors=factors,
         risks=risks,
-        score_formula={"en": "Sum of weighted positive factor contributions minus evidence-supported risk penalties, bounded 0-100. Financial Intelligence is the primary evidence layer for corporate assets.", "th": "คะแนนโอกาสเกิดจากผลรวมของคะแนนปัจจัยเชิงบวกตามน้ำหนักที่กำหนด แล้วหักด้วยค่าปรับความเสี่ยงที่มีหลักฐานรองรับ โดย Financial Intelligence เป็นหลักฐานหลักสำหรับสินทรัพย์ที่เป็นบริษัท", "bounds": [0, 100], "weights": PENNY_FACTOR_WEIGHTS, "primary_evidence_policy": validate_primary_evidence_policy(PENNY_FACTOR_WEIGHTS)},
+        score_formula={"en": "Sum of weighted positive factor contributions minus evidence-supported risk penalties, bounded 0-100. Financial Intelligence is the primary evidence layer and Business Intelligence is the secondary evidence layer for corporate assets.", "th": "คะแนนโอกาสเกิดจากผลรวมของคะแนนปัจจัยเชิงบวกตามน้ำหนักที่กำหนด แล้วหักด้วยค่าปรับความเสี่ยงที่มีหลักฐานรองรับ โดย Financial Intelligence เป็นหลักฐานหลัก และ Business Intelligence เป็นหลักฐานรองสำหรับสินทรัพย์ที่เป็นบริษัท", "bounds": [0, 100], "weights": PENNY_FACTOR_WEIGHTS, "primary_evidence_policy": validate_primary_evidence_policy(PENNY_FACTOR_WEIGHTS)},
         confidence={"en": "Data Confidence measures evidence quality and availability. It is not probability of profit.", "th": "ความเชื่อมั่นของข้อมูลวัดคุณภาพและความพร้อมของหลักฐาน ไม่ใช่โอกาสทำกำไร"},
         completeness={"en": "Completeness measures which required evidence groups were available, missing, stale, or failed.", "th": "ความครบถ้วนวัดว่ากลุ่มข้อมูลสำคัญใดมีพร้อม ขาดหาย ล่าช้า หรือดึงข้อมูลไม่สำเร็จ"},
         ranking={"policy": PENNY_ENGINE_DEFINITION.tie_breaker_policy, "en": "Candidates rank by final score first; confidence and completeness break ties only.", "th": "จัดอันดับจากคะแนนสุดท้ายก่อน ความเชื่อมั่นและความครบถ้วนใช้เฉพาะกรณีคะแนนเท่ากัน"},
@@ -391,6 +422,7 @@ def build_penny_opportunities(
     news_fn: NewsFn | None = None,
     market: str | None = None,
     limit: int = 5,
+    thai_max_price: float | None = None,
 ) -> Dict[str, Any]:
     safe_limit = max(1, min(int(limit or 5), 20))
     scan_id = f"penny-{uuid4().hex[:12]}"
@@ -398,6 +430,7 @@ def build_penny_opportunities(
     scan_started_iso = scan_started_at.isoformat()
     timer_started = monotonic()
     selected_markets = _selected_markets(market)
+    active_policies = _configured_policies(thai_max_price)
     generated_at = scan_started_iso
     registry = _candidate_registry(selected_markets)
     candidates = []
@@ -411,12 +444,12 @@ def build_penny_opportunities(
 
     workers = min(SCAN_MAX_WORKERS, max(1, len(registry)))
     if workers == 1:
-        results = [_evaluate_registry_asset(asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes) for asset in registry]
+        results = [_evaluate_registry_asset(asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies) for asset in registry]
     else:
         results = []
         with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="penny-scan") as executor:
             futures = [
-                executor.submit(_evaluate_registry_asset, asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes)
+                executor.submit(_evaluate_registry_asset, asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies)
                 for asset in registry
             ]
             for future in as_completed(futures):
@@ -483,6 +516,7 @@ def build_penny_opportunities(
             "scan_duration_ms": scan_duration_ms,
         },
         "markets": selected_markets,
+        "universe": _universe_response(active_policies, selected_markets),
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
         "qualification": {
             "universe_size": len(registry),
@@ -495,11 +529,13 @@ def build_penny_opportunities(
             "result_count": len(items),
             "excluded_count": excluded,
             "unknown_count": unknown,
+            "active_thresholds": {market_id: active_policies[market_id].penny_price_maximum for market_id in selected_markets if market_id in active_policies},
         },
         "items": [_public_item(item) for item in items],
         "why_not_index": dict(list(why_not_index.items())[:250]),
         "limitations": [
             "The scanner evaluates the complete currently supported Thai and US equity universe before ranking qualified candidates.",
+            "Price defines the scanning universe only. Price is not a positive score factor.",
             "Catalyst evidence is shown only when a configured provider returns verifiable items.",
             "Missing fundamentals, liquidity, or catalyst data reduce confidence instead of being replaced.",
             "Scores are transparent research rankings, not scientifically validated predictions.",
@@ -515,6 +551,7 @@ def run_penny_scan_once(
     news_fn: NewsFn | None = None,
     market: str | None = None,
     limit: int = 5,
+    thai_max_price: float | None = None,
 ) -> Dict[str, Any]:
     if not _scan_execution_lock.acquire(blocking=False):
         current = _snapshot_store.latest(PENNY_ENGINE_ID)
@@ -531,7 +568,7 @@ def run_penny_scan_once(
             return current
         return _empty_snapshot("running", "A scheduled penny scan is already running.")
     try:
-        snapshot = build_penny_opportunities(quote_fn, history_fn, news_fn, market=market, limit=limit)
+        snapshot = build_penny_opportunities(quote_fn, history_fn, news_fn, market=market, limit=limit, thai_max_price=thai_max_price)
         snapshot["snapshot_status"] = snapshot["status"]
         qualification = snapshot.get("qualification", {})
         failed_all_candidates = (
@@ -605,6 +642,17 @@ def get_penny_opportunities_snapshot(market: str | None = None, limit: int = 5) 
         scan["failed_scan_timestamp"] = failed.get("failed_scan_timestamp")
         scan["failure_stage"] = failed.get("failure_stage")
     return snapshot
+
+
+def build_custom_penny_opportunities(
+    quote_fn: QuoteFn,
+    history_fn: HistoryFn,
+    news_fn: NewsFn | None = None,
+    market: str | None = None,
+    limit: int = 5,
+    thai_max_price: float | None = None,
+) -> Dict[str, Any]:
+    return build_penny_opportunities(quote_fn, history_fn, news_fn, market=market, limit=limit, thai_max_price=thai_max_price)
 
 
 def start_penny_opportunity_scheduler(
@@ -769,6 +817,7 @@ def _empty_snapshot(status: str, reason: str, failure: Dict[str, Any] | None = N
             "scan_duration_ms": 0,
         },
         "markets": [],
+        "universe": _universe_response(_configured_policies(), []),
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
         "qualification": {
             "universe_size": 0,
@@ -844,17 +893,22 @@ def evaluate_candidate(
         risk_flags.append(_risk_flag("liquidity_unknown", "MEDIUM", "unknown", 12, "Liquidity metrics are unavailable from provider."))
 
     financial_report = build_financial_intelligence_report(symbol, quote, quote, asset)
+    business_report = build_business_intelligence_report(symbol, quote, financial_report)
     financial = _financial_score_from_report(financial_report, quote, missing_data)
+    business = _business_score_from_report(business_report, missing_data)
     growth = _growth_score(quote, missing_data)
     technical = _technical_score(closes, volumes, quote, missing_data, risk_flags)
     catalyst = _catalyst_score(symbol, news_fn, missing_data, provider_status)
-    completeness = _data_completeness(quote, history, catalyst)
-    confidence = _data_confidence(completeness, liquidity, financial, growth, technical, catalyst, risk_flags)
+    setup = _opportunity_setup(financial, business, growth, liquidity, risk_flags)
+    if setup["value_trap_detected"]:
+        risk_flags.append(_risk_flag("value_trap_evidence", "HIGH", "confirmed", 22, "Low price is accompanied by weak financial or business evidence."))
+    completeness = _data_completeness(quote, history, catalyst, business)
+    confidence = _data_confidence(completeness, liquidity, financial, business, technical, catalyst, risk_flags)
     risk_penalty = _risk_penalty([*hard_flags, *risk_flags], liquidity, technical)
     market_context = _market_context_score(asset, quote)
     factor_scores = {
         "financial": financial["score"],
-        "growth": growth["score"],
+        "business": business["score"],
         "technical": technical["score"],
         "liquidity": liquidity["score"],
         "catalyst": catalyst["score"],
@@ -893,24 +947,30 @@ def evaluate_candidate(
             "liquidity": liquidity["status"],
             "history": history_status,
             "fundamentals": financial["status"],
+            "business": business["status"],
             "growth": growth["status"],
             "catalyst": catalyst["status"],
         },
+        "universe_filter": _universe_filter_response(policy, classification),
+        "price_tier": classification["tier"],
+        "price_tier_label": classification["label"],
+        "opportunity_setup": setup,
         "risk_penalty": risk_penalty,
         "risk_level": risk_level,
         "severe_risk_count": len([flag for flag in [*hard_flags, *risk_flags] if flag["severity"] in {"HIGH", "CRITICAL"}]),
-        "strengths": _strengths(liquidity, financial, growth, technical, catalyst),
+        "strengths": _strengths(liquidity, financial, business, growth, technical, catalyst, setup),
         "risks": [*hard_flags, *risk_flags],
         "missing_data": sorted(set(missing_data)),
         "catalysts": catalyst["items"],
         "explanation": _explanation(symbol, score, confidence, [*hard_flags, *risk_flags], missing_data, catalyst),
         "score_explanation": _candidate_score_explanation(symbol, score, score_breakdown, confidence, completeness, factor_scores, [*hard_flags, *risk_flags], missing_data),
         "score_breakdown": score_breakdown,
-        "confidence_explanation": _confidence_explanation(confidence, completeness, liquidity, financial, growth, technical, catalyst, risk_flags),
-        "completeness_explanation": _completeness_explanation(completeness, quote, history, catalyst),
+        "confidence_explanation": _confidence_explanation(confidence, completeness, liquidity, financial, business, technical, catalyst, risk_flags),
+        "completeness_explanation": _completeness_explanation(completeness, quote, history, catalyst, business),
         "uncertainty_disclosure": _uncertainty_disclosure(missing_data, provider_status, [*hard_flags, *risk_flags]),
         "evidence_integrity": _evidence_integrity_records(symbol, quote, history, catalyst, provider_status),
         "financial_intelligence": financial_report,
+        "business_intelligence": business_report,
         "trust": _trust_api_metadata(),
         "provider_attribution": _provider_attribution(quote, history, catalyst),
         "provider_status": provider_status,
@@ -921,12 +981,26 @@ def evaluate_candidate(
 
 def classify_price(price: float | None, policy: PennyMarketPolicy) -> Dict[str, Any]:
     if price is None:
-        return {"status": "UNKNOWN", "classification": "unavailable", "label": "Data unavailable"}
+        return {"status": "UNKNOWN", "classification": "unavailable", "label": "Data unavailable", "tier": "unavailable"}
+    if policy.market == "TH":
+        if price <= 2.0:
+            tier = ("micro_penny", "Micro Penny")
+        elif price <= 5.0:
+            tier = ("classic_penny", "Classic Penny")
+        elif price <= 10.0:
+            tier = ("thai_emerging", "Thai Emerging")
+        elif price <= 15.0:
+            tier = ("extended_emerging", "Extended Emerging")
+        else:
+            tier = ("outside_policy", "Outside Thai Emerging Opportunity universe")
+        if price <= policy.penny_price_maximum:
+            return {"status": "PASS", "classification": "thai_emerging_opportunity_universe", "label": tier[1], "tier": tier[0], "maximum_share_price": policy.penny_price_maximum, "methodology": policy.methodology}
+        return {"status": "FAIL", "classification": "outside_policy", "label": tier[1], "tier": tier[0], "maximum_share_price": policy.penny_price_maximum, "methodology": policy.methodology}
     if price <= policy.penny_price_maximum:
-        return {"status": "PASS", "classification": "penny_stock", "label": "Penny Stock"}
+        return {"status": "PASS", "classification": "penny_stock", "label": "Penny Stock", "tier": "penny_stock"}
     if policy.extended_price_maximum is not None and price <= policy.extended_price_maximum:
-        return {"status": "PASS", "classification": "low_priced_small_cap", "label": "Low-Priced Small Cap"}
-    return {"status": "FAIL", "classification": "outside_policy", "label": "Outside configured low-price policy"}
+        return {"status": "PASS", "classification": "low_priced_small_cap", "label": "Low-Priced Small Cap", "tier": "low_priced_small_cap"}
+    return {"status": "FAIL", "classification": "outside_policy", "label": "Outside configured low-price policy", "tier": "outside_policy"}
 
 
 def _candidate_registry(markets: Iterable[str]) -> List[MasterAsset]:
@@ -945,9 +1019,10 @@ def _evaluate_registry_asset(
     news_fn: NewsFn | None,
     generated_at: str,
     scan_quotes: Dict[str, Dict[str, Any]],
+    policies: Dict[str, PennyMarketPolicy] | None = None,
 ) -> Dict[str, Any]:
     try:
-        policy = _policy_for_asset(asset)
+        policy = _policy_for_asset(asset, policies)
         if policy is None:
             return {"status": "unsupported", "provider_status": []}
         provider_symbol = asset.provider_symbols.get("yfinance") or asset.canonical_symbol
@@ -1007,12 +1082,86 @@ def _selected_markets(market: str | None) -> List[str]:
     return []
 
 
-def _policy_for_asset(asset: MasterAsset) -> PennyMarketPolicy | None:
+def _configured_policies(thai_max_price: float | None = None) -> Dict[str, PennyMarketPolicy]:
+    policies = dict(POLICIES)
+    active_thai_threshold = _validated_thai_threshold(thai_max_price)
+    policies["TH"] = replace(
+        POLICIES["TH"],
+        penny_price_maximum=active_thai_threshold,
+        extended_price_maximum=15.0,
+    )
+    return policies
+
+
+def _validated_thai_threshold(value: float | None) -> float:
+    if value is None:
+        return THAI_PENNY_DEFAULT_MAX_SHARE_PRICE
+    selected = float(value)
+    low, high = THAI_PENNY_CUSTOM_RANGE
+    if selected < low or selected > high:
+        raise ValueError("Thai Penny maximum share price must be between 5.00 and 15.00 THB.")
+    return round(selected, 2)
+
+
+def _thai_universe_disclosure(policy: PennyMarketPolicy) -> Dict[str, Any]:
+    return {
+        "name": "Thai Emerging Opportunities (Penny Stock)",
+        "current_penny_universe": "Thai Penny Stock Universe",
+        "maximum_share_price": policy.penny_price_maximum,
+        "currency": policy.currency,
+        "default_maximum_share_price": policy.default_price_maximum,
+        "supported_options": list(policy.supported_price_options),
+        "custom_range": list(policy.custom_price_range or ()),
+        "methodology": policy.methodology,
+        "version": METHODOLOGY_VERSION,
+        "principle": "Price defines the universe. Evidence determines the opportunity.",
+        "price_tiers": [
+            {"tier": "micro_penny", "label": "Micro Penny", "range": "0.01-2.00 THB"},
+            {"tier": "classic_penny", "label": "Classic Penny", "range": "2.00-5.00 THB"},
+            {"tier": "thai_emerging", "label": "Thai Emerging", "range": "5.00-10.00 THB"},
+            {"tier": "extended_emerging", "label": "Extended Emerging", "range": "10.00-15.00 THB"},
+        ],
+    }
+
+
+def _universe_response(policies: Dict[str, PennyMarketPolicy], selected_markets: List[str]) -> Dict[str, Any]:
+    return {
+        "principle": "Price defines the universe. Evidence determines the opportunity.",
+        "markets": {
+            market: _thai_universe_disclosure(policy) if market == "TH" else {
+                "name": "US Penny Opportunity",
+                "maximum_share_price": policy.penny_price_maximum,
+                "currency": policy.currency,
+                "methodology": policy.methodology,
+                "version": METHODOLOGY_VERSION,
+            }
+            for market, policy in policies.items()
+            if market in selected_markets
+        },
+    }
+
+
+def _universe_filter_response(policy: PennyMarketPolicy, classification: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "market": policy.market,
+        "methodology": policy.methodology,
+        "maximum_share_price": policy.penny_price_maximum,
+        "currency": policy.currency,
+        "supported_options": list(policy.supported_price_options),
+        "custom_range": list(policy.custom_price_range or ()),
+        "price_tier": classification.get("tier"),
+        "eligible": classification.get("status") == "PASS",
+        "principle": "Price defines the universe. Evidence determines the opportunity.",
+    }
+
+
+def _policy_for_asset(asset: MasterAsset, policies: Dict[str, PennyMarketPolicy] | None = None) -> PennyMarketPolicy | None:
+    active_policies = policies or POLICIES
     market = _asset_market(asset)
     if market == "TH":
-        return POLICIES["TH"]
+        return active_policies["TH"]
     if market == "US":
-        return POLICIES["US"]
+        return active_policies["US"]
     return None
 
 
@@ -1067,6 +1216,74 @@ def _financial_score_from_report(report: Dict[str, Any], quote: Dict[str, Any], 
         return {"score": None, "status": "UNKNOWN", "source": "financial_intelligence", "profile": (report.get("profile") or {}).get("profile_type")}
     fallback = _financial_score(quote, missing)
     return {**fallback, "source": "legacy_quote_fallback", "profile": (report.get("profile") or {}).get("profile_type")}
+
+
+def _business_score_from_report(report: Dict[str, Any], missing: List[str]) -> Dict[str, Any]:
+    score = _number(report.get("business_intelligence_score"))
+    missing.extend(report.get("missing_business_evidence") or [])
+    if score is not None:
+        return {
+            "score": _clamp(round(score), 0, 100),
+            "status": "PASS" if report.get("status") in {"measured", "partial"} else "UNKNOWN",
+            "source": "business_intelligence",
+            "confidence": report.get("business_confidence"),
+            "completeness": report.get("business_completeness"),
+            "risk": report.get("business_risk"),
+        }
+    if report.get("applicable") is False:
+        missing.append("corporate_business_intelligence_not_applicable")
+    return {
+        "score": None,
+        "status": "UNKNOWN",
+        "source": "business_intelligence",
+        "confidence": report.get("business_confidence"),
+        "completeness": report.get("business_completeness"),
+        "risk": report.get("business_risk"),
+    }
+
+
+def _opportunity_setup(financial: Dict[str, Any], business: Dict[str, Any], growth: Dict[str, Any], liquidity: Dict[str, Any], risk_flags: List[Dict[str, Any]]) -> Dict[str, Any]:
+    financial_score = _number(financial.get("score"))
+    business_score = _number(business.get("score"))
+    growth_score = _number(growth.get("score"))
+    liquidity_score = _number(liquidity.get("score"))
+    turnaround = bool(
+        financial_score is not None
+        and business_score is not None
+        and growth_score is not None
+        and financial_score >= 45
+        and business_score >= 45
+        and growth_score >= 58
+    )
+    value_trap = bool(
+        (financial_score is not None and financial_score < 40)
+        or (business_score is not None and business_score < 40)
+        or liquidity.get("status") == "FAIL"
+    )
+    emerging_quality = bool(
+        financial_score is not None
+        and business_score is not None
+        and liquidity_score is not None
+        and financial_score >= 60
+        and business_score >= 60
+        and liquidity_score >= 55
+        and not value_trap
+    )
+    category = "emerging_quality" if emerging_quality else "turnaround_candidate" if turnaround else "value_trap_risk" if value_trap else "insufficient_evidence"
+    return {
+        "turnaround_detected": turnaround,
+        "value_trap_detected": value_trap,
+        "emerging_quality_detected": emerging_quality,
+        "category": category,
+        "evidence": {
+            "financial_score": financial_score,
+            "business_score": business_score,
+            "growth_score": growth_score,
+            "liquidity_score": liquidity_score,
+            "risk_flags": [risk["code"] for risk in risk_flags],
+        },
+        "interpretation": "Price defines eligibility only. The category is determined by Financial Intelligence, Business Intelligence, growth, liquidity, and risk evidence.",
+    }
 
 
 def _financial_score(quote: Dict[str, Any], missing: List[str]) -> Dict[str, Any]:
@@ -1170,7 +1387,8 @@ def _catalyst_score(symbol: str, news_fn: NewsFn | None, missing: List[str], pro
     return {"score": min(80, 45 + len(catalysts) * 10), "status": "PASS", "items": catalysts}
 
 
-def _data_completeness(quote: Dict[str, Any], history: Dict[str, Any], catalyst: Dict[str, Any]) -> int:
+def _data_completeness(quote: Dict[str, Any], history: Dict[str, Any], catalyst: Dict[str, Any], business: Dict[str, Any] | None = None) -> int:
+    business = business or {}
     checks = [
         quote.get("price") is not None,
         quote.get("volume") is not None,
@@ -1180,15 +1398,16 @@ def _data_completeness(quote: Dict[str, Any], history: Dict[str, Any], catalyst:
         quote.get("return_on_equity") is not None,
         quote.get("revenue_growth") is not None,
         len(_history_closes(history)) >= 10,
+        business.get("status") == "PASS",
         catalyst.get("status") == "PASS",
         quote.get("timestamp") is not None,
     ]
     return round(sum(1 for item in checks if item) / len(checks) * 100)
 
 
-def _data_confidence(completeness: int, liquidity: Dict[str, Any], financial: Dict[str, Any], growth: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any], risks: List[Dict[str, Any]]) -> int:
+def _data_confidence(completeness: int, liquidity: Dict[str, Any], financial: Dict[str, Any], business: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any], risks: List[Dict[str, Any]]) -> int:
     score = completeness
-    for factor in [liquidity, financial, growth, technical, catalyst]:
+    for factor in [liquidity, financial, business, technical, catalyst]:
         if factor.get("status") == "UNKNOWN":
             score -= 6
         elif factor.get("status") == "FAIL":
@@ -1263,8 +1482,8 @@ def _candidate_score_explanation(symbol: str, score: int, breakdown: Dict[str, A
     }
 
 
-def _confidence_explanation(confidence: int, completeness: int, liquidity: Dict[str, Any], financial: Dict[str, Any], growth: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any], risks: List[Dict[str, Any]]) -> Dict[str, Any]:
-    factor_status = {name: value.get("status") for name, value in {"liquidity": liquidity, "financial": financial, "growth": growth, "technical": technical, "catalyst": catalyst}.items()}
+def _confidence_explanation(confidence: int, completeness: int, liquidity: Dict[str, Any], financial: Dict[str, Any], business: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any], risks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    factor_status = {name: value.get("status") for name, value in {"liquidity": liquidity, "financial": financial, "business": business, "technical": technical, "catalyst": catalyst}.items()}
     reducers = [name for name, status in factor_status.items() if status in {"UNKNOWN", "FAIL"}]
     return {
         "score": confidence,
@@ -1278,7 +1497,8 @@ def _confidence_explanation(confidence: int, completeness: int, liquidity: Dict[
     }
 
 
-def _completeness_explanation(completeness: int, quote: Dict[str, Any], history: Dict[str, Any], catalyst: Dict[str, Any]) -> Dict[str, Any]:
+def _completeness_explanation(completeness: int, quote: Dict[str, Any], history: Dict[str, Any], catalyst: Dict[str, Any], business: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    business = business or {}
     checks = {
         "price": quote.get("price") is not None,
         "volume": quote.get("volume") is not None,
@@ -1288,6 +1508,7 @@ def _completeness_explanation(completeness: int, quote: Dict[str, Any], history:
         "return_on_equity": quote.get("return_on_equity") is not None,
         "revenue_growth": quote.get("revenue_growth") is not None,
         "history_coverage": len(_history_closes(history)) >= 10,
+        "business_intelligence": business.get("status") == "PASS",
         "verified_catalyst": catalyst.get("status") == "PASS",
         "timestamp": quote.get("timestamp") is not None,
     }
@@ -1453,7 +1674,7 @@ def _candidate_exclusion_explanation(candidate: Dict[str, Any], reason: str) -> 
     }
 
 
-def _strengths(liquidity: Dict[str, Any], financial: Dict[str, Any], growth: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any]) -> List[str]:
+def _strengths(liquidity: Dict[str, Any], financial: Dict[str, Any], business: Dict[str, Any], growth: Dict[str, Any], technical: Dict[str, Any], catalyst: Dict[str, Any], setup: Dict[str, Any]) -> List[str]:
     rows = []
     if liquidity["status"] == "PASS":
         rows.append("Liquidity requirement passed with provider volume evidence.")
@@ -1463,6 +1684,12 @@ def _strengths(liquidity: Dict[str, Any], financial: Dict[str, Any], growth: Dic
         rows.append("Available growth metrics are improving.")
     if financial["score"] >= 55:
         rows.append("Available financial quality metrics are supportive.")
+    if business["score"] is not None and business["score"] >= 55:
+        rows.append("Business Intelligence evidence is supportive.")
+    if setup.get("turnaround_detected"):
+        rows.append("Turnaround evidence is present from improving financial or business signals.")
+    if setup.get("emerging_quality_detected"):
+        rows.append("Emerging quality evidence is present across financial, business, and liquidity signals.")
     if catalyst["status"] == "PASS":
         rows.append("Verified provider catalyst evidence is available.")
     return rows[:5]

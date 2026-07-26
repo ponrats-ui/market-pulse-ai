@@ -444,3 +444,19 @@ Related canonical documents:
 - `docs/CAPITAL_ALLOCATION_ANALYSIS.md`
 - `docs/MANAGEMENT_EXECUTION_ANALYSIS.md`
 - `docs/GOVERNANCE_INTELLIGENCE.md`
+
+## RC5A Thai Emerging Opportunities Addendum
+
+Thai Emerging Opportunities (Penny Stock) is the first opportunity engine that consumes both Financial Intelligence and Business Intelligence.
+
+The default Thailand universe is `price <= 10.00 THB`. Users may configure `5.00`, `7.50`, `10.00`, `15.00`, or a custom threshold between `5.00` and `15.00 THB`.
+
+Price defines the universe. Evidence determines the opportunity.
+
+The engine classifies price tiers as Micro Penny, Classic Penny, Thai Emerging, and Extended Emerging. Tiering is context only and does not add positive score.
+
+The RC5A evidence mix is Financial Intelligence `55%`, Business Intelligence `20%`, Liquidity `10%`, Technical Participation `5%`, Verified Catalyst Evidence `5%`, and Market Context `5%`. Risk penalties, confidence, and completeness remain separate.
+
+Related canonical document:
+
+- `docs/THAI_EMERGING_OPPORTUNITIES_ENGINE.md`

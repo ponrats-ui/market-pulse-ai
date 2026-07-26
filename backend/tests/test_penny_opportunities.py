@@ -78,7 +78,22 @@ def no_news(symbol: str, limit: int):
 def test_thai_price_classification() -> None:
     classified = po.classify_price(5.0, po.POLICIES["TH"])
     assert classified["status"] == "PASS"
-    assert classified["classification"] == "penny_stock"
+    assert classified["classification"] == "thai_emerging_opportunity_universe"
+    assert classified["tier"] == "classic_penny"
+
+
+def test_thai_default_universe_includes_five_to_ten_thb() -> None:
+    classified = po.classify_price(9.8, po.POLICIES["TH"])
+    assert classified["status"] == "PASS"
+    assert classified["tier"] == "thai_emerging"
+    assert classified["maximum_share_price"] == 10.0
+
+
+def test_thai_custom_threshold_filters_above_active_limit() -> None:
+    policy = po._configured_policies(7.5)["TH"]
+    classified = po.classify_price(9.8, policy)
+    assert classified["status"] == "FAIL"
+    assert classified["maximum_share_price"] == 7.5
 
 
 def test_us_penny_classification() -> None:
@@ -118,6 +133,49 @@ def test_missing_fundamentals_reduce_confidence() -> None:
     full = po.evaluate_candidate(asset(), po.POLICIES["TH"], lambda symbol: quote(symbol), lambda *_: history(), no_news)
     missing = po.evaluate_candidate(asset(), po.POLICIES["TH"], lambda symbol: quote(symbol, debt_to_equity=None, return_on_equity=None, return_on_assets=None, revenue_growth=None, earnings_growth=None, trailing_pe=None), lambda *_: history(), no_news)
     assert missing["data_confidence"] < full["data_confidence"]
+
+
+def test_business_intelligence_is_consumed_as_score_factor() -> None:
+    result = po.evaluate_candidate(replace(asset("QUALITY.BK"), sector="Technology", industry="Software"), po.POLICIES["TH"], lambda symbol: quote(symbol, price=8.4), lambda *_: history(), no_news)
+    assert "business" in result["scores"]
+    assert result["scores"]["business"] is not None
+    assert result["business_intelligence"]["business_intelligence_score"] == result["scores"]["business"]
+    assert any(row["factor_id"] == "business" for row in result["score_breakdown"]["factor_contributions"])
+
+
+def test_value_trap_detection_adds_risk_penalty() -> None:
+    result = po.evaluate_candidate(
+        asset("WEAK.BK"),
+        po.POLICIES["TH"],
+        lambda symbol: quote(symbol, price=0.8, debt_to_equity=400, return_on_equity=-0.3, return_on_assets=-0.2, revenue_growth=-0.2, earnings_growth=-0.4),
+        lambda *_: history(),
+        no_news,
+    )
+    assert result["opportunity_setup"]["value_trap_detected"] is True
+    assert any(risk["code"] == "value_trap_evidence" for risk in result["risks"])
+
+
+def test_emerging_quality_detection_uses_evidence_not_price() -> None:
+    result = po.evaluate_candidate(
+        replace(asset("EMERGE.BK"), sector="Technology", industry="Software"),
+        po.POLICIES["TH"],
+        lambda symbol: quote(
+            symbol,
+            price=9.8,
+            totalRevenue=1000.0,
+            grossProfit=450.0,
+            netIncome=180.0,
+            freeCashFlow=200.0,
+            totalDebt=120.0,
+            totalEquity=500.0,
+            debt_to_equity=0.24,
+        ),
+        lambda *_: history(),
+        no_news,
+    )
+    assert result["price_tier"] == "thai_emerging"
+    assert result["opportunity_setup"]["emerging_quality_detected"] is True
+    assert "Price defines eligibility only" in result["opportunity_setup"]["interpretation"]
 
 
 def test_missing_catalyst_does_not_create_fake_catalyst() -> None:
@@ -222,6 +280,8 @@ def test_api_response_schema_is_valid(monkeypatch) -> None:
     assert "warning" in payload
     assert "qualification" in payload
     assert "items" in payload
+    assert payload["universe"]["markets"]["TH"]["maximum_share_price"] == 10.0
+    assert payload["qualification"]["active_thresholds"]["TH"] == 10.0
 
 
 def test_limit_parameter_is_bounded(monkeypatch) -> None:

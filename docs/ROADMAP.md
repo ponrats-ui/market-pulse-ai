@@ -195,3 +195,9 @@ Future roadmap items should build on the shared Asset Intelligence contracts ins
 RC5 adds Business Intelligence as a separate evidence layer for operating companies. The layer evaluates business model quality, revenue model quality, pricing-power evidence, capital allocation evidence, business risk, and missing operational evidence while refusing to fabricate competitive advantage, management execution, governance, customer concentration, or supplier-risk claims.
 
 Financial Intelligence remains primary. Business Intelligence remains secondary until a Founder-approved scoring migration is versioned.
+
+## RC5A Thai Emerging Opportunities
+
+RC5A applies Financial Intelligence and Business Intelligence to the first opportunity engine that consumes both layers: Thai Emerging Opportunities (Penny Stock).
+
+The Thailand default universe is `price <= 10.00 THB`, with configurable thresholds from `5.00` to `15.00 THB`. The engine discloses price tier, active threshold, turnaround evidence, value-trap evidence, emerging-quality evidence, score reconciliation, missing data, confidence, and limitations.

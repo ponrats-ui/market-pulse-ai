@@ -189,3 +189,9 @@ The Trust Foundation establishes a permanent release gate for evidence integrity
 RC4 establishes Financial Intelligence as the primary evidence layer for corporate assets and creates explicit boundaries for funds, crypto, macro, and commodity instruments.
 
 Future roadmap items should build on the shared Asset Intelligence contracts instead of creating separate scoring systems.
+
+## RC5 Business Intelligence Foundation
+
+RC5 adds Business Intelligence as a separate evidence layer for operating companies. The layer evaluates business model quality, revenue model quality, pricing-power evidence, capital allocation evidence, business risk, and missing operational evidence while refusing to fabricate competitive advantage, management execution, governance, customer concentration, or supplier-risk claims.
+
+Financial Intelligence remains primary. Business Intelligence remains secondary until a Founder-approved scoring migration is versioned.

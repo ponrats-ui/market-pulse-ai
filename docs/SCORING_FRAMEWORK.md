@@ -221,3 +221,13 @@ Confidence measures evidence reliability. Completeness measures evidence availab
 ## Primary Corporate Evidence
 
 For corporate assets, Financial Intelligence must be the largest single positive evidence domain. The default target is 55%, with a governed range of 45%-65%. Confidence and completeness remain separate from score construction.
+
+## Business Intelligence Score
+
+Business Intelligence is a secondary corporate evidence layer. It evaluates business quality, operating durability, business risk, and missing operational evidence using only available provider and Financial Intelligence fields.
+
+The Business Intelligence Score remains separate from Financial Intelligence. It must not be merged into opportunity ranking weights until a Founder-approved methodology migration is versioned.
+
+Current domains include business model quality, revenue model quality, competitive position context, pricing power evidence, capital allocation evidence, industry structure, cyclicality, regulatory risk, durability of growth, and business risk.
+
+Unavailable evidence such as competitive advantage, customer concentration, supplier risk, management execution, and governance must remain unavailable when no verified provider evidence exists.

@@ -425,3 +425,22 @@ Related canonical documents:
 - `docs/PRIMARY_EVIDENCE_POLICY.md`
 - `docs/FINANCIAL_INTELLIGENCE_ENGINE.md`
 - `docs/FINANCIAL_SCORING_FRAMEWORK.md`
+
+## RC5 Business Intelligence Addendum
+
+Market Pulse AI now separates Financial Intelligence from Business Intelligence.
+
+Financial Intelligence explains what reported financial evidence shows. Business Intelligence explains why those numbers may be sustainable, improving, weakening, or vulnerable. The Business Intelligence layer covers operating-business quality, revenue model quality, pricing-power evidence, capital allocation evidence, industry context, cyclicality, regulatory context, durability of growth, and business risk.
+
+The layer follows the Zero Mock Policy. It does not fabricate competitive advantage, market share, customer loyalty, supplier dependency, management quality, or governance quality when verified evidence is unavailable.
+
+Business Intelligence is secondary evidence and is not activated inside opportunity ranking weights until a Founder-approved methodology migration is versioned.
+
+Related canonical documents:
+
+- `docs/BUSINESS_INTELLIGENCE_ENGINE.md`
+- `docs/BUSINESS_MODEL_QUALITY.md`
+- `docs/COMPETITIVE_ADVANTAGE_EVIDENCE.md`
+- `docs/CAPITAL_ALLOCATION_ANALYSIS.md`
+- `docs/MANAGEMENT_EXECUTION_ANALYSIS.md`
+- `docs/GOVERNANCE_INTELLIGENCE.md`

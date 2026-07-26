@@ -17,6 +17,7 @@ from app.data_hub.capabilities import capabilities_for_symbol
 from app.data_hub.exchange_master import exchange_master_metadata, validate_exchange_master
 from app.data_hub.master_asset_registry import master_asset_registry_metadata, validate_master_asset_registry
 from app.data_hub.symbol_resolver import resolve_symbol
+from app.intelligence.business import build_business_intelligence_report, business_intelligence_methodology
 from app.intelligence.financial import build_financial_intelligence_report, classify_asset_for_intelligence, financial_intelligence_methodology
 from app.premium.alerts import build_digest, evaluate_alert_rules
 from app.premium.entitlements import entitlement_matrix, evaluate_entitlement
@@ -182,6 +183,19 @@ def financial_intelligence(symbol: str) -> Dict[str, Any]:
     provider_payload = get_cached_fundamentals(symbol)
     quote = get_cached_quote(symbol)
     return build_financial_intelligence_report(symbol, provider_payload, quote)
+
+
+@app.get("/api/intelligence/business/methodology")
+def business_intelligence_methodology_endpoint() -> Dict[str, Any]:
+    return business_intelligence_methodology()
+
+
+@app.get("/api/intelligence/business/{symbol}")
+def business_intelligence(symbol: str) -> Dict[str, Any]:
+    provider_payload = get_cached_fundamentals(symbol)
+    quote = get_cached_quote(symbol)
+    financial_report = build_financial_intelligence_report(symbol, provider_payload, quote)
+    return build_business_intelligence_report(symbol, quote, financial_report)
 
 
 @app.get("/api/sectors")

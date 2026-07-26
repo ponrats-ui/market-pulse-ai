@@ -8,6 +8,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Added
 
+- Business Intelligence foundation with separate business quality score, business risk, evidence, missing evidence, confidence, completeness, methodology endpoint, and business analysis API.
 - Asset Intelligence layer with explicit classification, corporate Financial Intelligence profile, special-profile boundaries, reusable Financial Intelligence report, methodology endpoint, and Financial Intelligence API.
 - Financial Intelligence backend engine with formula registry, evidence normalization, score, confidence, completeness, risk signals, cache metadata, and version metadata.
 - Penny Opportunity v2 migration using Financial Intelligence as the largest positive evidence domain at 55% weight.
@@ -22,6 +23,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Documentation
 
+- Added Business Intelligence Engine, Business Model Quality, Competitive Advantage Evidence, Capital Allocation Analysis, Management Execution Analysis, and Governance Intelligence documentation.
 - Added Financial Intelligence, Asset Intelligence, model registry, scoring, normalization, formula, risk, confidence, API, UI, governance, and Penny migration documentation.
 - Added trust governance documents for Trust Foundation, Algorithm Neutrality, Evidence Integrity, Uncertainty Disclosure, Ranking Integrity, Conflict of Interest, Decision Boundary, and Intellectual Honesty.
 - Added `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, then linked the framework and scanner across roadmap, product bible, AI architecture, scoring, and explainability docs.

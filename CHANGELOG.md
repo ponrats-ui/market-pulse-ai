@@ -8,6 +8,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Fixed
 
+- Removed startup-time Penny Opportunity scans from the FastAPI lifespan path, added Data Hub/provider-level Thai symbol mapping guards, and blocked Thai foreign-board symbols from reaching Yahoo Finance in production stability hotfix RC5A.1.1.
 - Hardened Thai Emerging Opportunities production behavior by excluding unsupported Thai foreign-board/special-board symbols before provider calls, making custom-threshold API requests snapshot-first, and returning transparent `not_ready` or `scan_in_progress` states instead of starting unbounded request-time scans.
 
 ### Added

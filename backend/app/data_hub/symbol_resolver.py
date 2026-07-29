@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
+from app.data_hub.provider_symbol_mapper import map_provider_symbol
 
 
 @dataclass(frozen=True)
@@ -32,12 +33,16 @@ def resolve_symbol(query: str, provider: str = "yfinance") -> ResolutionResult:
         provider_symbol = asset.provider_symbols.get(provider)
         if not provider_symbol:
             return ResolutionResult(False, query, reason=f"provider_symbol_unavailable:{provider}")
+        mapped = map_provider_symbol(provider_symbol, _asset_market(asset), provider)
+        if not mapped.supported or not mapped.provider_symbol:
+            return ResolutionResult(False, query, reason=mapped.exclusion_reason or f"provider_symbol_unavailable:{provider}")
+        provider_symbols = {**asset.provider_symbols, provider: mapped.provider_symbol}
         return ResolutionResult(
             True,
             query,
             canonical_symbol=asset.canonical_symbol,
             display_symbol=asset.display_symbol,
-            provider_symbols=asset.provider_symbols,
+            provider_symbols=provider_symbols,
             asset=asset.to_dict(),
         )
     return ResolutionResult(False, query, reason="unsupported_under_current_universe")
@@ -81,3 +86,11 @@ def _asset_rank_priority(asset: MasterAsset) -> tuple[int, str]:
         if asset.asset_class == "fund":
             return (2, asset.canonical_symbol)
     return (1, asset.canonical_symbol)
+
+
+def _asset_market(asset: MasterAsset) -> str:
+    if asset.country == "Thailand" or asset.canonical_symbol.endswith(".BK"):
+        return "TH"
+    if asset.country in {"US", "United States"}:
+        return "US"
+    return asset.market or asset.exchange or ""

@@ -29,7 +29,7 @@ from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
 from app.services.macro import company_events, intelligence_status, macro_indicators
 from app.services.news import news_for_symbol, news_impact_for_symbol
-from app.services.penny_opportunities import get_penny_algorithm_definition, get_penny_candidate_explanation, get_penny_opportunities_snapshot, get_penny_why_not, register_penny_opportunity_engine, start_penny_opportunity_scheduler, stop_penny_opportunity_scheduler
+from app.services.penny_opportunities import get_penny_algorithm_definition, get_penny_candidate_explanation, get_penny_opportunities_snapshot, get_penny_why_not, register_penny_opportunity_engine, stop_penny_opportunity_scheduler
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
@@ -88,7 +88,6 @@ class DigestRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     register_penny_opportunity_engine()
-    start_penny_opportunity_scheduler(get_cached_quote, get_cached_history, news_for_symbol)
     try:
         yield
     finally:

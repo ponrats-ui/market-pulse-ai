@@ -33,3 +33,15 @@ def test_provider_router_rejects_unsupported_without_fabricating() -> None:
     assert payload["source"] == "Unavailable"
     assert payload["error"] == "unsupported_under_current_universe"
     assert "price" not in payload
+
+
+def test_provider_router_rejects_thai_foreign_board_before_provider_call(monkeypatch) -> None:
+    def fail_provider(name):
+        raise AssertionError("Provider should not be selected for excluded Thai foreign-board symbols.")
+
+    monkeypatch.setattr(provider_router, "get_provider", fail_provider)
+    payload = provider_router.get_quote("AOT-F.BK")
+
+    assert payload["source"] == "Unavailable"
+    assert payload["error"] == "foreign_board_excluded"
+    assert "price" not in payload

@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 import pandas as pd
 import yfinance as yf
 
+from app.data_hub.provider_symbol_mapper import map_thai_yfinance_symbol
 from app.providers.base import MarketDataProvider
 
 VALID_RANGES = {"1d", "5d", "1mo", "3mo", "6mo", "ytd", "1y", "3y", "5y", "max"}
@@ -25,7 +26,8 @@ class YFinanceProvider(MarketDataProvider):
 
     def get_scan_quotes(self, symbols: List[str], chunk_size: int = 120) -> Dict[str, Dict[str, Any]]:
         results: Dict[str, Dict[str, Any]] = {}
-        unique_symbols = [symbol for symbol in dict.fromkeys(symbols) if symbol]
+        unique_symbols = [_provider_safe_symbol(symbol) for symbol in dict.fromkeys(symbols) if symbol]
+        unique_symbols = [symbol for symbol in unique_symbols if symbol]
         for start in range(0, len(unique_symbols), max(1, chunk_size)):
             chunk = unique_symbols[start:start + chunk_size]
             try:
@@ -51,6 +53,10 @@ class YFinanceProvider(MarketDataProvider):
         return results
 
     def get_quote(self, symbol: str) -> Dict[str, Any]:
+        safe_symbol = _provider_safe_symbol(symbol)
+        if not safe_symbol:
+            return _unsupported_symbol_payload(symbol, "quote")
+        symbol = safe_symbol
         try:
             ticker = yf.Ticker(symbol)
             info = self._safe_info(ticker)
@@ -118,6 +124,10 @@ class YFinanceProvider(MarketDataProvider):
             return self._quote_error(symbol, exc)
 
     def get_history(self, symbol: str, range: str = "1mo", interval: str = "1d") -> Dict[str, Any]:
+        safe_symbol = _provider_safe_symbol(symbol)
+        if not safe_symbol:
+            return _unsupported_symbol_payload(symbol, "history")
+        symbol = safe_symbol
         selected_range = range if range in VALID_RANGES else "1mo"
         selected_interval = interval if interval in VALID_INTERVALS else "1d"
         try:
@@ -162,6 +172,10 @@ class YFinanceProvider(MarketDataProvider):
             }
 
     def get_financials(self, symbol: str) -> Dict[str, Any]:
+        safe_symbol = _provider_safe_symbol(symbol)
+        if not safe_symbol:
+            return _unsupported_symbol_payload(symbol, "financials")
+        symbol = safe_symbol
         try:
             ticker = yf.Ticker(symbol)
             info = self._safe_info(ticker)
@@ -491,3 +505,23 @@ def infer_currency(symbol: str) -> str:
     if symbol == "^TNX":
         return "%"
     return "USD"
+
+
+def _provider_safe_symbol(symbol: str) -> str | None:
+    value = str(symbol or "").strip()
+    upper = value.upper()
+    if upper.endswith(".BK") or upper.endswith("-F") or "-F." in upper or "-P." in upper or "-Q." in upper:
+        mapping = map_thai_yfinance_symbol(value)
+        return mapping.provider_symbol if mapping.supported else None
+    return value or None
+
+
+def _unsupported_symbol_payload(symbol: str, data_type: str) -> Dict[str, Any]:
+    return {
+        "symbol": symbol,
+        "source": "Unavailable",
+        "provider": "yfinance",
+        "provider_configured": True,
+        "error": "unsupported_provider_symbol",
+        "data_type": data_type,
+    }

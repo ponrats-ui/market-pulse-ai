@@ -14,6 +14,7 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ### Added
 
+- RC5A.2 Thai Penny Snapshot Producer with an explicit CLI job, file-backed persisted snapshots, bounded scan batches, memory diagnostics, and public `not_ready` / `scan_in_progress` / `stale` / `failed` lifecycle states.
 - RC5A Thai Emerging Opportunities engine upgrade with Thailand-specific `10.00 THB` default universe, configurable threshold, price-tier classification, Financial Intelligence plus Business Intelligence factor mix, turnaround/value-trap/emerging-quality detection, and active-threshold disclosure.
 - Business Intelligence foundation with separate business quality score, business risk, evidence, missing evidence, confidence, completeness, methodology endpoint, and business analysis API.
 - Asset Intelligence layer with explicit classification, corporate Financial Intelligence profile, special-profile boundaries, reusable Financial Intelligence report, methodology endpoint, and Financial Intelligence API.

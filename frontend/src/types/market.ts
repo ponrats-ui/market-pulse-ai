@@ -75,7 +75,7 @@ export interface TrustMetadata { evidence_based?: boolean; methodology_inspectab
 export interface PennyAlgorithmResponse { status: string; algorithm: { identity: Record<string, unknown>; objective: { th: string; en: string }; hypothesis: { th: string; en: string }; factors: Array<Record<string, unknown>>; risks: Array<Record<string, unknown>>; score_formula: Record<string, unknown>; confidence: Record<string, unknown>; completeness: Record<string, unknown>; ranking: Record<string, unknown>; trust?: Record<string, unknown>; limitations: Array<{ th: string; en: string }>; non_claims: Array<{ th: string; en: string }>; change_history: Array<Record<string, unknown>> }; trust?: TrustMetadata; validation: { valid: boolean; errors: string[]; warnings?: string[] }; cache?: Record<string, unknown>; disclaimer: string; }
 export interface PennyCandidateExplanationResponse { status: string; symbol: string; score_explanation?: Record<string, unknown>; score_breakdown?: PennyOpportunityItem['score_breakdown']; risk_explanation?: PennyRiskFlag[]; confidence_explanation?: Record<string, unknown>; completeness_explanation?: PennyOpportunityItem['completeness_explanation']; ranking_explanation?: PennyOpportunityItem['ranking_explanation']; trust?: TrustMetadata; why_not?: Record<string, unknown>; disclaimer: string; }
 export interface PennyOpportunitiesResponse {
-  status: 'running' | 'ok' | 'partial' | 'unavailable' | string;
+  status: 'scan_in_progress' | 'not_ready' | 'stale' | 'failed' | 'ok' | 'partial' | 'unavailable' | string;
   category: 'penny_opportunity' | string;
   engine?: {
     engine_id: string;
@@ -103,7 +103,9 @@ export interface PennyOpportunitiesResponse {
     frequency_minutes: number;
     is_stale: boolean;
     scan_duration_ms: number;
+    diagnostics?: Record<string, unknown>;
   };
+  diagnostics?: Record<string, unknown>;
   markets: string[];
   warning: { th: string; en: string };
   qualification: { universe_size: number; prefiltered_count?: number; classified_count?: number; eligible_count: number; qualified_count?: number; excluded_count: number; failed_candidate_count?: number; ranked_count: number; result_count?: number; unknown_count: number };

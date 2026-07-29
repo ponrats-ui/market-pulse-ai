@@ -4,6 +4,7 @@ from dataclasses import replace
 
 from app.data_hub.master_asset_registry import MasterAsset
 from app import main
+from app.jobs import generate_penny_snapshot
 from app.services import penny_opportunities as po
 
 
@@ -448,7 +449,7 @@ def test_hourly_scan_lock_prevents_overlap(monkeypatch) -> None:
     assert acquired is True
     try:
         payload = po.run_penny_scan_once(lambda symbol: quote(symbol), lambda *_: history(), no_news)
-        assert payload["status"] in {"running", "unavailable"}
+        assert payload["status"] in {"scan_in_progress", "failed"}
     finally:
         po._scan_execution_lock.release()
 
@@ -463,7 +464,7 @@ def test_failed_scan_preserves_latest_successful_snapshot(monkeypatch) -> None:
         raise RuntimeError("provider down")
 
     failed = po.run_penny_scan_once(broken_quote, lambda *_: history(), no_news, market="TH")
-    assert failed["status"] == "partial"
+    assert failed["status"] == "stale"
     assert failed["items"][0]["symbol"] == success["items"][0]["symbol"]
     assert failed["scan"]["is_stale"] is True
 
@@ -499,3 +500,61 @@ def test_empty_snapshot_is_not_ready_without_starting_provider_work(monkeypatch)
     assert payload["status"] == "not_ready"
     assert payload["items"] == []
     assert "does not run a live full-universe scan" in payload["limitations"][0]
+
+
+def test_scan_uses_bounded_registry_batches(monkeypatch) -> None:
+    rows = [asset(f"AAA{index}.BK") for index in range(7)]
+    batch_sizes = []
+    monkeypatch.setattr(po, "SCAN_BATCH_SIZE", 2)
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: rows)
+
+    def fake_scan_quote_map(registry, quote_fn):
+        batch_sizes.append(len(registry))
+        return {}
+
+    monkeypatch.setattr(po, "_scan_quote_map", fake_scan_quote_map)
+    monkeypatch.setattr(po, "evaluate_candidate", lambda asset_obj, *_: candidate_payload(asset_obj.canonical_symbol, 70))
+
+    payload = po.build_penny_opportunities(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+
+    assert max(batch_sizes) <= 2
+    assert payload["diagnostics"]["batches_processed"] == 4
+    assert payload["diagnostics"]["batch_size"] == 2
+
+
+def test_scan_response_exposes_memory_and_snapshot_diagnostics(monkeypatch) -> None:
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: [asset("AAA.BK")])
+    payload = po.build_penny_opportunities(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+
+    assert "memory_start_mb" in payload["diagnostics"]
+    assert payload["diagnostics"]["snapshot_persisted"] is False
+    assert payload["scan"]["diagnostics"]["scan_id"] == payload["scan"]["scan_id"]
+
+
+def test_run_scan_marks_persisted_snapshot(monkeypatch) -> None:
+    po.reset_penny_opportunity_snapshots_for_tests()
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: [asset("AAA.BK")])
+
+    payload = po.run_penny_scan_once(lambda symbol: quote(symbol), lambda *_: history(), no_news, market="TH")
+
+    assert payload["diagnostics"]["snapshot_persisted"] is True
+    assert payload["scan"]["diagnostics"]["snapshot_persisted"] is True
+
+
+def test_snapshot_producer_returns_concise_diagnostics(monkeypatch) -> None:
+    payload = {
+        "status": "ok",
+        "snapshot_status": "ok",
+        "items": [{"symbol": "AAA.BK"}],
+        "scan": {"scan_id": "scan-1", "diagnostics": {"snapshot_persisted": True}},
+        "qualification": {"result_count": 1},
+        "diagnostics": {"snapshot_persisted": True},
+        "limitations": [],
+    }
+    monkeypatch.setattr(generate_penny_snapshot, "run_penny_scan_once", lambda *args, **kwargs: payload)
+
+    result = generate_penny_snapshot.generate_snapshot(["--market", "TH", "--max-price", "10", "--limit", "5"])
+
+    assert result["status"] == "ok"
+    assert result["items"] == 1
+    assert result["diagnostics"]["snapshot_persisted"] is True

@@ -8,6 +8,8 @@ frontend/dist/
 frontend/.vite/
 backend/.mypy_cache/
 backend/.ruff_cache/
+runtime/
+backend/runtime/
 .env
 .env.*
 !.env.example

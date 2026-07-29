@@ -459,6 +459,8 @@ The RC5A evidence mix is Financial Intelligence `55%`, Business Intelligence `20
 
 RC5A.1 adds provider-symbol hardening for production. Thai common shares are normalized to provider-safe Yahoo Finance `.BK` symbols, while foreign-board and special-board variants such as `AOT-F.BK` are excluded before provider calls. The public endpoint serves published snapshots and transparent degraded statuses such as `not_ready` or `scan_in_progress` instead of fabricating candidates or running unbounded scans during user requests.
 
+RC5A.2 adds an explicit Thai Penny Snapshot Producer. The producer runs bounded registry batches, persists completed snapshots to disk, exposes memory and batch diagnostics, and keeps public GET requests read-only. Stale or failed producer states must remain transparent rather than creating synthetic candidates.
+
 Related canonical document:
 
 - `docs/THAI_EMERGING_OPPORTUNITIES_ENGINE.md`

@@ -53,6 +53,25 @@ def test_snapshot_store_preserves_failure_separately() -> None:
     assert store.failure("test-engine")["failure_stage"] == "candidate_processing"
 
 
+def test_snapshot_store_persists_snapshot_between_instances(tmp_path) -> None:
+    first = OpportunitySnapshotStore(tmp_path)
+    first.publish("test-engine", {"status": "ok", "items": [{"symbol": "AAA"}]})
+
+    second = OpportunitySnapshotStore(tmp_path)
+    assert second.latest("test-engine")["items"][0]["symbol"] == "AAA"
+
+
+def test_snapshot_store_reset_removes_persisted_snapshot(tmp_path) -> None:
+    store = OpportunitySnapshotStore(tmp_path)
+    store.publish("test-engine", {"status": "ok", "items": []})
+    store.record_failure("test-engine", {"failure_stage": "candidate_processing"})
+
+    store.reset("test-engine")
+
+    assert store.latest("test-engine") is None
+    assert store.failure("test-engine") is None
+
+
 def test_scheduler_prevents_duplicate_engine_threads() -> None:
     scheduler = OpportunityScheduler()
     calls = {"count": 0}

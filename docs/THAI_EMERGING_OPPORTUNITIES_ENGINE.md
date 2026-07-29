@@ -129,7 +129,7 @@ Custom Thai threshold:
 GET /api/opportunities/penny?market=TH&max_price=7.5
 ```
 
-The endpoint is snapshot-first. It does not start an unbounded full-universe provider scan inside a user request. If no successful snapshot exists, it returns a transparent `not_ready` or `scan_in_progress` status.
+The endpoint is snapshot-first. It does not start an unbounded full-universe provider scan inside a user request. RC5A.2 publishes snapshots through the bounded producer documented in `RC5A2_PENNY_SNAPSHOT_PRODUCER.md`. If a fresh snapshot is not available, the API returns a transparent `not_ready`, `scan_in_progress`, `stale`, or `failed` status.
 
 Methodology:
 

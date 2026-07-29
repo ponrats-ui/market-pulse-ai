@@ -16,12 +16,13 @@ It remains exposed through:
 
 Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the provider-safe bounded scan universe.
 
-The Penny Opportunity universe is rescanned and reranked once every hour.
+The Penny Opportunity universe is rescanned and reranked by an explicit bounded snapshot producer. Production may run the producer manually from Render Shell or through a future scheduler, but public user requests must only read the latest published snapshot.
 
 The implementation is intentionally memory-conscious:
 
 - It starts from lightweight Master Asset Registry metadata.
 - It scans a provider-safe bounded TH/US lightweight equity universe before final ranking.
+- It processes registry candidates in bounded batches and releases intermediate provider quote maps after each batch.
 - It normalizes provider symbols before market data calls.
 - It excludes unsupported Thai foreign-board or special-board variants before provider calls.
 - It fetches quote data before history or news.
@@ -105,13 +106,13 @@ Data Confidence and Data Completeness are not added to the Penny Opportunity Sco
 
 ## Hourly Scan Snapshot
 
-The backend owns the hourly scan through the shared engine scheduler. The browser only polls for the latest published snapshot and does not trigger a full market scan.
+The backend owns snapshot publication through the RC5A.2 producer command documented in `docs/RC5A2_PENNY_SNAPSHOT_PRODUCER.md`. The browser only polls for the latest published snapshot and does not trigger a full market scan.
 
 The current Render configuration runs a single `uvicorn app.main:app --host 0.0.0.0 --port $PORT` process. Under that topology the in-process scheduler has one active owner per service instance and uses an execution lock to prevent overlapping scans. If deployment later adds multiple workers or replicas, this scheduler should move to an external cron-protected refresh endpoint or a dedicated worker.
 
-Each completed scan publishes a compact immutable snapshot containing scan timing, engine metadata, methodology version, score version, policy version, config version, qualification funnel counts, Top 5 items, provider status, limitations, duration, and status.
+Each completed scan publishes a compact persisted snapshot containing scan timing, engine metadata, methodology version, score version, policy version, config version, qualification funnel counts, Top 5 items, provider status, limitations, duration, memory diagnostics, batch diagnostics, and status.
 
-If a new scan fails, the API keeps serving the latest successful snapshot, marks it stale or partial, and includes the failed scan timestamp and failure stage. If no successful snapshot exists yet, the endpoint returns `not_ready` or `scan_in_progress` instead of triggering a synchronous full-universe scan inside the user request.
+If a new scan fails, the API keeps serving the latest successful snapshot, marks it `stale`, and includes the failed scan timestamp and failure stage. If no successful snapshot exists yet, the endpoint returns `not_ready`, `scan_in_progress`, or `failed` instead of triggering a synchronous full-universe scan inside the user request.
 
 Custom threshold requests such as `max_price=7.5` are served from the latest snapshot and filtered transparently. If the requested threshold is above the latest published scan threshold, the response is marked `partial` and discloses that extended candidates require a future scheduled bounded scan.
 
@@ -143,6 +144,7 @@ Production scans are bounded by:
 - `PENNY_SCAN_DEADLINE_SECONDS`
 - `PENNY_SCAN_MAX_WORKERS`
 - a scan execution lock
+- persisted file-backed snapshots under `OPPORTUNITY_SNAPSHOT_DIR`
 
 The `/health` endpoint does not trigger provider work. The user-facing penny endpoint serves published snapshots and transparent unavailable states.
 

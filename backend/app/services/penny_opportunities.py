@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from math import sqrt
 import os
+import platform
 from threading import Lock
 from time import monotonic
 from typing import Any, Callable, Dict, Iterable, List, Literal
@@ -35,6 +36,9 @@ SCAN_MAX_WORKERS = max(1, min(int(os.getenv("PENNY_SCAN_MAX_WORKERS", "6")), 12)
 SCAN_DEADLINE_SECONDS = max(5, min(int(os.getenv("PENNY_SCAN_DEADLINE_SECONDS", "45")), 120))
 SCAN_MAX_SYMBOLS = max(25, min(int(os.getenv("PENNY_SCAN_MAX_SYMBOLS", "160")), 500))
 SCAN_MAX_PROVIDER_BATCH = max(10, min(int(os.getenv("PENNY_SCAN_MAX_PROVIDER_BATCH", "80")), 120))
+SCAN_BATCH_SIZE = max(5, min(int(os.getenv("PENNY_SCAN_BATCH_SIZE", "20")), 50))
+SCAN_PROVIDER_TIMEOUT_SECONDS = max(3, min(int(os.getenv("PENNY_SCAN_PROVIDER_TIMEOUT_SECONDS", "20")), 60))
+SCAN_RETRY_LIMIT = max(0, min(int(os.getenv("PENNY_SCAN_RETRY_LIMIT", "0")), 3))
 _DEFAULT_SNAPSHOT_KEY = ("ALL", 5)
 PENNY_ENGINE_ID = "penny-opportunity"
 PENNY_CATEGORY = "penny_opportunity"
@@ -436,6 +440,7 @@ def build_penny_opportunities(
     selected_markets = _selected_markets(market)
     active_policies = _configured_policies(thai_max_price)
     generated_at = scan_started_iso
+    memory_start_mb = _process_memory_mb()
     registry_context = _candidate_registry_context(selected_markets)
     registry = registry_context["assets"]
     universe_diagnostics = registry_context["diagnostics"]
@@ -446,66 +451,106 @@ def build_penny_opportunities(
     classified = 0
     failed_candidate_count = 0
     provider_status: List[Dict[str, Any]] = []
-    scan_quotes = _scan_quote_map(registry, quote_fn)
-
-    workers = min(SCAN_MAX_WORKERS, max(1, len(registry)))
-    if workers == 1:
-        results = [_evaluate_registry_asset(asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies) for asset in registry]
-    else:
-        results = []
-        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="penny-scan") as executor:
-            futures = [
-                executor.submit(_evaluate_registry_asset, asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies)
-                for asset in registry
+    scan_deadline_at = timer_started + SCAN_DEADLINE_SECONDS
+    batches_processed = 0
+    for registry_batch in _chunked(registry, SCAN_BATCH_SIZE):
+        remaining_seconds = scan_deadline_at - monotonic()
+        if remaining_seconds <= 0:
+            provider_status.append({
+                "provider": "penny_opportunity_engine",
+                "stage": "scan_deadline",
+                "status": "partial",
+                "reason": "scan_deadline_exceeded",
+                "deadline_seconds": SCAN_DEADLINE_SECONDS,
+                "timestamp": generated_at,
+            })
+            break
+        batches_processed += 1
+        scan_quotes = _scan_quote_map(registry_batch, quote_fn)
+        workers = min(SCAN_MAX_WORKERS, max(1, len(registry_batch)))
+        if workers == 1:
+            results = [
+                _evaluate_registry_asset(asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies)
+                for asset in registry_batch
             ]
-            try:
-                for future in as_completed(futures, timeout=SCAN_DEADLINE_SECONDS):
-                    results.append(future.result())
-            except FuturesTimeoutError:
-                provider_status.append({
-                    "provider": "penny_opportunity_engine",
-                    "stage": "scan_deadline",
-                    "status": "partial",
-                    "reason": "scan_deadline_exceeded",
-                    "deadline_seconds": SCAN_DEADLINE_SECONDS,
-                    "timestamp": generated_at,
-                })
-                for future in futures:
-                    if not future.done():
-                        future.cancel()
+        else:
+            results = []
+            with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="penny-scan") as executor:
+                futures = [
+                    executor.submit(_evaluate_registry_asset, asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies)
+                    for asset in registry_batch
+                ]
+                try:
+                    for future in as_completed(futures, timeout=max(0.1, remaining_seconds)):
+                        results.append(future.result())
+                except FuturesTimeoutError:
+                    provider_status.append({
+                        "provider": "penny_opportunity_engine",
+                        "stage": "scan_deadline",
+                        "status": "partial",
+                        "reason": "scan_deadline_exceeded",
+                        "deadline_seconds": SCAN_DEADLINE_SECONDS,
+                        "timestamp": generated_at,
+                    })
+                    for future in futures:
+                        if not future.done():
+                            future.cancel()
 
-    for result in results:
-        provider_status.extend(result.get("provider_status", []))
-        if result["status"] == "unsupported":
-            excluded += 1
-            continue
-        if result["status"] == "error":
-            excluded += 1
-            failed_candidate_count += 1
-            continue
-
-        candidate = result["candidate"]
-        policy = result["policy"]
-        if candidate.get("classification_status") == "PASS":
-            classified += 1
-        if candidate["hard_disqualified"]:
-            excluded += 1
-            why_not_index[candidate["symbol"]] = _candidate_exclusion_explanation(candidate, "disqualified")
-            continue
-        if not candidate["eligible_for_top5"]:
-            why_not_index[candidate["symbol"]] = _candidate_exclusion_explanation(candidate, "below_threshold")
-            if candidate["data_completeness"] < policy.minimum_data_completeness:
-                unknown += 1
-            else:
+        for result in results:
+            provider_status.extend(result.get("provider_status", []))
+            if result["status"] == "unsupported":
                 excluded += 1
-            continue
-        candidates.append(candidate)
+                continue
+            if result["status"] == "error":
+                excluded += 1
+                failed_candidate_count += 1
+                continue
+
+            candidate = result["candidate"]
+            policy = result["policy"]
+            if candidate.get("classification_status") == "PASS":
+                classified += 1
+            if candidate["hard_disqualified"]:
+                excluded += 1
+                why_not_index[candidate["symbol"]] = _candidate_exclusion_explanation(candidate, "disqualified")
+                continue
+            if not candidate["eligible_for_top5"]:
+                why_not_index[candidate["symbol"]] = _candidate_exclusion_explanation(candidate, "below_threshold")
+                if candidate["data_completeness"] < policy.minimum_data_completeness:
+                    unknown += 1
+                else:
+                    excluded += 1
+                continue
+            candidates.append(candidate)
+        del results
+        del scan_quotes
 
     items = _add_ranking_explanations(rank_candidates(candidates, score_field="penny_opportunity_score", limit=safe_limit))
     completed_at = datetime.now(timezone.utc)
     completed_iso = completed_at.isoformat()
     scan_duration_ms = round((monotonic() - timer_started) * 1000)
+    memory_end_mb = _process_memory_mb()
     status = "ok" if items else ("partial" if provider_status else "unavailable")
+    diagnostics = {
+        "scan_id": scan_id,
+        "duration_seconds": round(scan_duration_ms / 1000, 3),
+        "memory_start_mb": memory_start_mb,
+        "memory_end_mb": memory_end_mb,
+        "memory_peak_observed_mb": _max_optional(memory_start_mb, memory_end_mb),
+        "symbols_seen": len(registry),
+        "symbols_eligible": len(candidates),
+        "symbols_excluded": excluded,
+        "failed_symbol_count": failed_candidate_count,
+        "candidates_scored": len(candidates),
+        "batches_processed": batches_processed,
+        "batch_size": SCAN_BATCH_SIZE,
+        "provider_batch_limit": SCAN_MAX_PROVIDER_BATCH,
+        "worker_cap": SCAN_MAX_WORKERS,
+        "total_deadline_seconds": SCAN_DEADLINE_SECONDS,
+        "provider_timeout_seconds": SCAN_PROVIDER_TIMEOUT_SECONDS,
+        "retry_limit": SCAN_RETRY_LIMIT,
+        "snapshot_persisted": False,
+    }
     return {
         "status": status,
         "category": PENNY_ENGINE_DEFINITION.category,
@@ -533,7 +578,9 @@ def build_penny_opportunities(
             "frequency_minutes": SCAN_FREQUENCY_MINUTES,
             "is_stale": False,
             "scan_duration_ms": scan_duration_ms,
+            "diagnostics": diagnostics,
         },
+        "diagnostics": diagnostics,
         "markets": selected_markets,
         "universe": {**_universe_response(active_policies, selected_markets), "diagnostics": universe_diagnostics},
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
@@ -576,7 +623,7 @@ def run_penny_scan_once(
     if not _scan_execution_lock.acquire(blocking=False):
         current = _snapshot_store.latest(PENNY_ENGINE_ID)
         if current:
-            current["status"] = "partial"
+            current["status"] = "scan_in_progress"
             current.setdefault("limitations", []).append("Scheduled penny scan skipped because a previous scan is still running.")
             current.setdefault("provider_status", []).append({
                 "provider": "penny_opportunity_scheduler",
@@ -586,7 +633,7 @@ def run_penny_scan_once(
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
             return current
-        return _empty_snapshot("running", "A scheduled penny scan is already running.")
+        return _empty_snapshot("scan_in_progress", "A scheduled penny scan is already running.")
     try:
         snapshot = build_penny_opportunities(quote_fn, history_fn, news_fn, market=market, limit=limit, thai_max_price=thai_max_price)
         snapshot["snapshot_status"] = snapshot["status"]
@@ -606,14 +653,17 @@ def run_penny_scan_once(
             _snapshot_store.record_failure(PENNY_ENGINE_ID, failure)
             current = _snapshot_store.latest(PENNY_ENGINE_ID)
             if current:
-                current["status"] = "partial"
-                current["snapshot_status"] = "partial"
+                current["status"] = "stale"
+                current["snapshot_status"] = current.get("snapshot_status", "ok")
                 current.setdefault("limitations", []).append("Latest hourly penny scan failed for every candidate; serving the last successful snapshot.")
                 current["scan"]["is_stale"] = True
                 current["scan"]["failed_scan_timestamp"] = failed_at
                 current["scan"]["failure_stage"] = failure["failure_stage"]
                 return current
-            return _empty_snapshot("unavailable", "No successful Penny Opportunity scan has been published yet.", failure)
+            return _empty_snapshot("failed", "No successful Penny Opportunity scan has been published yet.", failure)
+        snapshot.setdefault("diagnostics", {})["snapshot_persisted"] = True
+        snapshot.setdefault("scan", {}).setdefault("diagnostics", snapshot["diagnostics"])
+        snapshot["scan"]["diagnostics"]["snapshot_persisted"] = True
         return _snapshot_store.publish(PENNY_ENGINE_ID, snapshot)
     except Exception as exc:  # pragma: no cover - defensive scheduler isolation
         failed_at = datetime.now(timezone.utc).isoformat()
@@ -625,14 +675,14 @@ def run_penny_scan_once(
         _snapshot_store.record_failure(PENNY_ENGINE_ID, failure)
         current = _snapshot_store.latest(PENNY_ENGINE_ID)
         if current:
-            current["status"] = "partial"
-            current["snapshot_status"] = "partial"
+            current["status"] = "stale"
+            current["snapshot_status"] = current.get("snapshot_status", "ok")
             current.setdefault("limitations", []).append("Latest hourly penny scan failed; serving the last successful snapshot.")
             current["scan"]["is_stale"] = True
             current["scan"]["failed_scan_timestamp"] = failed_at
             current["scan"]["failure_stage"] = failure["failure_stage"]
             return current
-        return _empty_snapshot("unavailable", "No successful Penny Opportunity scan has been published yet.", failure)
+        return _empty_snapshot("failed", "No successful Penny Opportunity scan has been published yet.", failure)
     finally:
         _scan_execution_lock.release()
 
@@ -673,7 +723,7 @@ def get_penny_opportunities_snapshot(market: str | None = None, limit: int = 5, 
     scan = snapshot.setdefault("scan", {})
     completed = _parse_dt(scan.get("scan_completed_at"))
     if completed and datetime.now(timezone.utc) - completed > timedelta(minutes=SCAN_FREQUENCY_MINUTES + 15):
-        snapshot["status"] = "partial"
+        snapshot["status"] = "stale"
         scan["is_stale"] = True
         snapshot.setdefault("limitations", []).append("Data may be stale because the latest published scan is older than the expected hourly window.")
     if failed:
@@ -834,6 +884,26 @@ def _empty_snapshot(
     now = datetime.now(timezone.utc)
     selected = selected_markets or []
     active_policies = policies or _configured_policies()
+    diagnostics = {
+        "scan_id": None,
+        "duration_seconds": 0,
+        "memory_start_mb": None,
+        "memory_end_mb": None,
+        "memory_peak_observed_mb": None,
+        "symbols_seen": 0,
+        "symbols_eligible": 0,
+        "symbols_excluded": 0,
+        "failed_symbol_count": 0,
+        "candidates_scored": 0,
+        "batches_processed": 0,
+        "batch_size": SCAN_BATCH_SIZE,
+        "provider_batch_limit": SCAN_MAX_PROVIDER_BATCH,
+        "worker_cap": SCAN_MAX_WORKERS,
+        "total_deadline_seconds": SCAN_DEADLINE_SECONDS,
+        "provider_timeout_seconds": SCAN_PROVIDER_TIMEOUT_SECONDS,
+        "retry_limit": SCAN_RETRY_LIMIT,
+        "snapshot_persisted": False,
+    }
     payload = {
         "status": status,
         "category": PENNY_ENGINE_DEFINITION.category,
@@ -861,7 +931,9 @@ def _empty_snapshot(
             "frequency_minutes": SCAN_FREQUENCY_MINUTES,
             "is_stale": True,
             "scan_duration_ms": 0,
+            "diagnostics": diagnostics,
         },
+        "diagnostics": diagnostics,
         "markets": selected,
         "universe": _universe_response(active_policies, selected),
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
@@ -895,6 +967,53 @@ def _parse_dt(value: Any) -> datetime | None:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
+
+
+def _process_memory_mb() -> float | None:
+    try:
+        if platform.system().lower() == "windows":
+            import ctypes
+            import ctypes.wintypes
+
+            class ProcessMemoryCounters(ctypes.Structure):
+                _fields_ = [
+                    ("cb", ctypes.wintypes.DWORD),
+                    ("PageFaultCount", ctypes.wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t),
+                ]
+
+            counters = ProcessMemoryCounters()
+            counters.cb = ctypes.sizeof(ProcessMemoryCounters)
+            ctypes.windll.kernel32.GetCurrentProcess.restype = ctypes.wintypes.HANDLE
+            ctypes.windll.psapi.GetProcessMemoryInfo.argtypes = [
+                ctypes.wintypes.HANDLE,
+                ctypes.POINTER(ProcessMemoryCounters),
+                ctypes.wintypes.DWORD,
+            ]
+            ctypes.windll.psapi.GetProcessMemoryInfo.restype = ctypes.wintypes.BOOL
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            if ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
+                return round(counters.WorkingSetSize / (1024 * 1024), 2)
+            return None
+        import resource
+
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        multiplier = 1 if platform.system().lower() == "darwin" else 1024
+        return round((usage * multiplier) / (1024 * 1024), 2)
+    except Exception:
+        return None
+
+
+def _max_optional(*values: float | None) -> float | None:
+    present = [value for value in values if value is not None]
+    return max(present) if present else None
 
 
 def _snapshot_threshold(snapshot: Dict[str, Any]) -> float | None:
@@ -1063,6 +1182,12 @@ def classify_price(price: float | None, policy: PennyMarketPolicy) -> Dict[str, 
 
 def _candidate_registry(markets: Iterable[str]) -> List[MasterAsset]:
     return _candidate_registry_context(markets)["assets"]
+
+
+def _chunked(items: List[MasterAsset], size: int) -> Iterable[List[MasterAsset]]:
+    safe_size = max(1, int(size or 1))
+    for start in range(0, len(items), safe_size):
+        yield items[start:start + safe_size]
 
 
 def _candidate_registry_context(markets: Iterable[str]) -> Dict[str, Any]:

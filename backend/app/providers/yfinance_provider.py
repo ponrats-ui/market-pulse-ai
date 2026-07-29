@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import importlib
+import math
 from typing import Any, Dict, List
-
-import pandas as pd
-import yfinance as yf
 
 from app.data_hub.provider_symbol_mapper import map_thai_yfinance_symbol
 from app.providers.base import MarketDataProvider
@@ -19,6 +18,24 @@ REITS = {"VNQ"}
 GLOBAL_INDICES = {"^GSPC", "^IXIC", "^DJI", "^N225", "^HSI", "^GDAXI"}
 COMMODITIES = {"CL=F", "BZ=F", "NG=F", "GC=F", "SI=F", "PL=F", "HG=F"}
 MACRO = {"DX-Y.NYB", "^TNX"}
+
+
+class _LazyModule:
+    def __init__(self, module_name: str) -> None:
+        self._module_name = module_name
+        self._module: Any | None = None
+
+    def _load(self) -> Any:
+        if self._module is None:
+            self._module = importlib.import_module(self._module_name)
+        return self._module
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._load(), name)
+
+
+yf = _LazyModule("yfinance")
+pd = _LazyModule("pandas")
 
 
 class YFinanceProvider(MarketDataProvider):
@@ -341,13 +358,13 @@ class YFinanceProvider(MarketDataProvider):
             "error": str(exc),
         }
 
-    def _safe_info(self, ticker: yf.Ticker) -> Dict[str, Any]:
+    def _safe_info(self, ticker: Any) -> Dict[str, Any]:
         try:
             return ticker.info or {}
         except Exception:
             return {}
 
-    def _safe_fast_info(self, ticker: yf.Ticker) -> Any:
+    def _safe_fast_info(self, ticker: Any) -> Any:
         try:
             return ticker.fast_info
         except Exception:
@@ -457,9 +474,12 @@ class YFinanceProvider(MarketDataProvider):
 
     def _safe_float(self, value: Any) -> float | None:
         try:
-            if value is None or pd.isna(value):
+            if value is None:
                 return None
-            return float(value)
+            number = float(value)
+            if math.isnan(number):
+                return None
+            return number
         except (TypeError, ValueError):
             return None
 

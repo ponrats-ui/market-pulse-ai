@@ -10,6 +10,7 @@ HISTORICAL_TTL_SECONDS = int(os.getenv("DATA_HUB_HISTORY_TTL_SECONDS", "300"))
 WATCHLIST_TTL_SECONDS = int(os.getenv("DATA_HUB_ASSET_MASTER_TTL_SECONDS", "300"))
 INTELLIGENCE_TTL_SECONDS = int(os.getenv("DATA_HUB_NEWS_TTL_SECONDS", "900"))
 FUNDAMENTALS_TTL_SECONDS = int(os.getenv("DATA_HUB_FUNDAMENTALS_TTL_SECONDS", "3600"))
+MAX_CACHE_ENTRIES = max(50, int(os.getenv("DATA_HUB_MAX_CACHE_ENTRIES", "300")))
 
 
 @dataclass
@@ -44,6 +45,8 @@ class TTLCache:
 
     def set(self, key: Tuple[Hashable, ...], value: Any, ttl_seconds: int) -> Any:
         now = time.time()
+        self._purge_expired_at(now)
+        self._evict_if_needed()
         self._items[key] = CacheEntry(value=value, created_at=now, expires_at=now + ttl_seconds)
         return value
 
@@ -55,10 +58,17 @@ class TTLCache:
         return len(self._items)
 
     def _purge_expired(self) -> None:
-        now = time.time()
+        self._purge_expired_at(time.time())
+
+    def _purge_expired_at(self, now: float) -> None:
         expired = [key for key, entry in self._items.items() if entry.expires_at <= now]
         for key in expired:
             self._items.pop(key, None)
+
+    def _evict_if_needed(self) -> None:
+        while len(self._items) >= MAX_CACHE_ENTRIES:
+            oldest_key = min(self._items, key=lambda key: self._items[key].created_at)
+            self._items.pop(oldest_key, None)
 
 
 cache = TTLCache()

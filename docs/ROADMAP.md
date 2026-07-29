@@ -57,7 +57,7 @@ Current work improves the explanation of scores, AI views, market context, and d
 
 ### AI Opportunity Discovery
 
-RC2 introduces the Penny Opportunity Scanner as the first evidence-first discovery engine for low-priced equities and the first registered engine on the shared Opportunity Engine Framework. It ranks only candidates supported by real provider data, exposes risk beside opportunity, keeps confidence separate from score, and refuses to fill Top 5 slots with weak candidates. Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe, rescanned and reranked once every hour.
+RC2 introduces the Penny Opportunity Scanner as the first evidence-first discovery engine for low-priced equities and the first registered engine on the shared Opportunity Engine Framework. It ranks only candidates supported by real provider data, exposes risk beside opportunity, keeps confidence separate from score, and refuses to fill Top 5 slots with weak candidates. Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from a provider-safe bounded scan universe, rescanned and reranked once every hour.
 
 RC3 adds Transparent Intelligence for opportunity discovery: algorithm cards, score reconciliation, Why This explanations, Why Not explanations, ranking reasons, confidence disclosure, completeness disclosure, and algorithm governance documentation.
 

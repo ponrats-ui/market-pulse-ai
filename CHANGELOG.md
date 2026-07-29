@@ -6,6 +6,10 @@ The format is inspired by Keep a Changelog, and this project uses human-readable
 
 ## [Unreleased]
 
+### Fixed
+
+- Hardened Thai Emerging Opportunities production behavior by excluding unsupported Thai foreign-board/special-board symbols before provider calls, making custom-threshold API requests snapshot-first, and returning transparent `not_ready` or `scan_in_progress` states instead of starting unbounded request-time scans.
+
 ### Added
 
 - RC5A Thai Emerging Opportunities engine upgrade with Thailand-specific `10.00 THB` default universe, configurable threshold, price-tier classification, Financial Intelligence plus Business Intelligence factor mix, turnaround/value-trap/emerging-quality detection, and active-threshold disclosure.

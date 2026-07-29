@@ -318,9 +318,10 @@ def test_no_mock_values_appear_in_result(monkeypatch) -> None:
 def test_api_endpoint_uses_penny_scanner(monkeypatch) -> None:
     captured = {}
 
-    def fake_snapshot(market=None, limit=5):
+    def fake_snapshot(market=None, limit=5, thai_max_price=None):
         captured["market"] = market
         captured["limit"] = limit
+        captured["thai_max_price"] = thai_max_price
         return {
             "status": "ok",
             "category": "penny_opportunity",
@@ -342,7 +343,22 @@ def test_api_endpoint_uses_penny_scanner(monkeypatch) -> None:
     payload = main.penny_opportunities(market="TH", limit=5, language="en")
     assert payload["category"] == "penny_opportunity"
     assert payload["scan"]["frequency_minutes"] == 60
-    assert captured == {"market": "TH", "limit": 5}
+    assert captured == {"market": "TH", "limit": 5, "thai_max_price": None}
+
+
+def test_api_endpoint_with_custom_threshold_uses_snapshot(monkeypatch) -> None:
+    captured = {}
+
+    def fake_snapshot(market=None, limit=5, thai_max_price=None):
+        captured["market"] = market
+        captured["limit"] = limit
+        captured["thai_max_price"] = thai_max_price
+        return {"status": "ok", "items": [], "category": "penny_opportunity"}
+
+    monkeypatch.setattr(main, "get_penny_opportunities_snapshot", fake_snapshot)
+    payload = main.penny_opportunities(market="TH", limit=5, max_price=7.5)
+    assert payload["status"] == "ok"
+    assert captured == {"market": "TH", "limit": 5, "thai_max_price": 7.5}
 
 
 def candidate_payload(symbol: str, score: int, confidence: int = 50, completeness: int = 50, liquidity: int = 50, risk_penalty: int = 0, hard: bool = False):
@@ -460,3 +476,26 @@ def test_frontend_receives_scan_metadata(monkeypatch) -> None:
     assert payload["scan"]["frequency_minutes"] == 60
     assert payload["scan"]["scan_completed_at"]
     assert payload["qualification"]["universe_size"] == 1
+
+
+def test_thai_foreign_board_assets_are_excluded_before_provider_calls(monkeypatch) -> None:
+    rows = [asset("AOT-F.BK"), asset("PTT.BK")]
+    called = []
+    monkeypatch.setattr(po, "list_registry_assets", lambda enabled_only=True, searchable_only=True: rows)
+
+    def quote_fn(symbol):
+        called.append(symbol)
+        return quote(symbol)
+
+    payload = po.build_penny_opportunities(quote_fn, lambda *_: history(), no_news, market="TH")
+    assert "AOT-F.BK" not in called
+    assert "PTT.BK" in called
+    assert payload["qualification"]["prefilter_diagnostics"]["excluded_foreign_board_count"] == 1
+
+
+def test_empty_snapshot_is_not_ready_without_starting_provider_work(monkeypatch) -> None:
+    po.reset_penny_opportunity_snapshots_for_tests()
+    payload = po.get_penny_opportunities_snapshot(market="TH", limit=5, thai_max_price=10)
+    assert payload["status"] == "not_ready"
+    assert payload["items"] == []
+    assert "does not run a live full-universe scan" in payload["limitations"][0]

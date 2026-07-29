@@ -185,7 +185,7 @@ Opportunity Score must not equal Confidence. Confidence measures AI certainty an
 
 Opportunity Ranking should prioritize assets for research using opportunity strength, catalyst quality, risk penalty, evidence quality, and confidence. It should not imply that the top-ranked asset must be bought.
 
-The RC2 Penny Opportunity Scanner implements this principle for low-priced Thailand and United States equities where the current provider stack exposes sufficient real data. It is the first registered engine on the shared Opportunity Engine Framework, which standardizes scheduling, snapshot publication, deterministic ranking, confidence separation, completeness disclosure, and failure fallback. See `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md` and `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`.
+The RC2 Penny Opportunity Scanner implements this principle for low-priced Thailand and United States equities where the current provider stack exposes sufficient real data. It is the first registered engine on the shared Opportunity Engine Framework, which standardizes scheduling, snapshot publication, deterministic ranking, confidence separation, completeness disclosure, and failure fallback. Production requests are snapshot-first; they must not start unbounded full-universe provider scans inside user requests. See `docs/OPPORTUNITY_ENGINE_FRAMEWORK.md`, `docs/PENNY_OPPORTUNITY_SCANNER_IMPLEMENTATION.md`, and `docs/PROVIDER_SYMBOL_MAPPING.md`.
 
 RC3 adds the Transparent Intelligence layer for this engine. Users and reviewers can inspect the Penny Opportunity Algorithm card, see score reconciliation for ranked candidates, understand why a candidate appeared, and request a Why Not explanation for symbols that did not qualify in the latest snapshot. This layer keeps opportunity discovery auditable while preserving the Zero Mock Policy.
 
@@ -457,6 +457,10 @@ The engine classifies price tiers as Micro Penny, Classic Penny, Thai Emerging, 
 
 The RC5A evidence mix is Financial Intelligence `55%`, Business Intelligence `20%`, Liquidity `10%`, Technical Participation `5%`, Verified Catalyst Evidence `5%`, and Market Context `5%`. Risk penalties, confidence, and completeness remain separate.
 
+RC5A.1 adds provider-symbol hardening for production. Thai common shares are normalized to provider-safe Yahoo Finance `.BK` symbols, while foreign-board and special-board variants such as `AOT-F.BK` are excluded before provider calls. The public endpoint serves published snapshots and transparent degraded statuses such as `not_ready` or `scan_in_progress` instead of fabricating candidates or running unbounded scans during user requests.
+
 Related canonical document:
 
 - `docs/THAI_EMERGING_OPPORTUNITIES_ENGINE.md`
+- `docs/PROVIDER_SYMBOL_MAPPING.md`
+- `docs/RC5A1_PRODUCTION_DIAGNOSTICS.md`

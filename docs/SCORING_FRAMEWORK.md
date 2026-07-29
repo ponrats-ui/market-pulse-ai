@@ -71,7 +71,9 @@ RC5A evolves the Thailand-specific implementation into Thai Emerging Opportuniti
 
 Price defines the universe. Evidence determines the opportunity. Price tier is disclosed for context but does not add positive score.
 
-Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe. The final ranking score is the positive weighted factor score minus risk penalty, bounded between 0 and 100. Data Confidence and Data Completeness are qualification, explanation, and tie-breaking signals only; they are not added to the Opportunity Score.
+Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the provider-safe bounded scan universe. The final ranking score is the positive weighted factor score minus risk penalty, bounded between 0 and 100. Data Confidence and Data Completeness are qualification, explanation, and tie-breaking signals only; they are not added to the Opportunity Score.
+
+The Thai implementation uses Data Hub provider symbol mapping before any provider call. Unsupported Thai foreign-board or special-board variants are excluded from the default common-share universe and disclosed through diagnostics instead of being treated as provider evidence.
 
 Transparent Intelligence requires each displayed Penny score to reconcile from weighted factor contributions minus risk penalties. The score is accompanied by version metadata, missing evidence, confidence explanation, completeness explanation, and ranking rationale.
 

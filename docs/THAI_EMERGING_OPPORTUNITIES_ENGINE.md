@@ -52,17 +52,19 @@ Price tier is context only. It does not add opportunity score.
 The filter sequence is:
 
 1. Master Asset Registry
-2. Thailand market classification
-3. Operating-company equity classification
-4. Active maximum share price threshold
-5. Trading history requirement
-6. Liquidity requirement
-7. Financial Intelligence
-8. Business Intelligence
-9. Technical participation
-10. Catalyst evidence where available
-11. Risk penalties
-12. Deterministic ranking
+2. Provider symbol mapping
+3. Exclusion of unsupported Thai foreign-board or special-board symbols
+4. Thailand market classification
+5. Operating-company equity classification
+6. Active maximum share price threshold
+7. Trading history requirement
+8. Liquidity requirement
+9. Financial Intelligence
+10. Business Intelligence
+11. Technical participation
+12. Catalyst evidence where available
+13. Risk penalties
+14. Deterministic ranking
 
 ## Evidence Layers
 
@@ -127,6 +129,8 @@ Custom Thai threshold:
 GET /api/opportunities/penny?market=TH&max_price=7.5
 ```
 
+The endpoint is snapshot-first. It does not start an unbounded full-universe provider scan inside a user request. If no successful snapshot exists, it returns a transparent `not_ready` or `scan_in_progress` status.
+
 Methodology:
 
 ```text
@@ -138,3 +142,5 @@ GET /api/opportunities/penny/algorithm
 Provider coverage can be incomplete or unavailable. Missing financial, business, catalyst, or liquidity data reduces confidence and completeness instead of being fabricated.
 
 The score is a research ranking, not investment advice, not a forecast, and not a guarantee.
+
+Foreign-board Thai symbols such as `AOT-F.BK` are excluded from the default common-share universe before provider calls and are reported through diagnostics rather than treated as Yahoo Finance delisted-symbol failures.

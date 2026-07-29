@@ -29,7 +29,7 @@ from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
 from app.services.macro import company_events, intelligence_status, macro_indicators
 from app.services.news import news_for_symbol, news_impact_for_symbol
-from app.services.penny_opportunities import build_custom_penny_opportunities, get_penny_algorithm_definition, get_penny_candidate_explanation, get_penny_opportunities_snapshot, get_penny_why_not, register_penny_opportunity_engine, start_penny_opportunity_scheduler, stop_penny_opportunity_scheduler
+from app.services.penny_opportunities import get_penny_algorithm_definition, get_penny_candidate_explanation, get_penny_opportunities_snapshot, get_penny_why_not, register_penny_opportunity_engine, start_penny_opportunity_scheduler, stop_penny_opportunity_scheduler
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
@@ -272,8 +272,7 @@ def penny_opportunities(
     if max_price is not None:
         if max_price < 5 or max_price > 15:
             raise HTTPException(status_code=400, detail="max_price must be between 5.00 and 15.00 THB for Thai Emerging Opportunities.")
-        return build_custom_penny_opportunities(get_cached_quote, get_cached_history, news_for_symbol, market=market, limit=limit, thai_max_price=max_price)
-    return get_penny_opportunities_snapshot(market=market, limit=limit)
+    return get_penny_opportunities_snapshot(market=market, limit=limit, thai_max_price=max_price)
 
 
 @app.get("/api/opportunities/penny/algorithm")

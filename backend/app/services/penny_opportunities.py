@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError, as_completed
 from dataclasses import dataclass, replace
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Iterable, List, Literal
 from uuid import uuid4
 
 from app.data_hub.master_asset_registry import MasterAsset, list_registry_assets
+from app.data_hub.provider_symbol_mapper import ProviderSymbolMapping, map_thai_yfinance_symbol
 from app.intelligence.business import build_business_intelligence_report
 from app.intelligence.financial import build_financial_intelligence_report, validate_primary_evidence_policy
 from app.opportunities.models import AlgorithmChangeRecord, AlgorithmDefinition, AlgorithmFactorDefinition, AlgorithmIdentity, AlgorithmNeutralityDeclaration, AlgorithmRiskDefinition, AlgorithmTextBlock, ConflictOfInterestPolicy, DecisionBoundaryPolicy, EvidenceIntegrityPolicy, OpportunityEngineDefinition, OpportunityEngineRuntime, ProviderLimitationDisclosure, RankingIntegrityPolicy, TrustDisclosure, TrustPrinciple, UncertaintyDisclosurePolicy
@@ -31,6 +32,9 @@ SCORE_VERSION = "thai-emerging-score-v1"
 TRUST_POLICY_VERSION = "trust-policy-v1"
 SCAN_FREQUENCY_MINUTES = 60
 SCAN_MAX_WORKERS = max(1, min(int(os.getenv("PENNY_SCAN_MAX_WORKERS", "6")), 12))
+SCAN_DEADLINE_SECONDS = max(5, min(int(os.getenv("PENNY_SCAN_DEADLINE_SECONDS", "45")), 120))
+SCAN_MAX_SYMBOLS = max(25, min(int(os.getenv("PENNY_SCAN_MAX_SYMBOLS", "160")), 500))
+SCAN_MAX_PROVIDER_BATCH = max(10, min(int(os.getenv("PENNY_SCAN_MAX_PROVIDER_BATCH", "80")), 120))
 _DEFAULT_SNAPSHOT_KEY = ("ALL", 5)
 PENNY_ENGINE_ID = "penny-opportunity"
 PENNY_CATEGORY = "penny_opportunity"
@@ -432,7 +436,9 @@ def build_penny_opportunities(
     selected_markets = _selected_markets(market)
     active_policies = _configured_policies(thai_max_price)
     generated_at = scan_started_iso
-    registry = _candidate_registry(selected_markets)
+    registry_context = _candidate_registry_context(selected_markets)
+    registry = registry_context["assets"]
+    universe_diagnostics = registry_context["diagnostics"]
     candidates = []
     why_not_index: Dict[str, Any] = {}
     excluded = 0
@@ -452,8 +458,21 @@ def build_penny_opportunities(
                 executor.submit(_evaluate_registry_asset, asset, quote_fn, history_fn, news_fn, generated_at, scan_quotes, active_policies)
                 for asset in registry
             ]
-            for future in as_completed(futures):
-                results.append(future.result())
+            try:
+                for future in as_completed(futures, timeout=SCAN_DEADLINE_SECONDS):
+                    results.append(future.result())
+            except FuturesTimeoutError:
+                provider_status.append({
+                    "provider": "penny_opportunity_engine",
+                    "stage": "scan_deadline",
+                    "status": "partial",
+                    "reason": "scan_deadline_exceeded",
+                    "deadline_seconds": SCAN_DEADLINE_SECONDS,
+                    "timestamp": generated_at,
+                })
+                for future in futures:
+                    if not future.done():
+                        future.cancel()
 
     for result in results:
         provider_status.extend(result.get("provider_status", []))
@@ -516,7 +535,7 @@ def build_penny_opportunities(
             "scan_duration_ms": scan_duration_ms,
         },
         "markets": selected_markets,
-        "universe": _universe_response(active_policies, selected_markets),
+        "universe": {**_universe_response(active_policies, selected_markets), "diagnostics": universe_diagnostics},
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
         "qualification": {
             "universe_size": len(registry),
@@ -530,11 +549,12 @@ def build_penny_opportunities(
             "excluded_count": excluded,
             "unknown_count": unknown,
             "active_thresholds": {market_id: active_policies[market_id].penny_price_maximum for market_id in selected_markets if market_id in active_policies},
+            "prefilter_diagnostics": universe_diagnostics,
         },
         "items": [_public_item(item) for item in items],
         "why_not_index": dict(list(why_not_index.items())[:250]),
         "limitations": [
-            "The scanner evaluates the complete currently supported Thai and US equity universe before ranking qualified candidates.",
+            "The scanner evaluates a bounded provider-safe candidate universe before ranking qualified candidates.",
             "Price defines the scanning universe only. Price is not a positive score factor.",
             "Catalyst evidence is shown only when a configured provider returns verifiable items.",
             "Missing fundamentals, liquidity, or catalyst data reduce confidence instead of being replaced.",
@@ -617,19 +637,37 @@ def run_penny_scan_once(
         _scan_execution_lock.release()
 
 
-def get_penny_opportunities_snapshot(market: str | None = None, limit: int = 5) -> Dict[str, Any]:
+def get_penny_opportunities_snapshot(market: str | None = None, limit: int = 5, thai_max_price: float | None = None) -> Dict[str, Any]:
     safe_limit = max(1, min(int(limit or 5), 20))
+    active_policies = _configured_policies(thai_max_price)
+    selected_markets = _selected_markets(market)
     snapshot = _snapshot_store.latest(PENNY_ENGINE_ID)
     failed = _snapshot_store.failure(PENNY_ENGINE_ID)
     if not snapshot:
         if _scan_execution_lock.locked():
-            return _empty_snapshot("running", "Initial Penny Opportunity scan is running; no successful snapshot has been published yet.", failed)
-        return _empty_snapshot("unavailable", "No successful Penny Opportunity scan has been published yet.", failed)
+            return _empty_snapshot("scan_in_progress", "Initial Penny Opportunity scan is running; no successful snapshot has been published yet.", failed, selected_markets, active_policies)
+        return _empty_snapshot("not_ready", "No successful Penny Opportunity snapshot has been published yet. The endpoint does not run a live full-universe scan inside the user request.", failed, selected_markets, active_policies)
 
     items = snapshot.get("items", [])
     if market:
-        selected = set(_selected_markets(market))
+        selected = set(selected_markets)
         items = [item for item in items if item.get("market") in selected]
+    requested_threshold = active_policies.get("TH", POLICIES["TH"]).penny_price_maximum
+    latest_threshold = _snapshot_threshold(snapshot)
+    if thai_max_price is not None:
+        items = [
+            item for item in items
+            if item.get("market") != "TH" or (_number(item.get("price")) is not None and (_number(item.get("price")) or 0) <= requested_threshold)
+        ]
+        snapshot["universe"] = _universe_response(active_policies, selected_markets)
+        snapshot.setdefault("qualification", {})["active_thresholds"] = {
+            market_id: active_policies[market_id].penny_price_maximum for market_id in selected_markets if market_id in active_policies
+        }
+        if latest_threshold is not None and requested_threshold > latest_threshold:
+            snapshot["status"] = "partial"
+            snapshot.setdefault("limitations", []).append(
+                "Requested Thai threshold exceeds the latest published snapshot threshold; extended candidates will appear after a scheduled bounded scan publishes them."
+            )
     snapshot["items"] = items[:safe_limit]
     snapshot["qualification"] = {**snapshot.get("qualification", {}), "ranked_count": len(snapshot["items"]), "result_count": len(snapshot["items"])}
     scan = snapshot.setdefault("scan", {})
@@ -786,8 +824,16 @@ def _trust_api_metadata() -> Dict[str, Any]:
     }
 
 
-def _empty_snapshot(status: str, reason: str, failure: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def _empty_snapshot(
+    status: str,
+    reason: str,
+    failure: Dict[str, Any] | None = None,
+    selected_markets: List[str] | None = None,
+    policies: Dict[str, PennyMarketPolicy] | None = None,
+) -> Dict[str, Any]:
     now = datetime.now(timezone.utc)
+    selected = selected_markets or []
+    active_policies = policies or _configured_policies()
     payload = {
         "status": status,
         "category": PENNY_ENGINE_DEFINITION.category,
@@ -816,8 +862,8 @@ def _empty_snapshot(status: str, reason: str, failure: Dict[str, Any] | None = N
             "is_stale": True,
             "scan_duration_ms": 0,
         },
-        "markets": [],
-        "universe": _universe_response(_configured_policies(), []),
+        "markets": selected,
+        "universe": _universe_response(active_policies, selected),
         "warning": {"th": PENNY_WARNING_TH, "en": PENNY_WARNING_EN},
         "qualification": {
             "universe_size": 0,
@@ -849,6 +895,18 @@ def _parse_dt(value: Any) -> datetime | None:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
+
+
+def _snapshot_threshold(snapshot: Dict[str, Any]) -> float | None:
+    thresholds = snapshot.get("qualification", {}).get("active_thresholds", {})
+    value = thresholds.get("TH") if isinstance(thresholds, dict) else None
+    if value is not None:
+        return _number(value)
+    markets = snapshot.get("universe", {}).get("markets", {})
+    thai = markets.get("TH") if isinstance(markets, dict) else None
+    if isinstance(thai, dict):
+        return _number(thai.get("maximum_share_price"))
+    return None
 
 
 def evaluate_candidate(
@@ -1004,12 +1062,70 @@ def classify_price(price: float | None, policy: PennyMarketPolicy) -> Dict[str, 
 
 
 def _candidate_registry(markets: Iterable[str]) -> List[MasterAsset]:
+    return _candidate_registry_context(markets)["assets"]
+
+
+def _candidate_registry_context(markets: Iterable[str]) -> Dict[str, Any]:
     selected = set(markets)
     assets = list_registry_assets(enabled_only=True, searchable_only=True)
-    return sorted(
-        [asset for asset in assets if _asset_market(asset) in selected and _asset_is_supported_equity(asset)],
-        key=lambda item: item.canonical_symbol,
-    )
+    diagnostics = {
+        "total_registry_assets": len(assets),
+        "included_common_share_count": 0,
+        "excluded_foreign_board_count": 0,
+        "excluded_special_board_count": 0,
+        "excluded_malformed_symbol_count": 0,
+        "excluded_other_count": 0,
+        "scan_symbol_limit": SCAN_MAX_SYMBOLS,
+        "scan_symbol_limit_applied": False,
+        "excluded_examples": [],
+    }
+    candidates: List[MasterAsset] = []
+    for asset in assets:
+        market = _asset_market(asset)
+        if market not in selected or not _asset_is_supported_equity(asset):
+            continue
+        if market == "TH":
+            mapped = _thai_asset_mapping(asset)
+            if not mapped.supported:
+                _record_symbol_exclusion(diagnostics, asset, mapped)
+                continue
+            provider_symbols = {**asset.provider_symbols, "yfinance": mapped.provider_symbol or asset.provider_symbols.get("yfinance", "")}
+            candidates.append(replace(asset, provider_symbols=provider_symbols))
+            continue
+        candidates.append(asset)
+    candidates = sorted(candidates, key=lambda item: item.canonical_symbol)
+    diagnostics["included_common_share_count"] = len(candidates)
+    if len(candidates) > SCAN_MAX_SYMBOLS:
+        diagnostics["scan_symbol_limit_applied"] = True
+        diagnostics["unbounded_candidate_count"] = len(candidates)
+        candidates = candidates[:SCAN_MAX_SYMBOLS]
+        diagnostics["included_common_share_count"] = len(candidates)
+    return {"assets": candidates, "diagnostics": diagnostics}
+
+
+def _thai_asset_mapping(asset: MasterAsset) -> ProviderSymbolMapping:
+    provider_symbol = asset.provider_symbols.get("yfinance") or asset.canonical_symbol
+    return map_thai_yfinance_symbol(provider_symbol)
+
+
+def _record_symbol_exclusion(diagnostics: Dict[str, Any], asset: MasterAsset, mapping: ProviderSymbolMapping) -> None:
+    reason = mapping.exclusion_reason or "unsupported_symbol"
+    if reason == "foreign_board_excluded":
+        diagnostics["excluded_foreign_board_count"] += 1
+    elif reason == "special_board_excluded":
+        diagnostics["excluded_special_board_count"] += 1
+    elif reason in {"malformed_symbol", "duplicate_exchange_suffix", "empty_symbol"}:
+        diagnostics["excluded_malformed_symbol_count"] += 1
+    else:
+        diagnostics["excluded_other_count"] += 1
+    examples = diagnostics.setdefault("excluded_examples", [])
+    if len(examples) < 10:
+        examples.append({
+            "symbol": asset.canonical_symbol,
+            "provider_symbol": asset.provider_symbols.get("yfinance"),
+            "reason": reason,
+            "board": mapping.board,
+        })
 
 
 def _evaluate_registry_asset(
@@ -1063,7 +1179,11 @@ def _scan_quote_map(registry: List[MasterAsset], quote_fn: QuoteFn) -> Dict[str,
         if not callable(get_scan_quotes):
             return {}
         symbols = [asset.provider_symbols.get("yfinance") or asset.canonical_symbol for asset in registry]
-        return get_scan_quotes(symbols)
+        results: Dict[str, Dict[str, Any]] = {}
+        for start in range(0, len(symbols), SCAN_MAX_PROVIDER_BATCH):
+            chunk = symbols[start:start + SCAN_MAX_PROVIDER_BATCH]
+            results.update(get_scan_quotes(chunk, chunk_size=SCAN_MAX_PROVIDER_BATCH))
+        return results
     except Exception:
         return {}
 

@@ -14,14 +14,16 @@ It remains exposed through:
 
 `GET /api/opportunities/penny?market=&limit=&language=`
 
-Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the complete supported scan universe.
+Top 5 means the five qualifying candidates with the highest final Penny Opportunity Scores from the provider-safe bounded scan universe.
 
 The Penny Opportunity universe is rescanned and reranked once every hour.
 
 The implementation is intentionally memory-conscious:
 
 - It starts from lightweight Master Asset Registry metadata.
-- It scans the complete supported TH/US lightweight equity universe before final ranking.
+- It scans a provider-safe bounded TH/US lightweight equity universe before final ranking.
+- It normalizes provider symbols before market data calls.
+- It excludes unsupported Thai foreign-board or special-board variants before provider calls.
 - It fetches quote data before history or news.
 - It skips expensive history calls for candidates that fail cheap hard filters.
 - It keeps only compact scoring and evidence payloads in the response.
@@ -109,7 +111,40 @@ The current Render configuration runs a single `uvicorn app.main:app --host 0.0.
 
 Each completed scan publishes a compact immutable snapshot containing scan timing, engine metadata, methodology version, score version, policy version, config version, qualification funnel counts, Top 5 items, provider status, limitations, duration, and status.
 
-If a new scan fails, the API keeps serving the latest successful snapshot, marks it stale or partial, and includes the failed scan timestamp and failure stage. If no successful snapshot exists yet, the endpoint returns `unavailable`.
+If a new scan fails, the API keeps serving the latest successful snapshot, marks it stale or partial, and includes the failed scan timestamp and failure stage. If no successful snapshot exists yet, the endpoint returns `not_ready` or `scan_in_progress` instead of triggering a synchronous full-universe scan inside the user request.
+
+Custom threshold requests such as `max_price=7.5` are served from the latest snapshot and filtered transparently. If the requested threshold is above the latest published scan threshold, the response is marked `partial` and discloses that extended candidates require a future scheduled bounded scan.
+
+## Provider Symbol Mapping
+
+The scanner uses the Data Hub provider symbol mapper documented in `docs/PROVIDER_SYMBOL_MAPPING.md`.
+
+Thai common shares are normalized to Yahoo Finance `.BK` symbols:
+
+- `AOT` -> `AOT.BK`
+- `AOT.BK` -> `AOT.BK`
+- `PTT` -> `PTT.BK`
+- `PTT.BK` -> `PTT.BK`
+
+Foreign-board variants are excluded before provider calls:
+
+- `AOT-F` -> excluded
+- `AOT-F.BK` -> excluded
+- `ACAP-F.BK` -> excluded
+
+The exclusion is recorded as scanner diagnostics, not as provider failure.
+
+## Scan Safety
+
+Production scans are bounded by:
+
+- `PENNY_SCAN_MAX_SYMBOLS`
+- `PENNY_SCAN_MAX_PROVIDER_BATCH`
+- `PENNY_SCAN_DEADLINE_SECONDS`
+- `PENNY_SCAN_MAX_WORKERS`
+- a scan execution lock
+
+The `/health` endpoint does not trigger provider work. The user-facing penny endpoint serves published snapshots and transparent unavailable states.
 
 ## Risk Penalty
 

@@ -76,6 +76,46 @@ def no_news(symbol: str, limit: int):
     return {"symbol": symbol, "items": [], "source": "test_news", "unavailable_reason": "No verified catalyst data available"}
 
 
+def test_penny_endpoint_returns_utf8_json_for_thai_snapshot(monkeypatch) -> None:
+    thai_explanation = "A.BK ไม่ผ่านเกณฑ์เพราะ insufficient_liquidity คำอธิบายนี้อ้างอิง snapshot ล่าสุด"
+
+    def fake_snapshot(market=None, limit=5, thai_max_price=None):
+        return {
+            "status": "stale",
+            "category": "penny_opportunity",
+            "methodology_version": po.METHODOLOGY_VERSION,
+            "score_version": po.SCORE_VERSION,
+            "configuration_version": po.CONFIGURATION_VERSION,
+            "trust": {"decision_boundary": {"th": "ระบบช่วยวิเคราะห์ แต่การตัดสินใจเป็นของคุณ", "en": "The decision remains yours."}},
+            "generated_at": "2026-01-01T00:00:00+00:00",
+            "scan": {"frequency_minutes": 60, "is_stale": True, "scan_duration_ms": 0},
+            "markets": ["TH"],
+            "warning": {"th": po.PENNY_WARNING_TH, "en": po.PENNY_WARNING_EN},
+            "qualification": {"universe_size": 1, "eligible_count": 0, "excluded_count": 1, "ranked_count": 0, "unknown_count": 0},
+            "items": [],
+            "why_not_index": {"A.BK": {"explanation_th": thai_explanation}},
+            "limitations": [],
+            "provider_status": [],
+            "disclaimer": "This is not financial advice.",
+        }
+
+    monkeypatch.setattr(main, "get_penny_opportunities_snapshot", fake_snapshot)
+    payload = main.penny_opportunities()
+    route = next(route for route in main.app.routes if getattr(route, "path", "") == "/api/opportunities/penny")
+    response = route.response_class(payload)
+
+    assert response.status_code == 200
+    assert "application/json" in response.headers["content-type"]
+    assert "charset=utf-8" in response.headers["content-type"].lower()
+    text = response.body.decode("utf-8")
+    assert "\ufffd" not in text
+    assert "ร\xa0ยธ" not in text
+    assert "ร\xa0ยน" not in text
+    value = payload["why_not_index"]["A.BK"]["explanation_th"]
+    assert "ไม่ผ่านเกณฑ์" in value
+    assert any("\u0e00" <= char <= "\u0e7f" for char in value)
+
+
 def test_thai_price_classification() -> None:
     classified = po.classify_price(5.0, po.POLICIES["TH"])
     assert classified["status"] == "PASS"

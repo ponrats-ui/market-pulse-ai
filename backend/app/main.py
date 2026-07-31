@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.data_hub import provider_router
@@ -46,6 +47,10 @@ DEFAULT_LOCAL_CORS_ORIGINS = (
     "https://market-pulse-ai.pages.dev",
 )
 DEFAULT_PRODUCTION_CORS_ORIGINS = ("https://market-pulse-ai.pages.dev",)
+
+
+class UTF8JSONResponse(JSONResponse):
+    media_type = "application/json; charset=utf-8"
 
 
 def _cors_allowed_origins() -> tuple[str, ...]:
@@ -261,7 +266,7 @@ def compare(symbols: str = Query("BTC-USD,ETH-USD")) -> Dict[str, Any]:
     return build_comparison(selected, get_cached_quote, get_cached_history)
 
 
-@app.get("/api/opportunities/penny")
+@app.get("/api/opportunities/penny", response_class=UTF8JSONResponse)
 def penny_opportunities(
     market: str | None = Query(None),
     limit: int = Query(5, ge=1, le=20),

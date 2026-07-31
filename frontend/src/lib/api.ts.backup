@@ -37,18 +37,11 @@ function resolveApiBaseUrl(value: string): string {
   }
   return normalized;
 }
+
 function isProductionPagesHost(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  const host = window.location.hostname;
-
-  return (
-    host === 'market-pulse-ai.pages.dev' ||
-    host.endsWith('.market-pulse-ai.pages.dev')
-  );
+  return typeof window !== 'undefined' && window.location.hostname === 'market-pulse-ai.pages.dev';
 }
+
 function isLoopbackApiUrl(value: string): boolean {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(value);
 }

@@ -29,7 +29,7 @@ def test_startup_and_health_do_not_reach_yahoo(monkeypatch) -> None:
     assert payload["status"] == "ok"
 
 
-def test_penny_scheduler_is_opt_in_and_uses_bounded_env_config(monkeypatch) -> None:
+def test_penny_scheduler_uses_bounded_env_config_when_enabled(monkeypatch) -> None:
     captured = {}
 
     def fake_start_scheduler(*args, **kwargs):
@@ -59,6 +59,49 @@ def test_penny_scheduler_is_opt_in_and_uses_bounded_env_config(monkeypatch) -> N
         "thai_max_price": 10.0,
         "initial_delay_seconds": 30,
     }
+
+
+def test_penny_scheduler_defaults_on_in_production(monkeypatch) -> None:
+    captured = {}
+
+    def fake_start_scheduler(*args, **kwargs):
+        captured["kwargs"] = kwargs
+        return True
+
+    monkeypatch.delenv("PENNY_OPPORTUNITY_SCHEDULER_ENABLED", raising=False)
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setattr(main, "start_penny_opportunity_scheduler", fake_start_scheduler)
+
+    async def run_lifespan():
+        async with main.lifespan(main.app):
+            return main.health()
+
+    payload = asyncio.run(run_lifespan())
+
+    assert payload["status"] == "ok"
+    assert captured["kwargs"]["market"] == "TH"
+    assert captured["kwargs"]["initial_delay_seconds"] == 30
+
+
+def test_penny_scheduler_can_be_disabled_in_production(monkeypatch) -> None:
+    calls = {"count": 0}
+
+    def fake_start_scheduler(*args, **kwargs):
+        calls["count"] += 1
+        return True
+
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("PENNY_OPPORTUNITY_SCHEDULER_ENABLED", "false")
+    monkeypatch.setattr(main, "start_penny_opportunity_scheduler", fake_start_scheduler)
+
+    async def run_lifespan():
+        async with main.lifespan(main.app):
+            return main.health()
+
+    payload = asyncio.run(run_lifespan())
+
+    assert payload["status"] == "ok"
+    assert calls["count"] == 0
 
 
 def test_importing_app_main_does_not_eagerly_load_provider_libraries() -> None:

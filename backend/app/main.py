@@ -77,7 +77,10 @@ def _cors_allowed_origin_regex() -> str | None:
 
 
 def _penny_scheduler_enabled() -> bool:
-    return os.getenv("PENNY_OPPORTUNITY_SCHEDULER_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
+    configured = os.getenv("PENNY_OPPORTUNITY_SCHEDULER_ENABLED")
+    if configured is not None:
+        return configured.strip().lower() in {"1", "true", "yes", "on"}
+    return os.getenv("APP_ENV", "development").strip().lower() == "production"
 
 
 def _env_int(name: str, default: int) -> int:

@@ -1,9 +1,13 @@
 ﻿from __future__ import annotations
 
+import os
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List
 
 from app.data_hub.symbol_resolver import resolve_symbol
 from app.services.analysis import build_risk
+
+COMPARE_WORKERS = max(1, min(5, int(os.getenv("DATA_HUB_COMPARE_WORKERS", "4"))))
 
 
 def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any]], history_fn: Callable[[str, str, str], Dict[str, Any]]) -> Dict[str, Any]:
@@ -20,11 +24,11 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
             unsupported.append({"symbol": raw_symbol.strip(), "reason": resolved.reason or "unsupported"})
     selected = selected[:5]
     items: List[Dict[str, Any]] = []
-    histories: Dict[str, Dict[str, Any]] = {}
+    fetched = _fetch_compare_inputs(selected, quote_fn, history_fn)
+    histories: Dict[str, Dict[str, Any]] = {symbol: payload["history"] for symbol, payload in fetched.items()}
     for symbol in selected:
-        quote = quote_fn(symbol)
-        history = history_fn(symbol, "1y", "1d")
-        histories[symbol] = history
+        quote = fetched[symbol]["quote"]
+        history = histories[symbol]
         risk = build_risk(symbol, quote, history)
         metrics = _history_metrics(history)
         correlation = _correlation_to_first(symbol, selected, histories)
@@ -76,6 +80,19 @@ def build_comparison(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any
         "summary": _summary(items),
         "disclaimer": "This is not financial advice.",
     }
+
+
+def _fetch_compare_inputs(symbols: List[str], quote_fn: Callable[[str], Dict[str, Any]], history_fn: Callable[[str, str, str], Dict[str, Any]]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    def fetch(symbol: str) -> tuple[str, Dict[str, Dict[str, Any]]]:
+        return symbol, {
+            "quote": quote_fn(symbol),
+            "history": history_fn(symbol, "1y", "1d"),
+        }
+
+    if len(symbols) <= 1:
+        return dict(fetch(symbol) for symbol in symbols)
+    with ThreadPoolExecutor(max_workers=min(COMPARE_WORKERS, len(symbols))) as executor:
+        return dict(executor.map(fetch, symbols))
 
 
 def _performance_points(symbols: List[str], histories: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:

@@ -21,13 +21,14 @@ def evaluate_portfolio(holdings: List[Dict[str, Any]], quote_fn: Callable[[str],
     total_value = 0.0
     total_cost = 0.0
     stale_quotes: List[Dict[str, str]] = []
+    quotes_by_symbol: Dict[str, Dict[str, Any]] = {}
     for holding in position_inputs:
         symbol = str(holding.get("symbol", "")).strip().upper()
         quantity = _number(holding.get("quantity"))
         average_cost = _number(holding.get("averageCost") or holding.get("average_cost"))
         if not symbol or quantity is None or average_cost is None or quantity <= 0:
             continue
-        quote = quote_fn(symbol)
+        quote = quotes_by_symbol.setdefault(symbol, quote_fn(symbol))
         price = _number(quote.get("price"))
         cost = quantity * average_cost
         value = quantity * price if price is not None else None

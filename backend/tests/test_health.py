@@ -33,3 +33,18 @@ def test_importing_app_main_does_not_eagerly_load_provider_libraries() -> None:
     script = "import sys; import app.main; print('pandas' in sys.modules, 'yfinance' in sys.modules)"
     result = subprocess.run([sys.executable, "-c", script], text=True, capture_output=True, check=True)
     assert result.stdout.strip() == "False False"
+
+
+def test_local_vite_fallback_port_is_allowed_by_cors(monkeypatch) -> None:
+    monkeypatch.delenv("CORS_ALLOWED_ORIGINS", raising=False)
+    monkeypatch.setenv("APP_ENV", "development")
+
+    assert main._cors_allowed_origin_regex()
+    assert "5174" in main._cors_allowed_origin_regex()
+
+
+def test_production_cors_does_not_allow_localhost_regex(monkeypatch) -> None:
+    monkeypatch.delenv("CORS_ALLOWED_ORIGINS", raising=False)
+    monkeypatch.setenv("APP_ENV", "production")
+
+    assert main._cors_allowed_origin_regex() is None

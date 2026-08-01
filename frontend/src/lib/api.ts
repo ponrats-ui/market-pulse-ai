@@ -6,6 +6,9 @@ const RAW_API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim();
 const API_BASE_URL = resolveApiBaseUrl(RAW_API_BASE_URL);
 const REQUEST_TIMEOUT_MS = 20000;
 const BATCH_QUOTES_TIMEOUT_MS = 120000;
+const HEAVY_REQUEST_TIMEOUT_MS = 45000;
+const inFlightGetRequests = new Map<string, Promise<unknown>>();
+const inFlightPostRequests = new Map<string, Promise<unknown>>();
 
 export class ApiRequestCanceledError extends Error {
   constructor(message = 'Request was canceled') {
@@ -60,6 +63,21 @@ export function isApiRequestCanceled(error: unknown): boolean {
 async function getJson<T>(path: string, fallback: T, options: ApiRequestOptions = {}): Promise<T> {
   if (!API_BASE_URL) return fallback;
   if (options.signal?.aborted) throw new ApiRequestCanceledError();
+  const url = `${API_BASE_URL}${path}`;
+  const requestKey = `GET ${url}`;
+  if (!options.signal) {
+    const existing = inFlightGetRequests.get(requestKey) as Promise<T> | undefined;
+    if (existing) return existing;
+  }
+  const request = fetchJson<T>(url, path, options);
+  if (!options.signal) {
+    inFlightGetRequests.set(requestKey, request);
+    request.then(() => inFlightGetRequests.delete(requestKey), () => inFlightGetRequests.delete(requestKey));
+  }
+  return request;
+}
+
+async function fetchJson<T>(url: string, path: string, options: ApiRequestOptions = {}): Promise<T> {
   const controller = new AbortController();
   let timedOut = false;
   const timeout = window.setTimeout(() => {
@@ -68,7 +86,6 @@ async function getJson<T>(path: string, fallback: T, options: ApiRequestOptions 
   }, options.timeoutMs ?? REQUEST_TIMEOUT_MS);
   const abortActiveRequest = () => controller.abort();
   options.signal?.addEventListener('abort', abortActiveRequest, { once: true });
-  const url = `${API_BASE_URL}${path}`;
   try {
     const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
@@ -93,6 +110,21 @@ async function getJson<T>(path: string, fallback: T, options: ApiRequestOptions 
 async function postJson<T>(path: string, body: unknown, fallback: T, options: ApiRequestOptions = {}): Promise<T> {
   if (!API_BASE_URL) return fallback;
   if (options.signal?.aborted) throw new ApiRequestCanceledError();
+  const url = `${API_BASE_URL}${path}`;
+  const requestKey = `POST ${url} ${JSON.stringify(body)}`;
+  if (!options.signal) {
+    const existing = inFlightPostRequests.get(requestKey) as Promise<T> | undefined;
+    if (existing) return existing;
+  }
+  const request = postFetchJson<T>(url, path, body, options);
+  if (!options.signal) {
+    inFlightPostRequests.set(requestKey, request);
+    request.then(() => inFlightPostRequests.delete(requestKey), () => inFlightPostRequests.delete(requestKey));
+  }
+  return request;
+}
+
+async function postFetchJson<T>(url: string, path: string, body: unknown, options: ApiRequestOptions = {}): Promise<T> {
   const controller = new AbortController();
   let timedOut = false;
   const timeout = window.setTimeout(() => {
@@ -101,7 +133,6 @@ async function postJson<T>(path: string, body: unknown, fallback: T, options: Ap
   }, options.timeoutMs ?? REQUEST_TIMEOUT_MS);
   const abortActiveRequest = () => controller.abort();
   options.signal?.addEventListener('abort', abortActiveRequest, { once: true });
-  const url = `${API_BASE_URL}${path}`;
   try {
     const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: controller.signal });
     if (!response.ok) throw new Error(`Request failed: ${response.status}`);
@@ -135,18 +166,18 @@ export const api = {
   quotes: (symbols: string[], options?: ApiRequestOptions): Promise<QuotesResponse> => getJson(`/api/assets/quotes?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map(unavailableQuote), source: 'Unavailable' }, { timeoutMs: BATCH_QUOTES_TIMEOUT_MS, ...options }),
   quote: (symbol: string): Promise<AssetQuote> => getJson(`/api/assets/${encodeURIComponent(symbol)}`, unavailableQuote(symbol)),
   history: (symbol: string, range = '1mo', interval = '1d'): Promise<AssetHistory> => getJson(`/api/assets/${encodeURIComponent(symbol)}/history?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`, unavailableHistory(symbol)),
-  sparklines: (symbols: string[]): Promise<SparklinesResponse> => getJson(`/api/assets/sparklines?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map((symbol) => ({ symbol, points: [], start_price: null, end_price: null, change_percent: null, provider: 'Unavailable', timestamp: '', stale: false, unavailable_reason: '7-day history unavailable from provider' })), source: 'Unavailable' }),
+  sparklines: (symbols: string[]): Promise<SparklinesResponse> => getJson(`/api/assets/sparklines?symbols=${symbols.map(encodeURIComponent).join(',')}`, { symbols, items: symbols.map((symbol) => ({ symbol, points: [], start_price: null, end_price: null, change_percent: null, provider: 'Unavailable', timestamp: '', stale: false, unavailable_reason: '7-day history unavailable from provider' })), source: 'Unavailable' }, { timeoutMs: HEAVY_REQUEST_TIMEOUT_MS }),
   technical: (symbol: string, range = '1y', interval = '1d'): Promise<TechnicalResponse> => getJson(`/api/technical/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`, { symbol, status: 'unavailable', available_indicators: [], indicators: {}, series: [], source: 'Unavailable', message: 'Technical analysis unavailable.', message_th: 'ยังไม่มีข้อมูลวิเคราะห์ทางเทคนิค', disclaimer: 'This is not financial advice.' }),
   analysis: (symbol: string): Promise<AnalysisResponse> => getJson(`/api/analysis/${encodeURIComponent(symbol)}`, unavailableAnalysis(symbol)),
   risk: (symbol: string): Promise<RiskResponse> => getJson(`/api/risk/${encodeURIComponent(symbol)}`, unavailableRisk(symbol)),
   financials: (symbol: string): Promise<FinancialsResponse> => getJson(`/api/financials/${encodeURIComponent(symbol)}`, unavailableFinancials(symbol)),
-  compare: (symbols: string[]): Promise<CompareResponse> => getJson(`/api/compare?symbols=${symbols.map(encodeURIComponent).join(',')}`, unavailableCompare(symbols)),
+  compare: (symbols: string[]): Promise<CompareResponse> => getJson(`/api/compare?symbols=${symbols.map(encodeURIComponent).join(',')}`, unavailableCompare(symbols), { timeoutMs: HEAVY_REQUEST_TIMEOUT_MS }),
   ask: (question: string, selectedSymbol: string, language: string): Promise<AssistantResponse> => postJson('/api/assistant/ask', { question, selected_symbol: selectedSymbol, language }, unavailableAssistant(selectedSymbol, language)),
-  evaluatePortfolio: (holdings: PortfolioHolding[]): Promise<PortfolioEvaluationResponse> => postJson('/api/portfolio/evaluate', { holdings }, { items: [], total_value: null, total_cost: null, total_gain_loss: null, total_gain_loss_percent: null, source: 'Unavailable', disclaimer: 'This is not financial advice.' }),
+  evaluatePortfolio: (holdings: PortfolioHolding[]): Promise<PortfolioEvaluationResponse> => postJson('/api/portfolio/evaluate', { holdings }, { items: [], total_value: null, total_cost: null, total_gain_loss: null, total_gain_loss_percent: null, source: 'Unavailable', disclaimer: 'This is not financial advice.' }, { timeoutMs: HEAVY_REQUEST_TIMEOUT_MS }),
   calendar: (): Promise<CalendarResponse> => getJson('/api/calendar', unavailableCalendar),
   newsImpact: (symbol: string): Promise<NewsImpactResponse> => getJson(`/api/news-impact/${encodeURIComponent(symbol)}`, unavailableNewsImpact(symbol)),
   sentiment: (symbol: string): Promise<SentimentResponse> => getJson(`/api/sentiment/${encodeURIComponent(symbol)}`, unavailableSentiment(symbol)),
-  marketCondition: (): Promise<MarketConditionResponse> => getJson('/api/market-condition', { state_th: 'รอข้อมูล', state_en: 'Awaiting data', average_change_percent: null, sentiment: unavailableSentiment('BTC-USD'), metrics: [], evidence: [], unavailable: ['Market condition provider unavailable'], provider: 'Unavailable', disclaimer: 'This is not financial advice.' }),
+  marketCondition: (): Promise<MarketConditionResponse> => getJson('/api/market-condition', { state_th: 'รอข้อมูล', state_en: 'Awaiting data', average_change_percent: null, sentiment: unavailableSentiment('BTC-USD'), metrics: [], evidence: [], unavailable: ['Market condition provider unavailable'], provider: 'Unavailable', disclaimer: 'This is not financial advice.' }, { timeoutMs: HEAVY_REQUEST_TIMEOUT_MS }),
   pennyOpportunities: (language = 'th', limit = 5): Promise<PennyOpportunitiesResponse> => getJson(`/api/opportunities/penny?limit=${encodeURIComponent(String(limit))}&language=${encodeURIComponent(language)}`, { status: 'unavailable', category: 'penny_opportunity', engine: { engine_id: 'penny-opportunity', category: 'penny_opportunity', methodology_version: 'penny-opportunity-v1', score_version: 'penny-score-v1', policy_version: 'penny-policy-v1', config_version: 'penny-config-v1' }, methodology_version: 'penny-opportunity-v1', score_version: 'penny-score-v1', policy_version: 'penny-policy-v1', configuration_version: 'penny-config-v1', generated_at: new Date().toISOString(), scan: { snapshot_id: null, scan_id: null, scan_started_at: null, scan_completed_at: null, last_successful_scan_at: null, next_scan_at: null, frequency_minutes: 60, is_stale: true, scan_duration_ms: 0 }, markets: [], warning: { th: 'คำเตือน: หุ้นเพนนีหรือหุ้นราคาต่ำมีความเสี่ยงสูงมาก คะแนนนี้เป็นข้อมูลเพื่อการศึกษา ไม่ใช่คำแนะนำให้ซื้อหรือขาย', en: 'Warning: Penny stocks and very low-priced equities carry extreme risk. This ranking is educational and is not a buy or sell recommendation.' }, qualification: { universe_size: 0, prefiltered_count: 0, classified_count: 0, eligible_count: 0, qualified_count: 0, ranked_count: 0, result_count: 0, excluded_count: 0, failed_candidate_count: 0, unknown_count: 0 }, items: [], limitations: ['Penny Opportunity Scanner is unavailable until the backend is reachable.'], provider_status: ['backend_unavailable'], disclaimer: 'This is not financial advice.' }),
   pennyAlgorithm: (): Promise<PennyAlgorithmResponse> => getJson('/api/opportunities/penny/algorithm', { status: 'unavailable', algorithm: { identity: {}, objective: { th: 'ยังไม่มีข้อมูล', en: 'Unavailable' }, hypothesis: { th: 'ยังไม่มีข้อมูล', en: 'Unavailable' }, factors: [], risks: [], score_formula: {}, confidence: {}, completeness: {}, ranking: {}, limitations: [], non_claims: [], change_history: [] }, validation: { valid: false, errors: ['backend_unavailable'] }, disclaimer: 'This is not financial advice.' }),
   pennyExplanation: (symbol: string): Promise<PennyCandidateExplanationResponse> => getJson(`/api/opportunities/penny/explain/${encodeURIComponent(symbol)}`, { status: 'unavailable', symbol, disclaimer: 'This is not financial advice.' }),

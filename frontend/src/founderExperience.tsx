@@ -105,8 +105,6 @@ function resolveAssetLogoUrls(symbol: string, logoUrl?: string | null): string[]
   const domains = uniqueStrings([...domainsForLogoKey(key), ...domainsForLogoKey(normalized)]);
   const candidates = uniqueStrings([
     logoUrl && logoUrl.toLowerCase().startsWith('https://') ? logoUrl : null,
-    ...tickerLogoProviders(key),
-    ...tickerLogoProviders(normalized),
     ...domains.flatMap((domain) => domainLogoProviders(domain)),
   ]);
   assetLogoUrlCache.set(cacheKey, candidates);
@@ -121,11 +119,6 @@ function domainsForLogoKey(key: string): string[] {
   const value = assetLogoDomains[key];
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
-}
-
-function tickerLogoProviders(symbol: string): string[] {
-  if (!symbol || /[^A-Z0-9.-]/.test(symbol)) return [];
-  return [`https://financialmodelingprep.com/image-stock/${encodeURIComponent(symbol)}.png`];
 }
 
 function domainLogoProviders(domain: string): string[] {

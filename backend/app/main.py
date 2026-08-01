@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from dataclasses import asdict
+from concurrent.futures import ThreadPoolExecutor
 import json
 from datetime import datetime, timezone
 import os
@@ -44,9 +45,13 @@ DEFAULT_PROVIDER = "yfinance"
 DEFAULT_LOCAL_CORS_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
     "https://market-pulse-ai.pages.dev",
 )
 DEFAULT_PRODUCTION_CORS_ORIGINS = ("https://market-pulse-ai.pages.dev",)
+LOCAL_CORS_ORIGIN_REGEX = r"^http://(localhost|127\.0\.0\.1):(5173|5174|5175|5176|4173|4174|4175|4176)$"
+BATCH_WORKERS = max(1, min(8, int(os.getenv("DATA_HUB_BATCH_WORKERS", "4"))))
 
 
 class UTF8JSONResponse(JSONResponse):
@@ -61,6 +66,14 @@ def _cors_allowed_origins() -> tuple[str, ...]:
         origins = tuple(origin for origin in origins if origin != "*")
         return origins or DEFAULT_PRODUCTION_CORS_ORIGINS
     return origins or DEFAULT_LOCAL_CORS_ORIGINS
+
+
+def _cors_allowed_origin_regex() -> str | None:
+    configured = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    app_env = os.getenv("APP_ENV", "development").strip().lower()
+    if app_env == "production" or configured:
+        return None
+    return LOCAL_CORS_ORIGIN_REGEX
 
 
 class AssistantRequest(BaseModel):
@@ -103,6 +116,7 @@ app = FastAPI(title="Market Pulse AI API", version="1.0.0-rc1", lifespan=lifespa
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(_cors_allowed_origins()),
+    allow_origin_regex=_cors_allowed_origin_regex(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -214,8 +228,8 @@ def sector_assets(sector: str, limit: int = Query(25, ge=1, le=50)) -> Dict[str,
 
 @app.get("/api/assets/quotes")
 def asset_quotes(symbols: str = Query("BTC-USD")) -> Dict[str, Any]:
-    selected = [symbol.strip() for symbol in symbols.split(",") if symbol.strip()][:25]
-    return {"symbols": selected, "items": [get_cached_quote(symbol) for symbol in selected], "source": DEFAULT_PROVIDER}
+    selected = _dedupe_symbols([symbol.strip() for symbol in symbols.split(",") if symbol.strip()])[:25]
+    return {"symbols": selected, "items": _bounded_map(selected, get_cached_quote), "source": DEFAULT_PROVIDER}
 
 
 @app.get("/api/assets/sparklines")
@@ -223,7 +237,7 @@ def asset_sparklines(symbols: str = Query("BTC-USD")) -> Dict[str, Any]:
     selected = _dedupe_symbols([symbol.strip() for symbol in symbols.split(",") if symbol.strip()])[:25]
     return {
         "symbols": selected,
-        "items": [build_sparkline(symbol) for symbol in selected],
+        "items": _bounded_map(selected, build_sparkline),
         "source": DEFAULT_PROVIDER,
         "ttl_seconds": HISTORICAL_TTL_SECONDS,
     }
@@ -346,10 +360,9 @@ def market_condition() -> Dict[str, Any]:
         {"key": "bitcoin", "label": "Bitcoin", "symbol": "BTC-USD"},
         {"key": "us10y", "label": "US 10Y Yield", "symbol": "^TNX"},
     ]
-    metrics = []
-    for proxy in proxies:
-        quote = get_cached_quote(proxy["symbol"])
-        metrics.append({
+    quotes = _bounded_map(proxies, lambda proxy: get_cached_quote(proxy["symbol"]))
+    metrics = [
+        {
             **proxy,
             "value": quote.get("price"),
             "change": quote.get("change"),
@@ -358,7 +371,9 @@ def market_condition() -> Dict[str, Any]:
             "provider": quote.get("source") or quote.get("metadata", {}).get("provider"),
             "available": quote.get("price") is not None,
             "error": quote.get("error") or quote.get("data_warning"),
-        })
+        }
+        for proxy, quote in zip(proxies, quotes)
+    ]
     sentiment_payload = sentiment_for_symbol("BTC-USD")
     available_changes = [item["change_percent"] for item in metrics if isinstance(item.get("change_percent"), (int, float))]
     average_change = sum(available_changes) / len(available_changes) if available_changes else None
@@ -499,14 +514,18 @@ def _dedupe_symbols(symbols: list[str]) -> list[str]:
     return deduped
 
 
+def _bounded_map(items: list[Any], fn: Any) -> list[Any]:
+    if len(items) <= 1:
+        return [fn(item) for item in items]
+    with ThreadPoolExecutor(max_workers=min(BATCH_WORKERS, len(items))) as executor:
+        return list(executor.map(fn, items))
+
+
 def get_cached_quote(symbol: str) -> Dict[str, Any]:
     resolved = resolve_symbol(symbol)
     canonical = resolved.canonical_symbol or symbol
     key = cache_key(DEFAULT_PROVIDER, "quote", canonical)
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-    return cache.set(key, provider_router.get_quote(symbol), QUOTE_TTL_SECONDS)
+    return cache.get_or_set(key, lambda: provider_router.get_quote(symbol), QUOTE_TTL_SECONDS)
 
 
 def get_cached_history(symbol: str, range: str, interval: str) -> Dict[str, Any]:
@@ -518,17 +537,14 @@ def get_cached_history(symbol: str, range: str, interval: str) -> Dict[str, Any]
         if isinstance(cached, dict):
             return {**cached, "cache_age_seconds": age}
         return cached
-    return cache.set(key, provider_router.get_history(symbol, range, interval), HISTORICAL_TTL_SECONDS)
+    return cache.get_or_set(key, lambda: provider_router.get_history(symbol, range, interval), HISTORICAL_TTL_SECONDS)
 
 
 def get_cached_fundamentals(symbol: str) -> Dict[str, Any]:
     resolved = resolve_symbol(symbol)
     canonical = resolved.canonical_symbol or symbol
     key = cache_key(DEFAULT_PROVIDER, "fundamentals", canonical)
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-    return cache.set(key, provider_router.get_fundamentals(symbol), FUNDAMENTALS_TTL_SECONDS)
+    return cache.get_or_set(key, lambda: provider_router.get_fundamentals(symbol), FUNDAMENTALS_TTL_SECONDS)
 
 
 def _load_watchlist() -> Dict[str, Any]:

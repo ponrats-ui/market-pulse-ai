@@ -35,7 +35,7 @@ if (!API_BASE_URL && import.meta.env.DEV) {
 
 function resolveApiBaseUrl(value: string): string {
   const normalized = value.replace(/\/$/, '');
-  if (isProductionPagesHost() && (!normalized || isLoopbackApiUrl(normalized))) {
+  if (isProductionPagesHost()) {
     return PRODUCTION_API_BASE_URL;
   }
   return normalized;
@@ -51,9 +51,6 @@ function isProductionPagesHost(): boolean {
     host === 'market-pulse-ai.pages.dev' ||
     host.endsWith('.market-pulse-ai.pages.dev')
   );
-}
-function isLoopbackApiUrl(value: string): boolean {
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(value);
 }
 
 export function isApiRequestCanceled(error: unknown): boolean {

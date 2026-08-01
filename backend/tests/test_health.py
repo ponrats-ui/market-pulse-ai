@@ -123,3 +123,31 @@ def test_production_cors_does_not_allow_localhost_regex(monkeypatch) -> None:
     monkeypatch.setenv("APP_ENV", "production")
 
     assert main._cors_allowed_origin_regex() is None
+
+
+def test_market_condition_returns_valid_utf8_thai_state(monkeypatch) -> None:
+    quote = {
+        "price": 100,
+        "change": 1,
+        "change_percent": 1.0,
+        "timestamp": "2026-08-02T00:00:00+00:00",
+        "source": "test_provider",
+    }
+    monkeypatch.setattr(main, "_bounded_map", lambda items, fn: [quote for _ in items])
+    monkeypatch.setattr(main, "sentiment_for_symbol", lambda symbol: {"symbol": symbol, "status": "unavailable"})
+
+    payload = main.market_condition()
+    route = next(route for route in main.app.routes if getattr(route, "path", "") == "/api/market-condition")
+    response = route.response_class(payload)
+    decoded = response.body.decode("utf-8")
+    parsed = main.json.loads(decoded)
+    state_th = parsed["state_th"]
+
+    assert response.status_code == 200
+    assert "application/json" in response.headers["content-type"]
+    assert "charset=utf-8" in response.headers["content-type"].lower()
+    assert state_th == "เชิงบวก"
+    assert any("\u0e00" <= char <= "\u0e7f" for char in state_th)
+    assert "ร ยธ" not in state_th
+    assert "ร ยน" not in state_th
+    assert "เน€เธ" not in state_th

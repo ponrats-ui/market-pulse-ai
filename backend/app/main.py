@@ -379,7 +379,7 @@ def macro() -> Dict[str, Any]:
     return macro_indicators()
 
 
-@app.get("/api/market-condition")
+@app.get("/api/market-condition", response_class=UTF8JSONResponse)
 def market_condition() -> Dict[str, Any]:
     proxies = [
         {"key": "vix", "label": "VIX", "symbol": "^VIX"},

@@ -31,7 +31,7 @@ from app.services.comparison import build_comparison
 from app.services.financials import build_financial_statement_analysis
 from app.services.macro import company_events, intelligence_status, macro_indicators
 from app.services.news import news_for_symbol, news_impact_for_symbol
-from app.services.penny_opportunities import get_penny_algorithm_definition, get_penny_candidate_explanation, get_penny_opportunities_snapshot, get_penny_why_not, register_penny_opportunity_engine, stop_penny_opportunity_scheduler
+from app.services.penny_opportunities import get_penny_algorithm_definition, get_penny_candidate_explanation, get_penny_opportunities_snapshot, get_penny_why_not, register_penny_opportunity_engine, start_penny_opportunity_scheduler, stop_penny_opportunity_scheduler
 from app.services.portfolio import evaluate_portfolio
 from app.services.qa_assistant import answer_question
 from app.services.sentiment import sentiment_for_symbol
@@ -76,6 +76,24 @@ def _cors_allowed_origin_regex() -> str | None:
     return LOCAL_CORS_ORIGIN_REGEX
 
 
+def _penny_scheduler_enabled() -> bool:
+    return os.getenv("PENNY_OPPORTUNITY_SCHEDULER_ENABLED", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
 class AssistantRequest(BaseModel):
     question: str
     selected_symbol: str = "BTC-USD"
@@ -106,6 +124,17 @@ class DigestRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     register_penny_opportunity_engine()
+    if _penny_scheduler_enabled():
+        start_penny_opportunity_scheduler(
+            get_cached_quote,
+            get_cached_history,
+            news_for_symbol,
+            market=os.getenv("PENNY_OPPORTUNITY_MARKET", "TH"),
+            limit=_env_int("PENNY_OPPORTUNITY_LIMIT", 5),
+            frequency_minutes=_env_int("PENNY_OPPORTUNITY_SCHEDULE_MINUTES", 60),
+            thai_max_price=_env_float("PENNY_OPPORTUNITY_MAX_PRICE", 10.0),
+            initial_delay_seconds=_env_int("PENNY_OPPORTUNITY_INITIAL_DELAY_SECONDS", 30),
+        )
     try:
         yield
     finally:

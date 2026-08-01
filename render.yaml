@@ -13,3 +13,15 @@ services:
         value: info
       - key: CORS_ALLOWED_ORIGINS
         value: https://market-pulse-ai.pages.dev
+      - key: PENNY_OPPORTUNITY_SCHEDULER_ENABLED
+        value: true
+      - key: PENNY_OPPORTUNITY_MARKET
+        value: TH
+      - key: PENNY_OPPORTUNITY_MAX_PRICE
+        value: "10"
+      - key: PENNY_OPPORTUNITY_LIMIT
+        value: "5"
+      - key: PENNY_OPPORTUNITY_SCHEDULE_MINUTES
+        value: "60"
+      - key: PENNY_OPPORTUNITY_INITIAL_DELAY_SECONDS
+        value: "30"

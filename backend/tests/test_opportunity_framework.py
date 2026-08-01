@@ -101,3 +101,34 @@ def test_scheduler_prevents_duplicate_engine_threads() -> None:
     assert scheduler.start(definition, lambda: None) is False
     scheduler.stop("test-engine")
     scheduler.reset_for_tests()
+
+
+def test_scheduler_initial_delay_prevents_immediate_scan() -> None:
+    scheduler = OpportunityScheduler()
+    calls = {"count": 0}
+
+    definition = OpportunityEngineDefinition(
+        engine_id="delayed-engine",
+        category="test",
+        display_name="Delayed Engine",
+        methodology_version="m1",
+        score_version="s1",
+        policy_version="p1",
+        config_version="c1",
+        supported_markets=["US"],
+        schedule_frequency_minutes=60,
+        maximum_results=5,
+        shortlist_limit=5,
+        minimum_score=0,
+        minimum_confidence=0,
+        minimum_completeness=0,
+        freshness_policy={},
+        factor_weights={},
+        risk_policy={},
+        tie_breaker_policy=[],
+    )
+
+    assert scheduler.start(definition, lambda: calls.__setitem__("count", calls["count"] + 1), initial_delay_seconds=60) is True
+    assert calls["count"] == 0
+    scheduler.stop("delayed-engine")
+    scheduler.reset_for_tests()

@@ -750,13 +750,19 @@ def start_penny_opportunity_scheduler(
     market: str | None = None,
     limit: int = 5,
     frequency_minutes: int = SCAN_FREQUENCY_MINUTES,
+    thai_max_price: float | None = None,
+    initial_delay_seconds: int = 0,
 ) -> bool:
     definition = PENNY_ENGINE_DEFINITION
     if frequency_minutes != definition.schedule_frequency_minutes:
         definition = OpportunityEngineDefinition(
             **{**definition.__dict__, "schedule_frequency_minutes": max(1, frequency_minutes)}
         )
-    return _scheduler.start(definition, lambda: run_penny_scan_once(quote_fn, history_fn, news_fn, market=market, limit=limit))
+    return _scheduler.start(
+        definition,
+        lambda: run_penny_scan_once(quote_fn, history_fn, news_fn, market=market, limit=limit, thai_max_price=thai_max_price),
+        initial_delay_seconds=max(0, initial_delay_seconds),
+    )
 
 
 def stop_penny_opportunity_scheduler() -> None:

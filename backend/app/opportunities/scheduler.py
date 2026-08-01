@@ -12,7 +12,7 @@ class OpportunityScheduler:
         self._stops: Dict[str, Event] = {}
         self._lock = Lock()
 
-    def start(self, definition: OpportunityEngineDefinition, scan: Callable[[], None]) -> bool:
+    def start(self, definition: OpportunityEngineDefinition, scan: Callable[[], None], initial_delay_seconds: int = 0) -> bool:
         with self._lock:
             thread = self._threads.get(definition.engine_id)
             if thread and thread.is_alive():
@@ -21,6 +21,8 @@ class OpportunityScheduler:
             self._stops[definition.engine_id] = stop
 
             def loop() -> None:
+                if initial_delay_seconds > 0 and stop.wait(initial_delay_seconds):
+                    return
                 while not stop.is_set():
                     scan()
                     stop.wait(max(1, definition.schedule_frequency_minutes) * 60)
